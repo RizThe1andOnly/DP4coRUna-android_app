@@ -2,20 +2,19 @@ package com.example.dp4coruna;
 
 import android.Manifest;
 import android.content.Context;
-<<<<<<< Updated upstream
-=======
+
 import android.content.Intent;
->>>>>>> Stashed changes
+
 import android.content.pm.PackageManager;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
-<<<<<<< Updated upstream
+
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-=======
+
 import android.os.Parcelable;
 import android.view.Gravity;
 import android.view.View;
@@ -38,13 +37,12 @@ import java.util.List;
 import java.util.Locale;
 
 import static android.widget.Toast.LENGTH_LONG;
->>>>>>> Stashed changes
+
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int ACCESS_FINE_LOCATION_REQUEST_CODE = 101;
-<<<<<<< Updated upstream
-=======
+
     private FusedLocationProviderClient fusedLocationClient;
 
     double longitude;
@@ -58,18 +56,17 @@ public class MainActivity extends AppCompatActivity {
     String country;
     String postalCode;
     String knownName;
->>>>>>> Stashed changes
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkForPermissions(getApplicationContext());
-<<<<<<< Updated upstream
-=======
+
         getLocation();
 
->>>>>>> Stashed changes
+
     }
 
 
@@ -86,8 +83,7 @@ public class MainActivity extends AppCompatActivity {
                                                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                                                 ACCESS_FINE_LOCATION_REQUEST_CODE);
         }
-<<<<<<< Updated upstream
-=======
+
 
     }
 
@@ -184,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
             knownName="";
         }
 
->>>>>>> Stashed changes
+
     }
 
 

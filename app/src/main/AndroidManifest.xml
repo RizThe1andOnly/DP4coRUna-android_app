@@ -3,10 +3,9 @@
           package="com.example.dp4coruna">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-<<<<<<< Updated upstream
-=======
+
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
->>>>>>> Stashed changes
+
 
     <application
             android:allowBackup="true"
