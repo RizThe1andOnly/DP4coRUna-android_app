@@ -26,4 +26,8 @@ public class LocationObject {
         WifiManager currentWifiManager = (WifiManager) currentContext.getSystemService(Context.WIFI_SERVICE);
         this.APs = currentWifiManager.getScanResults();
     }
+
+
+
+
 }
