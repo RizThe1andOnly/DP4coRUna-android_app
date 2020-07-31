@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.location.Geocoder;
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
         getLocation();
 
-
+        new SensorReader().getLightLevel(getApplicationContext());
     }
 
 
