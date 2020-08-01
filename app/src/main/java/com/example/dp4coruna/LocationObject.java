@@ -15,6 +15,14 @@ public class LocationObject {
     private List<ScanResult> APs;
     private List<Double> features;
 
+    //different features obtained from sensor and location:
+    private double lightLevel;
+    private double soundLevel;
+    private double geoMagLevel;
+    private double cellTowerId;
+    private double localAreaCode;
+    private double cellSignalStrength;
+
     public LocationObject(Context currentContext){
         this.locationLabel = "";
         this.features = new ArrayList<>();

@@ -7,26 +7,40 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.MediaRecorder;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.*;
 import android.telephony.*;
 import android.util.Log;
 import androidx.core.content.ContextCompat;
+
+import java.io.IOException;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Class that contains methods to obtain sensor data from device.
  */
 public class SensorReader implements SensorEventListener {
 
-    private static final String LOG_CAT_TAG = "SensorReader";
+    private final String LOG_CAT_TAG = "SensorReader";
+    private final long SOUND_SAMPLING_TIME = 1000; //in milliseconds
 
+    //tools to obtain sensor data:
     private SensorManager sm;
     private HandlerThread ht;
+    private MediaRecorder soundRecorder;
 
+    //various sensor data:
     private double lightLevel;
     private double geoMagenticVale;
+    private double soundLevel;
+    private double cellTowerId;
+    private double localAreaCode;
+    private double cellSignalStrength;
+
 
     /**
      * Gets list of current wifi access points
@@ -95,11 +109,12 @@ public class SensorReader implements SensorEventListener {
     }
 
 
-    //sense light and geo-magnetic forces here:
+    //sense light here:
 
     /**
      * Will get light level when called. Creates a new thread and waits for said thread to
-     * obtain sensor readings, since sensors report data in async manner. Will call helper "obtainSensorReadings" to complete task.
+     * obtain sensor readings, since sensors report data in async manner. Will call helper "obtainSensorReadings"
+     * to complete task.
      * @param context current context of the application to access the sensor services
      */
     public void getLightLevel(Context context){
@@ -107,13 +122,6 @@ public class SensorReader implements SensorEventListener {
         this.sm = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         obtainSensorReadings(this.sm,Sensor.TYPE_LIGHT);
     }
-
-    public void getGeoMagneticLevel(Context context){
-        this.geoMagenticVale = 0;
-        this.sm = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-
-    }
-
 
     /**
      * Accepts the sensor manager and sensor from which to obtain readings, then creates a new handler thread to handle
@@ -178,5 +186,88 @@ public class SensorReader implements SensorEventListener {
 
     }
 
+    //sound recording and sound level reporting section:
 
+    /**
+     * Returns the maximum sound amplitude measured by device mic during sampling.
+     * @return
+     */
+    public double getSoundLevel(){
+        this.setupSoundRecorder();
+        double soundLevel = this.sampleSound();
+
+        //release resources used by sound sampling processes:
+        this.soundRecorder.release();
+        this.soundRecorder = null;
+
+        return soundLevel;
+    }
+
+    /**
+     * Creates new MediaRecorder object and call all the necessary functions to adjust settings and prepare
+     * recorder to record, then sets new object to class variable "soundRecorder" so it is accessible.
+     */
+    private void setupSoundRecorder(){
+        MediaRecorder recorder = new MediaRecorder();
+        recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        recorder.setOutputFile("/dev/null");
+        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+
+        try {
+            recorder.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        this.soundRecorder = recorder;
+    }
+
+
+    /**
+     * Will record sound levels for pre-determined period of time. Recorded sound's max amplitude will be stored as
+     * part of the MediaRecorder object which then will be accessed and returned to calling method. Pre-determined
+     * period of time will be the SOUND_SAMPLING_TIME class var which.
+     */
+    private double sampleSound(){
+        //sound sampling will start at 1 second; soundrecorder will start then a timer will stop it after 1 second
+        SoundSamplingRunnable samplingTask = new SoundSamplingRunnable(this.soundRecorder,this.SOUND_SAMPLING_TIME);
+        Thread samplingThread = new Thread(samplingTask);
+        samplingThread.start();
+        try {
+            samplingThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Log.i(LOG_CAT_TAG,"message after sound sampling");
+        return (this.soundRecorder).getMaxAmplitude();
+    }
+
+
+}
+
+/**
+ * Additional class in file and subclass of Runnable. Created to handle task of sampling sound by device.
+ */
+class SoundSamplingRunnable implements Runnable{
+    private MediaRecorder recorder;
+    private long samplingDuration;
+    private String LOG_FROM_RUNNABLE = "From Runnable";
+
+    public SoundSamplingRunnable(MediaRecorder recorder,long samplingDuration){
+        this.recorder = recorder;
+        this.samplingDuration = samplingDuration;
+    }
+
+    @Override
+    public void run() {
+        final MediaRecorder localRecorderVar = this.recorder;
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                localRecorderVar.stop();
+            }
+        }, this.samplingDuration);
+        Log.i(LOG_FROM_RUNNABLE,String.valueOf(localRecorderVar.getMaxAmplitude()));
+    }
 }
