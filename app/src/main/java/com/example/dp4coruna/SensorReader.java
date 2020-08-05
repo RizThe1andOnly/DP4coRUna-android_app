@@ -1,7 +1,9 @@
 package com.example.dp4coruna;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -13,6 +15,8 @@ import android.net.wifi.WifiManager;
 import android.os.*;
 import android.telephony.*;
 import android.util.Log;
+import android.view.Gravity;
+import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
@@ -26,7 +30,10 @@ import java.util.TimerTask;
 public class SensorReader implements SensorEventListener {
 
     private final String LOG_CAT_TAG = "SensorReader";
-    private final long SOUND_SAMPLING_TIME = 1000; //in milliseconds
+    private final long SOUND_SAMPLING_TIME = 3000; //in milliseconds
+
+    private Activity inheritedActivity;
+    private Context inheritedContext;
 
     //tools to obtain sensor data:
     private SensorManager sm;
@@ -41,6 +48,13 @@ public class SensorReader implements SensorEventListener {
     private double localAreaCode;
     private double cellSignalStrength;
 
+
+    public SensorReader(){}
+
+    public SensorReader(Activity inheritedActivity, Context inheritedContext){
+        this.inheritedActivity = inheritedActivity;
+        this.inheritedContext = inheritedContext;
+    }
 
     /**
      * Gets list of current wifi access points
@@ -196,8 +210,6 @@ public class SensorReader implements SensorEventListener {
         this.setupSoundRecorder();
         double soundLevel = this.sampleSound();
 
-        //release resources used by sound sampling processes:
-        this.soundRecorder.release();
         this.soundRecorder = null;
 
         return soundLevel;
@@ -211,7 +223,8 @@ public class SensorReader implements SensorEventListener {
         MediaRecorder recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        recorder.setOutputFile("/dev/null");
+        //recorder.setOutputFile("/dev/null");
+        recorder.setOutputFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/recorderStore.3gp");
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
         try {
@@ -229,9 +242,9 @@ public class SensorReader implements SensorEventListener {
      * part of the MediaRecorder object which then will be accessed and returned to calling method. Pre-determined
      * period of time will be the SOUND_SAMPLING_TIME class var which.
      */
-    private double sampleSound(){
+    private synchronized double sampleSound(){
         //sound sampling will start at 1 second; soundrecorder will start then a timer will stop it after 1 second
-        SoundSamplingRunnable samplingTask = new SoundSamplingRunnable(this.soundRecorder,this.SOUND_SAMPLING_TIME);
+        SoundSamplingRunnable samplingTask = new SoundSamplingRunnable(this.soundRecorder,this.SOUND_SAMPLING_TIME,this.inheritedContext);
         Thread samplingThread = new Thread(samplingTask);
         samplingThread.start();
         try {
@@ -239,8 +252,26 @@ public class SensorReader implements SensorEventListener {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+
         Log.i(LOG_CAT_TAG,"message after sound sampling");
-        return (this.soundRecorder).getMaxAmplitude();
+//        return (this.soundRecorder).getMaxAmplitude();
+//        final Activity activityForTimer = this.inheritedActivity;
+//        final MediaRecorder soundRecorderForTimer = this.soundRecorder;
+//        this.soundRecorder.start();
+//        new Timer().schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                activityForTimer.runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        soundRecorderForTimer.stop();
+//                    }
+//                });
+//            }
+//        },this.SOUND_SAMPLING_TIME);
+
+        return this.soundRecorder.getMaxAmplitude();
     }
 
 
@@ -252,22 +283,31 @@ public class SensorReader implements SensorEventListener {
 class SoundSamplingRunnable implements Runnable{
     private MediaRecorder recorder;
     private long samplingDuration;
+    private Context inheritedContext;
     private String LOG_FROM_RUNNABLE = "From Runnable";
 
-    public SoundSamplingRunnable(MediaRecorder recorder,long samplingDuration){
+    public SoundSamplingRunnable(MediaRecorder recorder,long samplingDuration,Context inheritedContext){
         this.recorder = recorder;
         this.samplingDuration = samplingDuration;
+        this.inheritedContext = inheritedContext;
     }
 
     @Override
     public void run() {
         final MediaRecorder localRecorderVar = this.recorder;
+        final Context contextForTimer = this.inheritedContext;
+        localRecorderVar.start();
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
                 localRecorderVar.stop();
+                Log.i(LOG_FROM_RUNNABLE,"SOund level : " + String.valueOf(localRecorderVar.getMaxAmplitude()));
+                localRecorderVar.reset();
+                localRecorderVar.release();
             }
         }, this.samplingDuration);
+
+
         Log.i(LOG_FROM_RUNNABLE,String.valueOf(localRecorderVar.getMaxAmplitude()));
     }
 }

@@ -7,6 +7,7 @@ import android.content.Intent;
 
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
+import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.location.Geocoder;
@@ -43,6 +44,8 @@ import static android.widget.Toast.LENGTH_LONG;
 public class MainActivity extends AppCompatActivity {
 
     private static final int ACCESS_FINE_LOCATION_REQUEST_CODE = 101;
+    private static final int RECORD_AUDIO_REQUEST_CODE = 102;
+    private static final int WRITE_TO_EXTERNAL_STORAGE_CODE = 103;
 
     private FusedLocationProviderClient fusedLocationClient;
 
@@ -65,17 +68,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         checkForPermissions(getApplicationContext());
 
-        getLocation();
-
-        new SensorReader().getLightLevel(getApplicationContext());
+        Log.i("From Main","Sound Level = " + String.valueOf(new SensorReader(MainActivity.this,getApplicationContext()).getSoundLevel()));
     }
 
 
     /**
      * Checks for permission at the start of the app.
      * Currently permission being chekced is:
-     *      - Access Location Coarse
-     *
+     *      - Access Location Fine
+     *      - Record Audio
      */
     private void checkForPermissions(Context context){
         if(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
@@ -85,6 +86,19 @@ public class MainActivity extends AppCompatActivity {
                                                 ACCESS_FINE_LOCATION_REQUEST_CODE);
         }
 
+        if(ContextCompat.checkSelfPermission(context,Manifest.permission.RECORD_AUDIO)==
+                PackageManager.PERMISSION_DENIED){
+            ActivityCompat.requestPermissions(MainActivity.this,
+                                                new String[]{Manifest.permission.RECORD_AUDIO},
+                                                RECORD_AUDIO_REQUEST_CODE);
+        }
+
+        if(ContextCompat.checkSelfPermission(context,Manifest.permission.WRITE_EXTERNAL_STORAGE)==
+                PackageManager.PERMISSION_DENIED){
+            ActivityCompat.requestPermissions(MainActivity.this,
+                                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                                WRITE_TO_EXTERNAL_STORAGE_CODE);
+        }
 
     }
 
