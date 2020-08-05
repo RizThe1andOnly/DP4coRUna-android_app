@@ -112,61 +112,6 @@ public class LocationGrabber {
         }
     }
 
-//    /**
-//     * Requests location information from phone using Google API
-//     * Sets global variables: latitude, longitude and address
-//     *
-//     *
-//     */ // !!! changed function to void
-//    protected void getLocation(final Looper callBackLooper){
-//
-//        final Context context = this.inheritedContext;
-//
-//
-//        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this.inheritedActivity);
-//
-//        fusedLocationClient.getLastLocation()
-//                .addOnSuccessListener(new OnSuccessListener<Location>() {
-//                    @Override
-//                    public void onSuccess(Location location) {
-//                        Log.d("here", "onsuccess");
-//                        if (location != null) {
-//
-//                            //!!! passing entire location var into setAddress
-//                            //set lat/long global variables
-//                            //double latitude = location.getLatitude();
-//                            //double longitude = location.getLongitude();
-//
-//
-//                            double[] array = new double[2];
-//                            array[0] = latitude;
-//                            array[1] = longitude;
-//                            Log.d(Double.toString(latitude), Double.toString(longitude));
-//
-//                            try {
-//                                //set address global variables
-//                                setAddress(context, location,null);
-//                            } catch (IOException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                        else{
-//
-//                        }
-//                    }
-//                });
-//
-//
-//        Log.d("here", "before (after) updates");
-//
-////         !!! Got rid of below due to changing function to void
-////        double[] array2 = new double[2];
-////        array2[0]=0;
-////        array2[1]=0;
-////        return array2;
-//    }
-
-
     /** !!! Below function has been copied from getLocation and Thread stuff has been added
      *      Also change from getFusedLocationProviderClient(Context) to getFusedLocationProviderClient(Activity)
      * request current location update 

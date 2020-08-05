@@ -253,23 +253,7 @@ public class SensorReader implements SensorEventListener {
             e.printStackTrace();
         }
 
-
         Log.i(LOG_CAT_TAG,"message after sound sampling");
-//        return (this.soundRecorder).getMaxAmplitude();
-//        final Activity activityForTimer = this.inheritedActivity;
-//        final MediaRecorder soundRecorderForTimer = this.soundRecorder;
-//        this.soundRecorder.start();
-//        new Timer().schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                activityForTimer.runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        soundRecorderForTimer.stop();
-//                    }
-//                });
-//            }
-//        },this.SOUND_SAMPLING_TIME);
 
         return this.soundRecorder.getMaxAmplitude();
     }
