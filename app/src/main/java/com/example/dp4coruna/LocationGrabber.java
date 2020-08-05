@@ -69,8 +69,8 @@ public class LocationGrabber {
     public List<Address> addresses;
 
 
-    double longitude;
-    double latitude;
+    private double longitude;
+    private double latitude;
     public String address;
     public String city;
     public String state;
@@ -83,6 +83,14 @@ public class LocationGrabber {
         this.inheritedContext = inheritedContext;
         this.inheritedActivity = inheritedActivity;
         this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(inheritedActivity);
+    }
+
+    public double getLatitude() {
+        return this.latitude;
+    }
+
+    public double getLongitude() {
+        return this.longitude;
     }
 
     /** !!!
