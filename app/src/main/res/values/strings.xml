@@ -2,14 +2,14 @@
     <string name="app_name">DP4coRUna</string>
     <string name="EnterDataButton">Enter Location Data</string>
     <string name="Main_Screen_Title">DP4CoRUna</string>
-    <string name="InsertLocationInstructions">Your location data is below. Correct any changes and press submit.</string>
+    <string name="InsertLocationInstructions"></string>
     <string name="street_address">Street Address</string>
     <string name="name">Name</string>
     <string name="city">City</string>
     <string name="state">State</string>
     <string name="zipcode">Zipcode</string>
     <string name="country">Country</string>
-    <string name="enter_room_name_instruc">Enter the Building and Room Name:</string>
+    <string name="enter_room_name_instruc">Please enter additional applicable information:</string>
     <string name="building_name">Building Name</string>
     <string name="room_name">Room Name</string>
     <string name="submit">Submit</string>

@@ -1,5 +1,6 @@
 package com.example.dp4coruna;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
@@ -11,7 +12,22 @@ import java.util.List;
 public class LocationObject {
     private static final int NUMBER_OF_FEATURES = 7;
 
-    private String locationLabel;
+    //location attributes from GPS
+    private String streetAddress;
+    private String city;
+    private String state;
+    private String country;
+    private String zipcode;
+    private double latitude;
+    private double longitude;
+
+    private String knownFeatureName; //from address, ie "Brooklyn Bridge"
+
+    //location attributes from UI
+    private String buildingName;
+    private String roomName;
+    private String roomNumber;
+
     private List<ScanResult> APs;
     private List<Double> features;
 
@@ -24,7 +40,7 @@ public class LocationObject {
     private double cellSignalStrength;
 
     public LocationObject(Context currentContext){
-        this.locationLabel = "";
+        //this.locationLabel = "";
         this.features = new ArrayList<>();
         this.getWifiAccessPointsList(currentContext);
     }
@@ -36,6 +52,56 @@ public class LocationObject {
     }
 
 
+    /**
+     * Returns a new location object with all location related data fields filled by LocationGrabber
+     * Note: User input location data (room name, etc) must be added to object separately
+     * @param inheritedContext
+     * @param inheritedActivity
+     * @return LocationObject
+     */
+    public static LocationObject getLocationObjectWithLocationData(Context inheritedContext, Activity inheritedActivity){
+        LocationObject locobj = new LocationObject(inheritedContext);
+
+        LocationGrabber locgrab = new LocationGrabber(inheritedContext, inheritedActivity);
+        //locgrab.updateLocation();
+        locgrab.setupLocation();
+
+        locobj.streetAddress = locgrab.getAddress();
+        locobj.city= locgrab.getCity();
+        locobj.state = locgrab.getState();
+        locobj.country = locgrab.getCountry();
+        locobj.zipcode = locgrab.getZipcode();
+        locobj.knownFeatureName = locgrab.getKnownFeatureName();
+
+        locobj.latitude = locgrab.getLatitude();
+        locobj.longitude = locgrab.getLongitude();
+
+        return locobj;
+    }
+
+    /**
+     * Setter for building name, must be set from UI
+     * @param buildingName
+     */
+    public void setBuildingName(String buildingName){
+        this.buildingName=buildingName;
+    }
+
+    /**
+     * Setter for room name, must be set from UI
+     * @param roomName
+     */
+    public void setRoomName(String roomName){
+        this.roomName=roomName;
+    }
+
+    /**
+     * Setter for room name, must be set from UI
+     * @param roomNumber
+     */
+    public void setRoomNumber(String roomNumber){
+        this.roomNumber=roomNumber;
+    }
 
 
 }

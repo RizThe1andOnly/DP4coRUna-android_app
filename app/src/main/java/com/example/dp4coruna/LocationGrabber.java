@@ -75,14 +75,42 @@ public class LocationGrabber {
     public String city;
     public String state;
     public String country;
-    public String postalCode;
-    public String knownName;
+    public String zipcode;
+    public String knownFeatureName;
 
 
     public LocationGrabber(Context inheritedContext, Activity inheritedActivity){
         this.inheritedContext = inheritedContext;
         this.inheritedActivity = inheritedActivity;
         this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(inheritedActivity);
+    }
+
+    /**
+     * Getter Methods
+     * @return String
+     */
+    public String getAddress(){
+        return this.address;
+    }
+
+    public String getCity(){
+        return this.city;
+    }
+
+    public String getState(){
+        return this.state;
+    }
+
+    public String getCountry(){
+        return this.country;
+    }
+
+    public String getZipcode(){
+        return this.zipcode;
+    }
+
+    public String getKnownFeatureName(){
+        return this.knownFeatureName;
     }
 
     public double getLatitude() {
@@ -128,7 +156,7 @@ public class LocationGrabber {
      *
      * Will use HandlerThread class to make async task synchronous; will have main thread block until data is available
      */
-    private synchronized void updateLocation(){
+    protected synchronized void updateLocation(){
         final LocationRequest mLocationRequest = LocationRequest.create();
         mLocationRequest.setInterval(60000);
         mLocationRequest.setFastestInterval(5000);
@@ -211,8 +239,8 @@ public class LocationGrabber {
             this.city = this.addresses.get(0).getLocality();
             this.state = this.addresses.get(0).getAdminArea();
             this.country = this.addresses.get(0).getCountryName();
-            this.postalCode = this.addresses.get(0).getPostalCode();
-            this.knownName = this.addresses.get(0).getFeatureName();
+            this.zipcode = this.addresses.get(0).getPostalCode();
+            this.knownFeatureName = this.addresses.get(0).getFeatureName();
             // !!! added section for testing purposes:
             String toastString = address;
 
@@ -232,6 +260,16 @@ public class LocationGrabber {
             //knownName="";
         }
     }
+
+    /*
+    public LocationObject getLocationObject(Context context){
+        LocationObject locobj = new LocationObject(context);
+        locobj.StreetAddress = this.StreetAddress;
+
+        return locobj;
+    }
+    */
+
 
 }
 

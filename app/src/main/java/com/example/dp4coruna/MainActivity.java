@@ -49,19 +49,6 @@ public class MainActivity extends AppCompatActivity {
 
     private FusedLocationProviderClient fusedLocationClient;
 
-    double longitude;
-    double latitude;
-
-    List<Address> addresses;
-
-    String address;
-    String city;
-    String state;
-    String country;
-    String postalCode;
-    String knownName;
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -107,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
      * Sets global variables: latitude, longitude and address
      *
      */
+    /*
    private void getLocation(){
 
        // request current location update
@@ -170,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
      * Sets address global variables based on longitude and latitude
      * @throws IOException
      */
+    /*
     public void setAddress() throws IOException {
         Geocoder geocoder;
         geocoder = new Geocoder(this, Locale.getDefault());
@@ -198,11 +187,15 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    */
+
 
     public void enterLocationData(View view) {
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, SubmitLocationLabel.class);
-        bundle.putParcelableArrayList("addresses", (ArrayList<? extends Parcelable>) addresses);
+        //LocationGrabber lg = new LocationGrabber(this, this);
+        //lg.setupLocation();
+        //bundle.putParcelableArrayList("addresses", (ArrayList<? extends Parcelable>) lg.addresses);
         intent.putExtras(bundle);
         startActivity(intent);
     }

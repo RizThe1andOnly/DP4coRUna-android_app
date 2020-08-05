@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -9,60 +10,35 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="31dp" />
+            android:layout_height="21dp" />
 
         <TextView
             android:id="@+id/textView"
             android:layout_width="match_parent"
-            android:layout_height="57dp"
+            android:layout_height="6dp"
             android:text="@string/InsertLocationInstructions"
             android:textStyle="bold" />
 
-        <EditText
-            android:id="@+id/streetAddress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:autofillHints=""
-            android:ems="10"
-            android:hint="@string/street_address"
-            android:inputType="textPersonName" />
+        <TextView
+            android:id="@+id/streetaddress"
+            android:layout_width="244dp"
+            android:layout_height="90dp"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-        <EditText
-            android:id="@+id/city"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/latlong"
+            android:layout_width="240dp"
             android:layout_height="wrap_content"
-            android:autofillHints=""
-            android:ems="10"
-            android:hint="@string/city"
-            android:inputType="textPersonName" />
-
-        <EditText
-            android:id="@+id/state"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:hint="@string/state"
-            android:inputType="textPersonName" />
-
-        <EditText
-            android:id="@+id/zipcode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:hint="@string/zipcode"
-            android:inputType="textPersonName" />
-
-        <EditText
-            android:id="@+id/country"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:hint="@string/country"
-            android:inputType="textPersonName" />
+            android:textSize="18sp" />
 
         <Space
             android:layout_width="match_parent"
@@ -70,14 +46,14 @@
 
         <TextView
             android:id="@+id/textView2"
-            android:layout_width="match_parent"
+            android:layout_width="296dp"
             android:layout_height="wrap_content"
             android:text="@string/enter_room_name_instruc"
             android:textStyle="bold" />
 
         <EditText
             android:id="@+id/buildingname"
-            android:layout_width="match_parent"
+            android:layout_width="295dp"
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/building_name"
@@ -85,10 +61,18 @@
 
         <EditText
             android:id="@+id/roomname"
-            android:layout_width="match_parent"
+            android:layout_width="292dp"
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/room_name"
+            android:inputType="textPersonName" />
+
+        <EditText
+            android:id="@+id/roomnumber"
+            android:layout_width="294dp"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="Room Number"
             android:inputType="textPersonName" />
 
         <Button
