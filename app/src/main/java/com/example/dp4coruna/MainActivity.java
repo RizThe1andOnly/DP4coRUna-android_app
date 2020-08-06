@@ -61,7 +61,8 @@ public class MainActivity extends AppCompatActivity {
      * Checks for permission at the start of the app.
      * Currently permission being chekced is:
      *      - Access Location Fine
-     *      - Record Audio
+     *      - Record Audio -> for sound sampling
+     *      - Write to external storage -> for sound sampling
      */
     private void checkForPermissions(Context context){
         if(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==

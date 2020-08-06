@@ -18,6 +18,7 @@ import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -41,49 +42,76 @@ public class SensorReader implements SensorEventListener {
     private MediaRecorder soundRecorder;
 
     //various sensor data:
+    private List<WiFiAccessPoint> wifiApList;
     private double lightLevel;
-    private double geoMagenticVale;
+    private double geoMagenticValue;
     private double soundLevel;
     private double cellTowerId;
     private double localAreaCode;
     private double cellSignalStrength;
 
 
-    public SensorReader(){}
-
     public SensorReader(Activity inheritedActivity, Context inheritedContext){
         this.inheritedActivity = inheritedActivity;
         this.inheritedContext = inheritedContext;
     }
 
+
+    //interaction with other classes:
+
+    public void sense(){
+        getWifiAccessPoints(this.inheritedContext,this.wifiApList);
+        this.getLightLevel(this.inheritedContext);
+        this.geoMagenticValue = this.getGeoMagneticField();
+        this.soundLevel = this.sampleSoundLevel();
+
+    }
+
+    //end of interaction section
+
+
+    // get wifi access point info here:
     /**
      * Gets list of current wifi access points
      * @param context current device context required to obtain the wifi-access point data
      * @param listToBePopulated list which will hold the access point data; each element is an access point
      */
-    public void getWifiAccessPoints(Context context, List<ScanResult> listToBePopulated){
+    public void getWifiAccessPoints(Context context, List<WiFiAccessPoint> listToBePopulated){
         if(context == null) return;
 
+        if(listToBePopulated == null){
+            listToBePopulated = new ArrayList<>();
+        }
+
+        //create wifimanager object to get list of wifi access point
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         List<ScanResult> tempList = wifiManager.getScanResults();
 
+        //populate provide list with wifi access point data (ssid,rssi)
         for(ScanResult element:tempList){
-            listToBePopulated.add(element);
+            listToBePopulated.add(new WiFiAccessPoint(element.SSID,element.level));
         }
     }
 
+    //end of wifi access point operations
+
+    // get cell tower info here:
     /**
      * Gets the cell tower information at the time this method is called.
      * @param context current application context to access services related to obtaining cell tower info
      */
-    public void getCellInfoAtMoment(Context context){
+    public void getCellInfoAtMoment(Context context, List<CellData> listToBePopulated){
+        if(listToBePopulated == null){
+            listToBePopulated = new ArrayList<>();
+        }
+
         if(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED){
 
             if(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY)){
                 TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
                 List<CellInfo> cellInfoList = tm.getAllCellInfo();
-                getCellInfoFeatures(cellInfoList);
+                getCellInfoFeatures(cellInfoList,listToBePopulated);
             }
         }
 
@@ -95,7 +123,7 @@ public class SensorReader implements SensorEventListener {
      * to be the same (as of now) so only one will be used from the list.
      * @param cellInfoList list of CellInfo objects that contain data regarding cell tower
      */
-    private void getCellInfoFeatures(List<CellInfo> cellInfoList){
+    private void getCellInfoFeatures(List<CellInfo> cellInfoList, List<CellData> listToBePopulated){
         for(CellInfo element : cellInfoList){
             //String toBeLogged = "";
 
@@ -124,7 +152,6 @@ public class SensorReader implements SensorEventListener {
 
 
     //sense light here:
-
     /**
      * Will get light level when called. Creates a new thread and waits for said thread to
      * obtain sensor readings, since sensors report data in async manner. Will call helper "obtainSensorReadings"
@@ -190,15 +217,8 @@ public class SensorReader implements SensorEventListener {
         this.lightLevel = lightSensorValue;
     }
 
+    //end of light sensing
 
-    /**
-     *  Reports the geo-mag level when the sensor is called. Will be called by the onSensorChanged callback when geo-mag
-     *  level is to be reported.
-     * @param sensorEvent
-     */
-    private void reportGeoMagneticLevel(SensorEvent sensorEvent){
-
-    }
 
     //sound recording and sound level reporting section:
 
@@ -280,8 +300,18 @@ public class SensorReader implements SensorEventListener {
         return soundLevelReceived;
     }
 
+    //end of sound sensing
+
 
     //get geo-magnetic fields:
+
+    /**
+     * Obtains the geomagneticfield strength in nanoteslas
+     * Uses an instance of LocationGrabber to obtain location details : latitude, longitude, altitude
+     * These three factors are required parameters for GeomagneticField object.
+     *
+     * @return double geomagneti field strength (nanoteslas)
+     */
     public double getGeoMagneticField(){
         LocationGrabber lg = new LocationGrabber(this.inheritedContext,this.inheritedActivity);
         lg.setupLocation();
