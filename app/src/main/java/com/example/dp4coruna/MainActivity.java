@@ -54,8 +54,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkForPermissions(getApplicationContext());
-
-        Log.i("From Main","Sound Level = " + String.valueOf(new SensorReader(MainActivity.this,getApplicationContext()).getSoundLevel()));
     }
 
 
@@ -89,105 +87,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    /**
-     * Requests location information from phone using Google API
-     * Sets global variables: latitude, longitude and address
-     *
-     */
-    /*
-   private void getLocation(){
-
-       // request current location update
-       // This segment is necessary if the user has not previously
-       // logged their Location using any google services
-       LocationRequest mLocationRequest = LocationRequest.create();
-       mLocationRequest.setInterval(60000);
-       mLocationRequest.setFastestInterval(5000);
-       mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-       LocationCallback mLocationCallback = new LocationCallback() {
-
-           //Asynchronous - called when device location is available
-           @Override
-           public void onLocationResult(LocationResult locationResult) {
-               if (locationResult == null) {
-                   return; //no location found, exit
-               }
-               for (Location location : locationResult.getLocations()) {
-                   if (location != null) {
-                   }
-               }
-           }
-       };
-
-       //updates location to what we have just stored in mLocationRequest
-       LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-
-
-       fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-       fusedLocationClient.getLastLocation()
-               .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                   @Override
-                   public void onSuccess(Location location) {
-
-                       if (location != null) {
-
-                           //set lat/long global variables
-                           latitude = location.getLatitude();
-                           longitude = location.getLongitude();
-
-                           try {
-                               //set address global variables
-                               setAddress();
-                           } catch (IOException e) {
-                               e.printStackTrace();
-                           }
-                       }
-                       else{
-                           Toast toast= Toast.makeText(getApplicationContext(),
-                                   "location null", Toast.LENGTH_LONG);
-                           toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
-                           toast.show();
-                       }
-                   }
-               });;
-   }
-
-    /**
-     *
-     * Sets address global variables based on longitude and latitude
-     * @throws IOException
-     */
-    /*
-    public void setAddress() throws IOException {
-        Geocoder geocoder;
-        geocoder = new Geocoder(this, Locale.getDefault());
-
-        if (geocoder.isPresent()) {
-            addresses = geocoder.getFromLocation(latitude, longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
-
-            address = addresses.get(0).getAddressLine(0);
-            city = addresses.get(0).getLocality();
-            state = addresses.get(0).getAdminArea();
-            country = addresses.get(0).getCountryName();
-            postalCode = addresses.get(0).getPostalCode();
-            knownName = addresses.get(0).getFeatureName();
-        }
-
-        else{
-            addresses = null;
-            address = "";
-            city = "";
-            state = "";
-            country = "";
-            postalCode="";
-            knownName="";
-        }
-
-
-    }
-
-    */
 
 
     public void enterLocationData(View view) {
@@ -196,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
         //LocationGrabber lg = new LocationGrabber(this, this);
         //lg.setupLocation();
         //bundle.putParcelableArrayList("addresses", (ArrayList<? extends Parcelable>) lg.addresses);
+
         intent.putExtras(bundle);
         startActivity(intent);
     }
