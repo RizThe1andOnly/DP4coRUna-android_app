@@ -16,12 +16,16 @@ import java.util.List;
 
 public class SubmitLocationLabel extends AppCompatActivity {
 
-    TextView streetaddress;
+    TextView currentaddress;
+    //TextView streetaddress;
     TextView city;
     TextView state;
     TextView zipcode;
     TextView country;
     TextView latlong;
+    TextView z;
+    TextView ca;
+    TextView addresscurrent;
 
     EditText buildingname;
     EditText roomname;
@@ -39,11 +43,14 @@ public class SubmitLocationLabel extends AppCompatActivity {
         List<Address>  addresses = lg.addresses;
 
         //connects UI components
-        streetaddress = findViewById(R.id.streetaddress);
-        latlong = findViewById(R.id.latlong);
+      //  z = findViewById(R.id.curraddress);
+        //ca = findViewById(R.id.ca);
+                latlong = findViewById(R.id.latlong);
         buildingname = findViewById(R.id.buildingname);
         roomname = findViewById(R.id.roomname);
         roomnumber = findViewById(R.id.roomnumber);
+    addresscurrent = findViewById(R.id.addresscurrent);
+
 
         String show = "";
         //On create, populate text fields with location data
@@ -70,7 +77,7 @@ public class SubmitLocationLabel extends AppCompatActivity {
                 //country.setText(addresses.get(0).getCountryName());
                 show = show + '\n' + addresses.get(0).getCountryName();
             }
-            streetaddress.setText(show);
+            addresscurrent.setText(show);
            latlong.setText("Latitude: " + lg.getLatitude() + "\nLongitude: " + lg.getLongitude());
 
 

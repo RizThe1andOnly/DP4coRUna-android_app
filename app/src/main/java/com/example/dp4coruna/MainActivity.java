@@ -101,4 +101,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void chooseSafeRoute(View view) {
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent(this, enterDestinationActivity.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
 }

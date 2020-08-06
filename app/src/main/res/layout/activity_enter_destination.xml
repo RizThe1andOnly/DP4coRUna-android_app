@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="20dp" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="254dp"
+        android:layout_height="wrap_content"
+        android:text="@string/origin_location_instruc"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/originstreetaddress"
+        android:layout_width="304dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/origin_street_address"
+        android:inputType="textPersonName" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/origincity"
+            android:layout_width="145dp"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/origin_city"
+            android:inputType="textPersonName" />
+
+        <EditText
+            android:id="@+id/originstate"
+            android:layout_width="102dp"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/origin_state"
+            android:inputType="textPersonName" />
+
+        <EditText
+            android:id="@+id/originzipcode"
+            android:layout_width="61dp"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/origin_zipcode"
+            android:inputType="textPersonName" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="254dp"
+        android:layout_height="35dp"
+        android:text="@string/enter_the_address_of_your_destination"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/deststreetaddress"
+        android:layout_width="304dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/street_address"
+        android:inputType="textPersonName" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="61dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/destcity"
+            android:layout_width="145dp"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/city"
+            android:inputType="textPersonName" />
+
+        <EditText
+            android:id="@+id/deststate"
+            android:layout_width="102dp"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/state"
+            android:inputType="textPersonName" />
+
+        <EditText
+            android:id="@+id/destzipcode"
+            android:layout_width="61dp"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/zipcode"
+            android:inputType="textPersonName" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/showroutesbutton"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="168dp"
+        android:layout_height="wrap_content"
+        android:onClick="showRoutes"
+        android:text="@string/show_safe_routes" />
+</LinearLayout>
