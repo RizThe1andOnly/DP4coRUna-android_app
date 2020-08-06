@@ -13,20 +13,20 @@ public class LocationObject {
     private static final int NUMBER_OF_FEATURES = 7;
 
     //location attributes from GPS
-    private String streetAddress;
-    private String city;
-    private String state;
-    private String country;
-    private String zipcode;
-    private double latitude;
-    private double longitude;
+    protected String streetAddress;
+    protected String city;
+    protected String state;
+    protected String country;
+    protected String zipcode;
+    protected double latitude;
+    protected double longitude;
 
-    private String knownFeatureName; //from address, ie "Brooklyn Bridge"
+    protected String knownFeatureName; //from address, ie "Brooklyn Bridge"
 
     //location attributes from UI
-    private String buildingName;
-    private String roomName;
-    private String roomNumber;
+    protected String buildingName;
+    protected String roomName;
+    protected String roomNumber;
 
     private List<ScanResult> APs;
     private List<Double> features;
