@@ -5,10 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
+import android.hardware.*;
 import android.media.MediaRecorder;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
@@ -256,6 +253,15 @@ public class SensorReader implements SensorEventListener {
         Log.i(LOG_CAT_TAG,"message after sound sampling");
 
         return this.soundRecorder.getMaxAmplitude();
+    }
+
+    //get geo-magnetic fields:
+    public double getGeoMagneticField(){
+        LocationGrabber lg = new LocationGrabber(this.inheritedContext,this.inheritedActivity);
+        lg.setupLocation();
+        GeomagneticField gmf = new GeomagneticField((float)lg.getLatitude(),(float)lg.getLongitude(),
+                (float)lg.getAltitude_inMeters(), System.currentTimeMillis());
+        return gmf.getFieldStrength();
     }
 
 

@@ -77,6 +77,7 @@ public class LocationGrabber {
     public String country;
     public String zipcode;
     public String knownFeatureName;
+    private double altitude_inMeters;
 
 
     public LocationGrabber(Context inheritedContext, Activity inheritedActivity){
@@ -119,6 +120,10 @@ public class LocationGrabber {
 
     public double getLongitude() {
         return this.longitude;
+    }
+
+    public double getAltitude_inMeters() {
+        return this.altitude_inMeters;
     }
 
     /** !!!
@@ -226,12 +231,15 @@ public class LocationGrabber {
         Geocoder geocoder;
         geocoder = new Geocoder(this.inheritedContext, Locale.getDefault());
 
-        // !!! setting the global latitude and longitude vals:
-        this.latitude = location.getLatitude();
-        this.longitude = location.getLongitude();
+
 
         if ( (geocoder.isPresent()) && (location != null)) { //!!! changed condition to account for location object
             // !!! changed the array elem arguments to global latitude and longitude
+            // !!! setting the global latitude and longitude vals:
+            this.latitude = location.getLatitude();
+            this.longitude = location.getLongitude();
+            this.altitude_inMeters = location.getAltitude();
+
             this.addresses = geocoder.getFromLocation(this.latitude, this.longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
 
             // !!! changed local vars to the global variables, got rid of the type declaration
