@@ -4,6 +4,7 @@
     <string name="Main_Screen_Title">DP4CoRUna</string>
     <string name="InsertLocationInstructions"></string>
     <string name="street_address">Street Address</string>
+    <string name="current_address">Street Address</string>
     <string name="name">Name</string>
     <string name="city">City</string>
     <string name="state">State</string>
@@ -13,4 +14,12 @@
     <string name="building_name">Building Name</string>
     <string name="room_name">Room Name</string>
     <string name="submit">Submit</string>
+    <string name="choose_safe_route">Choose Safe Route</string>
+    <string name="enter_the_address_of_your_destination">Enter the address of your destination</string>
+    <string name="origin_street_address">Street Address</string>
+    <string name="origin_city">City</string>
+    <string name="origin_zipcode">Zipcode</string>
+    <string name="origin_state">State</string>
+    <string name="origin_location_instruc">Origin Location:</string>
+    <string name="show_safe_routes">Show Safe Routes</string>
 </resources>
