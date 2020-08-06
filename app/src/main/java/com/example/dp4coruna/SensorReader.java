@@ -10,6 +10,7 @@ import android.media.MediaRecorder;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.*;
+import android.provider.MediaStore;
 import android.telephony.*;
 import android.util.Log;
 import android.view.Gravity;
@@ -20,6 +21,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Class that contains methods to obtain sensor data from device.
@@ -205,8 +208,9 @@ public class SensorReader implements SensorEventListener {
      */
     public double getSoundLevel(){
         this.setupSoundRecorder();
-        double soundLevel = this.sampleSound();
+        double soundLevel = this.sampleSoundLevel();
 
+        this.soundRecorder.release();
         this.soundRecorder = null;
 
         return soundLevel;
@@ -238,22 +242,44 @@ public class SensorReader implements SensorEventListener {
      * Will record sound levels for pre-determined period of time. Recorded sound's max amplitude will be stored as
      * part of the MediaRecorder object which then will be accessed and returned to calling method. Pre-determined
      * period of time will be the SOUND_SAMPLING_TIME class var which.
+     *
+     * Utilizes Blockingqueue to wait for sound to be recorded and sound level to be reported before allowing main thread
+     * to move on.
      */
-    private synchronized double sampleSound(){
-        //sound sampling will start at 1 second; soundrecorder will start then a timer will stop it after 1 second
-        SoundSamplingRunnable samplingTask = new SoundSamplingRunnable(this.soundRecorder,this.SOUND_SAMPLING_TIME,this.inheritedContext);
-        Thread samplingThread = new Thread(samplingTask);
-        samplingThread.start();
+    private double sampleSoundLevel(){
+        final MediaRecorder localRecorderReference = this.soundRecorder;
+        final BlockingQueue<Double> blkQ = new ArrayBlockingQueue<>(1);
+
+        //start the recorder and do dummy call
+        localRecorderReference.start();
+        localRecorderReference.getMaxAmplitude(); // dummy call to function because apparently first call always returns zero; actual call has to be second
+
+        //stops the recorder after time period from SOUND_SAMPLING_TIME. Uses Timer class to delay and then stop, this
+        //creates a new thread so need to use final vars -> async response
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                localRecorderReference.stop();
+                //Log.i("From timer",String.valueOf(localRecorderReference.getMaxAmplitude()));
+                try {
+                    blkQ.put((double)localRecorderReference.getMaxAmplitude());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        },this.SOUND_SAMPLING_TIME);
+
+        //block: wait for sound level to be available / wait for async response from timer
+        double soundLevelReceived = 0;
         try {
-            samplingThread.join();
+            soundLevelReceived = blkQ.take();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        Log.i(LOG_CAT_TAG,"message after sound sampling");
-
-        return this.soundRecorder.getMaxAmplitude();
+        return soundLevelReceived;
     }
+
 
     //get geo-magnetic fields:
     public double getGeoMagneticField(){
@@ -267,37 +293,3 @@ public class SensorReader implements SensorEventListener {
 
 }
 
-/**
- * Additional class in file and subclass of Runnable. Created to handle task of sampling sound by device.
- */
-class SoundSamplingRunnable implements Runnable{
-    private MediaRecorder recorder;
-    private long samplingDuration;
-    private Context inheritedContext;
-    private String LOG_FROM_RUNNABLE = "From Runnable";
-
-    public SoundSamplingRunnable(MediaRecorder recorder,long samplingDuration,Context inheritedContext){
-        this.recorder = recorder;
-        this.samplingDuration = samplingDuration;
-        this.inheritedContext = inheritedContext;
-    }
-
-    @Override
-    public void run() {
-        final MediaRecorder localRecorderVar = this.recorder;
-        final Context contextForTimer = this.inheritedContext;
-        localRecorderVar.start();
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                localRecorderVar.stop();
-                Log.i(LOG_FROM_RUNNABLE,"SOund level : " + String.valueOf(localRecorderVar.getMaxAmplitude()));
-                localRecorderVar.reset();
-                localRecorderVar.release();
-            }
-        }, this.samplingDuration);
-
-
-        Log.i(LOG_FROM_RUNNABLE,String.valueOf(localRecorderVar.getMaxAmplitude()));
-    }
-}
