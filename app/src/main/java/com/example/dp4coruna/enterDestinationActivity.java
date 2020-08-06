@@ -69,9 +69,32 @@ public class enterDestinationActivity extends AppCompatActivity {
     }
 
     public void showRoutes(View view) {
+        //save user input fields into bundle to send to showRoutesActivity
+        String originStreetAddress = originstreetaddress.getText().toString();
+        String originCity = origincity.getText().toString();
+        String originState = originstate.getText().toString();
+        String originZipcode = originzipcode.getText().toString();
+
+        String destinationStreetAddress = deststreetaddress.getText().toString();
+        String destinationCity = destcity.getText().toString();
+        String destinationState = deststate.getText().toString();
+        String destinationZipcode = destzipcode.getText().toString();
+
         Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, showRoutesActivity.class);
+        Intent intent = new Intent(this, MapsActivity.class);
         intent.putExtras(bundle);
+        intent.putExtra(originStreetAddress, originStreetAddress);
+        intent.putExtra(originCity, originCity);
+        intent.putExtra(originState, originState);
+        intent.putExtra(originZipcode, originZipcode);
+        intent.putExtra(destinationStreetAddress, destinationStreetAddress);
+        intent.putExtra(destinationCity, destinationCity);
+        intent.putExtra(destinationState, destinationState);
+        intent.putExtra(destinationZipcode, destinationZipcode);
+
+
+
+
         startActivity(intent);
     }
 
