@@ -22,4 +22,5 @@
     <string name="origin_state">State</string>
     <string name="origin_location_instruc">Origin Location:</string>
     <string name="show_safe_routes">Show Safe Routes</string>
+    <string name="title_activity_maps">Map</string>
 </resources>
