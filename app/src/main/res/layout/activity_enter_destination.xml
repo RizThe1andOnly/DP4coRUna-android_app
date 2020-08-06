@@ -79,7 +79,7 @@
 
         <EditText
             android:id="@+id/destcity"
-            android:layout_width="145"
+            android:layout_width="145dp"
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/city"
@@ -87,7 +87,7 @@
 
         <EditText
             android:id="@+id/deststate"
-            android:layout_width="102"
+            android:layout_width="102dp"
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/state"
@@ -95,7 +95,7 @@
 
         <EditText
             android:id="@+id/destzipcode"
-            android:layout_width="61"
+            android:layout_width="61dp"
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/zipcode"
