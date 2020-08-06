@@ -46,8 +46,9 @@ public class SensorReader implements SensorEventListener {
     private double lightLevel;
     private double geoMagenticValue;
     private double soundLevel;
-    private double cellTowerId;
-    private double localAreaCode;
+    private CellData currentCellData;
+    private double cellId;
+    private double areaCode;
     private double cellSignalStrength;
 
 
@@ -59,13 +60,26 @@ public class SensorReader implements SensorEventListener {
 
     //interaction with other classes:
 
+    /**
+     * Sets all sensor values by calling all the methods that obtain sensor
+     * data and sets the values to the proper attributes for the object instance.
+     */
     public void sense(){
         getWifiAccessPoints(this.inheritedContext,this.wifiApList);
         this.getLightLevel(this.inheritedContext);
         this.geoMagenticValue = this.getGeoMagneticField();
         this.soundLevel = this.sampleSoundLevel();
+        this.currentCellData = this.getCellInfoAtMoment(this.inheritedContext,null);
 
+        //just in case will set each individual element of cell data here as well
+        if(this.currentCellData != null){
+            this.cellId = (this.currentCellData).cellTowerId;
+            this.cellSignalStrength = (this.currentCellData).cellSignalStrength;
+            this.areaCode = (this.currentCellData).areaCode;
+        }
     }
+
+
 
     //end of interaction section
 
@@ -100,7 +114,7 @@ public class SensorReader implements SensorEventListener {
      * Gets the cell tower information at the time this method is called.
      * @param context current application context to access services related to obtaining cell tower info
      */
-    public void getCellInfoAtMoment(Context context, List<CellData> listToBePopulated){
+    public CellData getCellInfoAtMoment(Context context, List<CellData> listToBePopulated){
         if(listToBePopulated == null){
             listToBePopulated = new ArrayList<>();
         }
@@ -115,6 +129,9 @@ public class SensorReader implements SensorEventListener {
             }
         }
 
+        // !!! for now, need to research this more:
+        if(listToBePopulated.size() == 0) return null;
+        return listToBePopulated.get(0);
     }
 
     /**
@@ -125,28 +142,25 @@ public class SensorReader implements SensorEventListener {
      */
     private void getCellInfoFeatures(List<CellInfo> cellInfoList, List<CellData> listToBePopulated){
         for(CellInfo element : cellInfoList){
-            //String toBeLogged = "";
+            double signalStrength;
+            double lac, tac;
+            double cellId;
 
             if(element instanceof CellInfoGsm){
+                signalStrength = ((CellInfoGsm) element).getCellSignalStrength().getLevel();// !!! adjust unit
                 CellIdentityGsm gsmi = ((CellInfoGsm) element).getCellIdentity();
-                //toBeLogged = String.valueOf(gsmi.getLac());
-                //toBeLogged += " " + String.valueOf(((CellInfoGsm) element).getCellSignalStrength().getLevel());
-
-                // cellId = gsmi.getCid();//subject to change
-                // lac = gsmi.getLac();
-                // signalStrength = ((CellInfoGsm) element).getCellSignalStrength().getLevel(); //getLevel subject to change
+                lac = gsmi.getLac();
+                cellId = gsmi.getCid();
+                listToBePopulated.add(new CellData(signalStrength,cellId,lac,"Gsm"));
             }
             else if(element instanceof CellInfoLte){
+                signalStrength = ((CellInfoLte) element).getCellSignalStrength().getLevel();// !!! adjust unit
                 CellIdentityLte ltei = ((CellInfoLte) element).getCellIdentity();
-                //toBeLogged = String.valueOf(ltei.getTac());
-                //toBeLogged += " " + String.valueOf(((CellInfoLte) element).getCellSignalStrength().getLevel());
-
-                // cellId = ltei.getCi();//subject to change
-                // lac = ltei.getTac();
-                // signalStrength = ((CellInfoGsm) element).getCellSignalStrength().getLevel(); //getLevel subject to change
+                tac = ltei.getTac();
+                cellId = ltei.getCi();
+                listToBePopulated.add(new CellData(signalStrength,cellId,tac,"Lte"));
             }
 
-            //Log.i(LOG_CAT_TAG,toBeLogged);
         }
     }
 
