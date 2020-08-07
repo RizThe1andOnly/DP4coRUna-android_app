@@ -1,4 +1,4 @@
-package com.example.databasetest;
+package com.example.dp4coruna;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -6,8 +6,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.hardware.Sensor;
-import android.location.Location;
 import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
@@ -59,7 +57,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-    public boolean addData(LocationObject locationObject, SensorReader sr,Context context){
+    public boolean addData(LocationObject locationObject, SensorReader sr, Context context){
 
 
         SQLiteDatabase db = this.getWritableDatabase();
