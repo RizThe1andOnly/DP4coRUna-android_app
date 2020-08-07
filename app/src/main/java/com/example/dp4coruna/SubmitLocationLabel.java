@@ -40,6 +40,19 @@ public class SubmitLocationLabel extends AppCompatActivity {
 
         LocationGrabber lg = new LocationGrabber(this, this);
         lg.setupLocation();
+
+        /*
+        while (lg.addresses==null){
+            lg = new LocationGrabber(this, this);
+            lg.setupLocation();
+            try {
+                wait(99999999);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+         */
         List<Address>  addresses = lg.addresses;
 
         //connects UI components
