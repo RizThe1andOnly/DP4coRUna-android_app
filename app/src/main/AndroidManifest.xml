@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 
     <application
         android:allowBackup="true"
@@ -65,6 +66,14 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.dp4coruna.MainActivity" />
+        </activity>
+        <activity
+                android:name=".TempResultsActivity"
+                android:label="DP4coRUna"
+                android:theme="@style/AppTheme">
+                <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value="com.example.dp4coruna.TempResultsActivity"/>
         </activity>
     </application>
 

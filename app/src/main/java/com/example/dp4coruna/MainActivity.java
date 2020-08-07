@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int ACCESS_FINE_LOCATION_REQUEST_CODE = 101;
     private static final int RECORD_AUDIO_REQUEST_CODE = 102;
     private static final int WRITE_TO_EXTERNAL_STORAGE_CODE = 103;
+    private static final int ACCESS_WIFISTATE_REQUEST_CODE = 104;
 
     private FusedLocationProviderClient fusedLocationClient;
 
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
      *      - Access Location Fine
      *      - Record Audio -> for sound sampling
      *      - Write to external storage -> for sound sampling
+     *      - Access Wifi state
      */
     private void checkForPermissions(Context context){
         if(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
@@ -86,6 +88,13 @@ public class MainActivity extends AppCompatActivity {
                                                 WRITE_TO_EXTERNAL_STORAGE_CODE);
         }
 
+        if(ContextCompat.checkSelfPermission(context,Manifest.permission.ACCESS_WIFI_STATE)==
+                PackageManager.PERMISSION_DENIED){
+            ActivityCompat.requestPermissions(MainActivity.this,
+                                                new String[]{Manifest.permission.ACCESS_WIFI_STATE},
+                                                ACCESS_WIFISTATE_REQUEST_CODE);
+        }
+
     }
 
 
@@ -104,6 +113,13 @@ public class MainActivity extends AppCompatActivity {
     public void chooseSafeRoute(View view) {
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, enterDestinationActivity.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    public void goToTempResPage(View view){
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent(this,TempResultsActivity.class);
         intent.putExtras(bundle);
         startActivity(intent);
     }

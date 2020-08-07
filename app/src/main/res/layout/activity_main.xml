@@ -42,6 +42,14 @@
             android:onClick="chooseSafeRoute"
             android:text="@string/choose_safe_route" />
 
+        <Button
+                android:id="@+id/TempResultsPage"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_width="230dp"
+                android:layout_height="wrap_content"
+                android:onClick="goToTempResPage"
+                android:text="TempResults"/>
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

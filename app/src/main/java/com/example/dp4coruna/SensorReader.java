@@ -55,6 +55,7 @@ public class SensorReader implements SensorEventListener {
     public SensorReader(Activity inheritedActivity, Context inheritedContext){
         this.inheritedActivity = inheritedActivity;
         this.inheritedContext = inheritedContext;
+        this.wifiApList = new ArrayList<>();
     }
 
 
@@ -68,8 +69,9 @@ public class SensorReader implements SensorEventListener {
         getWifiAccessPoints(this.inheritedContext,this.wifiApList);
         this.getLightLevel(this.inheritedContext);
         this.geoMagenticValue = this.getGeoMagneticField();
-        this.soundLevel = this.sampleSoundLevel();
+        this.soundLevel = this.getSoundLevel();
         this.currentCellData = this.getCellInfoAtMoment(this.inheritedContext,null);
+        this.currentCellData = new CellData(0,0,0,"Not Found!");
 
         //just in case will set each individual element of cell data here as well
         if(this.currentCellData != null){
@@ -77,9 +79,22 @@ public class SensorReader implements SensorEventListener {
             this.cellSignalStrength = (this.currentCellData).cellSignalStrength;
             this.areaCode = (this.currentCellData).areaCode;
         }
+
+        if(this.currentCellData == null){
+            Log.i("From sense","non existent"); // !!!
+        }
     }
 
-
+    @Override
+    public String toString() {
+        return "Sensor Data{ \n" +
+                "   Light Level(unit): " + this.lightLevel + "\n" +
+                "   GeoMagneticField (nanoteslas): " + this.geoMagenticValue + "\n" +
+                "   Sound Level (): " + this.soundLevel + "\n"+
+                "   " + "\n" +
+                "   " + "\n" +
+                "}";
+    }
 
     //end of interaction section
 
@@ -100,6 +115,13 @@ public class SensorReader implements SensorEventListener {
         //create wifimanager object to get list of wifi access point
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         List<ScanResult> tempList = wifiManager.getScanResults();
+
+        if(tempList == null){
+            Log.i("From wifi ap","got null list from wifi manager"); //!!!
+        }
+        else{
+            Log.i("From wifi ap",tempList.toString());
+        }
 
         //populate provide list with wifi access point data (ssid,rssi)
         for(ScanResult element:tempList){
@@ -130,8 +152,7 @@ public class SensorReader implements SensorEventListener {
         }
 
         // !!! for now, need to research this more:
-        if(listToBePopulated.size() == 0) return null;
-        return listToBePopulated.get(0);
+        return new CellData(0,0,0,"not found");
     }
 
     /**
@@ -160,7 +181,7 @@ public class SensorReader implements SensorEventListener {
                 cellId = ltei.getCi();
                 listToBePopulated.add(new CellData(signalStrength,cellId,tac,"Lte"));
             }
-
+            Log.i("From SensorReader celldata",element.toString());
         }
     }
 

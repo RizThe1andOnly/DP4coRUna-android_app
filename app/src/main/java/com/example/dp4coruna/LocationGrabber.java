@@ -269,16 +269,19 @@ public class LocationGrabber {
         }
     }
 
-    /*
-    public LocationObject getLocationObject(Context context){
-        LocationObject locobj = new LocationObject(context);
-        locobj.StreetAddress = this.StreetAddress;
 
-        return locobj;
+    @Override
+    public String toString() {
+        return "LocationGrabber{\n" +
+                "     Address: "+ this.address + "\n" +
+                "     City: " + this.city +"\n" +
+                "     Country: " + this.country + "\n" +
+                "     ZipCode: " + this.zipcode + "\n" +
+                "     Latitude: " + String.valueOf(this.latitude) + "\n" +
+                "     Longitude: " + String.valueOf(this.longitude) + "\n" +
+                "     Altitude(meter): " + String.valueOf(this.altitude_inMeters) + "\n" +
+                "}";
     }
-    */
-
-
 }
 
 

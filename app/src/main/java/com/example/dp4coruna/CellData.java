@@ -15,4 +15,14 @@ public class CellData {
         this.areaCode = areaCode;
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return "CellData{ \n" +
+                "   Cell Id: " + this.cellTowerId + "\n" +
+                "   Area Code: " + this.areaCode + "\n" +
+                "   Cell Signal Strength: " + this.cellSignalStrength + "\n"+
+                "   Type: " + this.type + "\n" +
+                "}";
+    }
 }
