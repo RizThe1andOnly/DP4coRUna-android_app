@@ -1,7 +1,9 @@
 package com.example.databasetest;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.hardware.Sensor;
@@ -19,6 +21,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COL4 = "soundLevel";
     private static final String COL5 = "geomagneticLevel";
 
+
+    //GPS Location Strings:
+
+    private static final String COL6 = "streetAddress";
+    private static final String COL7 ="city";
+    private static final String COL8 = "state";
+    private static final String COL9 = "country";
+
+
+
     //EDIT:  Change these columns to be fields of the Location Object
 
     public DatabaseHelper(Context context){
@@ -30,7 +42,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        String createTable = "CREATE TABLE" + TABLE_NAME + " COL 1: " + COL1 + "COL 2: " + COL2, + "COL3: "+COL3,+"COL 4 "+COL4 + "COL5 "+COL5+"TEXT" ;
+        String hello = "hello";
+
+        String createTable ="create table TABLE_NAME (id INTEGER PRIMARY KEY, txt TEXT)";
+
 
         db.execSQL(createTable);
 
@@ -39,7 +54,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
 
-        db.execSQL("DROP IF TABLE EXISTS" + TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);
 
     }
@@ -56,6 +71,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String roomName = locationObject.roomName;
         String roomNumber = locationObject.roomNumber;
 
+        String city = locationObject.city;
+        String state = locationObject.state;
+
         //Adding sensor data fields into the database
         Double soundLevel = sr.getSoundLevel();
         Double geoMagneticLevel = sr.getGeoMagneticField();
@@ -68,6 +86,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(COL3,roomNumber);
         contentValues.put(COL4,soundLevel);
         contentValues.put(COL5,geoMagneticLevel);
+        contentValues.put(COL6,locationObject.city);
 
 
         //EDIT:  Adding location Objects to the database
@@ -93,6 +112,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             //Successfully added to the database
         }
+    }
+
+    @SuppressLint("Recycle")
+    public Cursor getListContents(){
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor data = db.rawQuery("SELECT * FROM "+ TABLE_NAME,null);
+
+        return data;
+
     }
 
 
