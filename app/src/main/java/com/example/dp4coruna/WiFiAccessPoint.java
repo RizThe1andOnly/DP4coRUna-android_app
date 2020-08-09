@@ -11,11 +11,13 @@ import java.util.List;
 public class WiFiAccessPoint {
    public String ssid;
    public double rssi;
+   public String bssid;
    private static final int NUMBER_OF_TABS = 1;
 
-   public WiFiAccessPoint(String ssid, double rssi){
+   public WiFiAccessPoint(String ssid, double rssi, String bssid){
        this.ssid = ssid;
        this.rssi = rssi;
+       this.bssid = bssid;
    }
 
     public double getRssi() {
@@ -26,6 +28,10 @@ public class WiFiAccessPoint {
         return this.ssid;
     }
 
+    public String getBssid() {
+        return this.bssid;
+    }
+
     public static String getListStringRepresent(List<WiFiAccessPoint> list){
        String stringRep = "Wifi AccessPoints: { \n";
        for(WiFiAccessPoint elem : list){
@@ -33,7 +39,7 @@ public class WiFiAccessPoint {
            for(int i=0;i<NUMBER_OF_TABS;i++){
                elemString += "\t";
            }
-           elemString += elem.getSsid() + " : " + String.valueOf(elem.getRssi());
+           elemString += elem.getSsid() + "\n\t" + elem.getBssid() + "\n\t" + String.valueOf(elem.getRssi()) + "\n---";
            elemString += "\n";
            stringRep += elemString;
        }

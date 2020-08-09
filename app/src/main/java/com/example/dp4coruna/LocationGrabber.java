@@ -1,30 +1,20 @@
 package com.example.dp4coruna;
 
-import android.Manifest;
+
 import android.app.Activity;
 import android.content.Context;
 
-import android.content.Intent;
 
-import android.content.pm.PackageManager;
-import android.hardware.Sensor;
 import android.os.*;
-import android.os.Process;
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.location.Geocoder;
 import android.location.Location;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.util.Log;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.Toast;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+
 import android.location.Address;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -32,30 +22,32 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Tasks;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
-import static android.widget.Toast.LENGTH_LONG;
 
 /**
- * Since currently we set the location features and store them in a sequential manner (get features -> store features)
- * we need rest of program stalled while collecting info. The location callbacks do not stall the rest of the program,
- * so when the features are requested the rest of the program executes after request and since data from this request
- * is required for the rest of the program there will be some problems. By creating a new thread and keeping the main
- * thread stalled these problems are resolved (maybe?).
+ * Uses Google Location and Tasks APIs to obtain "last known location" of the device.
+ * Data features collected in this class and accessible through instance of this class include:
+ *
+ *  - Physical Data:
+ *     - Latitude
+ *     - Longitude
+ *     - Altitude
+ *
+ *  - Mailing Data:
+ *     - Address
+ *     - City
+ *     - State
+ *     - Country
+ *     - ZipCode
  */
-
-
 public class LocationGrabber {
 
     public Context inheritedContext;
@@ -71,12 +63,12 @@ public class LocationGrabber {
 
     private double longitude;
     private double latitude;
-    public String address;
-    public String city;
-    public String state;
-    public String country;
-    public String zipcode;
-    public String knownFeatureName;
+    private String address;
+    private String city;
+    private String state;
+    private String country;
+    private String zipcode;
+    private String knownFeatureName;
     private double altitude_inMeters;
 
 
@@ -234,38 +226,30 @@ public class LocationGrabber {
 
 
         if ( (geocoder.isPresent()) && (location != null)) { //!!! changed condition to account for location object
-            // !!! changed the array elem arguments to global latitude and longitude
-            // !!! setting the global latitude and longitude vals:
+
             this.latitude = location.getLatitude();
             this.longitude = location.getLongitude();
             this.altitude_inMeters = location.getAltitude();
 
             this.addresses = geocoder.getFromLocation(this.latitude, this.longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
 
-            // !!! changed local vars to the global variables, got rid of the type declaration
             this.address = this.addresses.get(0).getAddressLine(0);
             this.city = this.addresses.get(0).getLocality();
             this.state = this.addresses.get(0).getAdminArea();
             this.country = this.addresses.get(0).getCountryName();
             this.zipcode = this.addresses.get(0).getPostalCode();
             this.knownFeatureName = this.addresses.get(0).getFeatureName();
-            // !!! added section for testing purposes:
-            String toastString = address;
-
-            Toast toast= Toast.makeText(this.inheritedContext,
-                    toastString, Toast.LENGTH_LONG);
-            toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
-            toast.show();
         }
+        else if( (!geocoder.isPresent()) || (location == null) ){
+            this.latitude = 0;
+            this.longitude = 0;
+            this.altitude_inMeters = 0;
+            this.addresses = null;
 
-        else if( (!geocoder.isPresent()) || (location == null) ){ //!!! changed condition to account for location obj
-            addresses = null;
-            //address = "";
-            //city = "";
-            //state = "";
-            //country = "";
-            //postalCode="";
-            //knownName="";
+            /**
+             * These assignments should be verified to see whether or not these should be the values set if
+             * getLastLocation() doesn't work. (!!!)
+             */
         }
     }
 

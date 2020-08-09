@@ -31,9 +31,7 @@ public class TempResultsActivity extends AppCompatActivity {
 
         dataView = findViewById(R.id.dataViewBox);
         sr = new SensorReader(TempResultsActivity.this,getApplicationContext());
-        sr.sense();
         lg = new LocationGrabber(getApplicationContext(),TempResultsActivity.this);
-        lg.setupLocation();
     }
 
 
@@ -43,11 +41,8 @@ public class TempResultsActivity extends AppCompatActivity {
      */
     public void onTriggerSamplingButtonPress(View view){
 
-//        SensorReader sr = new SensorReader(TempResultsActivity.this,getApplicationContext());
-//        sr.sense();
-//
-//        LocationGrabber lg = new LocationGrabber(getApplicationContext(),TempResultsActivity.this);
-//        lg.setupLocation();
+        sr.sense();
+        lg.setupLocation();
 
         String presentString = "Data Sampled: \n" +
                                 "   " + sr.toString() + "\n" +

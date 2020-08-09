@@ -9,11 +9,30 @@ public class CellData {
     public double areaCode;
     public String type;
 
+    public CellData(){}
+
     public CellData(double cellSignalStrength, double cellTowerId, double areaCode, String type){
         this.cellSignalStrength = cellSignalStrength;
         this.cellTowerId = cellTowerId;
         this.areaCode = areaCode;
         this.type = type;
+    }
+
+    public void setFields(double cellSignalStrength, double cellTowerId, double areaCode, String type){
+        this.cellSignalStrength = cellSignalStrength;
+        this.cellTowerId = cellTowerId;
+        this.areaCode = areaCode;
+        this.type = type;
+    }
+
+    public void copyDataOf(Object srcCellData){
+        if((!(srcCellData instanceof CellData))||(srcCellData == null)){
+            return;
+        }
+
+        CellData cellDataSrc = (CellData)srcCellData;
+
+        this.setFields(cellDataSrc.cellSignalStrength,cellDataSrc.cellTowerId,cellDataSrc.areaCode,cellDataSrc.type);
     }
 
     @Override

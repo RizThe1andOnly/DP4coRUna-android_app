@@ -56,6 +56,7 @@ public class SensorReader implements SensorEventListener {
         this.inheritedActivity = inheritedActivity;
         this.inheritedContext = inheritedContext;
         this.wifiApList = new ArrayList<>();
+        this.currentCellData = new CellData();
     }
 
 
@@ -70,8 +71,7 @@ public class SensorReader implements SensorEventListener {
         this.getLightLevel(this.inheritedContext);
         this.geoMagenticValue = this.getGeoMagneticField();
         this.soundLevel = this.getSoundLevel();
-        this.currentCellData = this.getCellInfoAtMoment(this.inheritedContext,null);
-        this.currentCellData = new CellData(0,0,0,"Not Found!");
+        this.getCellInfoAtMoment(this.inheritedContext,null,this.currentCellData);
 
         //just in case will set each individual element of cell data here as well
         if(this.currentCellData != null){
@@ -80,9 +80,6 @@ public class SensorReader implements SensorEventListener {
             this.areaCode = (this.currentCellData).areaCode;
         }
 
-        if(this.currentCellData == null){
-            Log.i("From sense","non existent"); // !!!
-        }
     }
 
     @Override
@@ -91,8 +88,8 @@ public class SensorReader implements SensorEventListener {
                 "   Light Level(unit): " + this.lightLevel + "\n" +
                 "   GeoMagneticField (nanoteslas): " + this.geoMagenticValue + "\n" +
                 "   Sound Level (): " + this.soundLevel + "\n"+
-                "   " + "\n" +
-                "   " + "\n" +
+                "   " + this.currentCellData.toString() + "\n" +
+                "   " + WiFiAccessPoint.getListStringRepresent(this.wifiApList)+ "\n" +
                 "}";
     }
 
@@ -125,7 +122,7 @@ public class SensorReader implements SensorEventListener {
 
         //populate provide list with wifi access point data (ssid,rssi)
         for(ScanResult element:tempList){
-            listToBePopulated.add(new WiFiAccessPoint(element.SSID,element.level));
+            listToBePopulated.add(new WiFiAccessPoint(element.SSID,element.level,element.BSSID));
         }
     }
 
@@ -136,7 +133,7 @@ public class SensorReader implements SensorEventListener {
      * Gets the cell tower information at the time this method is called.
      * @param context current application context to access services related to obtaining cell tower info
      */
-    public CellData getCellInfoAtMoment(Context context, List<CellData> listToBePopulated){
+    public void getCellInfoAtMoment(Context context, List<CellData> listToBePopulated, CellData primaryCellDataObject){
         if(listToBePopulated == null){
             listToBePopulated = new ArrayList<>();
         }
@@ -151,8 +148,10 @@ public class SensorReader implements SensorEventListener {
             }
         }
 
+
         // !!! for now, need to research this more:
-        return new CellData(0,0,0,"not found");
+        CellData firstSelection = listToBePopulated.get(0);
+        primaryCellDataObject.copyDataOf(firstSelection);
     }
 
     /**
@@ -162,6 +161,7 @@ public class SensorReader implements SensorEventListener {
      * @param cellInfoList list of CellInfo objects that contain data regarding cell tower
      */
     private void getCellInfoFeatures(List<CellInfo> cellInfoList, List<CellData> listToBePopulated){
+
         for(CellInfo element : cellInfoList){
             double signalStrength;
             double lac, tac;
@@ -181,16 +181,16 @@ public class SensorReader implements SensorEventListener {
                 cellId = ltei.getCi();
                 listToBePopulated.add(new CellData(signalStrength,cellId,tac,"Lte"));
             }
-            Log.i("From SensorReader celldata",element.toString());
         }
     }
 
 
-    //sense light here:
+    //sense light here (Async Task !!!) :
     /**
      * Will get light level when called. Creates a new thread and waits for said thread to
      * obtain sensor readings, since sensors report data in async manner. Will call helper "obtainSensorReadings"
      * to complete task.
+     *
      * @param context current context of the application to access the sensor services
      */
     public void getLightLevel(Context context){
@@ -255,7 +255,8 @@ public class SensorReader implements SensorEventListener {
     //end of light sensing
 
 
-    //sound recording and sound level reporting section:
+
+    //sound recording and sound level reporting section (Async Task !!!) :
 
     /**
      * Returns the maximum sound amplitude measured by device mic during sampling.
@@ -274,13 +275,16 @@ public class SensorReader implements SensorEventListener {
     /**
      * Creates new MediaRecorder object and call all the necessary functions to adjust settings and prepare
      * recorder to record, then sets new object to class variable "soundRecorder" so it is accessible.
+     *
+     * These instructions are from Android MediaRecorder package that are required to set the audio recorder to the
+     * proper state. Android MediaRecorder behaves like state machine. To carry out certain functions like
+     * recording sound the recorder has to be in the particular state for the task.
      */
     private void setupSoundRecorder(){
         MediaRecorder recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        //recorder.setOutputFile("/dev/null");
-        recorder.setOutputFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/recorderStore.3gp");
+        recorder.setOutputFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/recorderStore.3gp");//creates a file to store audio values (required)
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
         try {
@@ -338,7 +342,8 @@ public class SensorReader implements SensorEventListener {
     //end of sound sensing
 
 
-    //get geo-magnetic fields:
+
+    //get geo-magnetic fields (Async Task !!! : Async due to requiring Location data):
 
     /**
      * Obtains the geomagneticfield strength in nanoteslas
