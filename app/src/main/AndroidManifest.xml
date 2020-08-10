@@ -34,7 +34,7 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".MapsActivity"
+            android:name=".mapmanagement.MapsActivity"
             android:label="@string/title_activity_maps"></activity>
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -44,7 +44,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SubmitLocationLabel"
+            android:name=".location.SubmitLocationLabel"
             android:label="@string/app_name"
             android:theme="@style/AppTheme">
             <meta-data
@@ -52,7 +52,7 @@
                 android:value="com.example.dp4coruna.MainActivity" />
         </activity>
         <activity
-            android:name=".enterDestinationActivity"
+            android:name=".mapmanagement.enterDestinationActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme">
             <meta-data
@@ -60,7 +60,7 @@
                 android:value="com.example.dp4coruna.MainActivity" />
         </activity>
         <activity
-            android:name=".showRoutesActivity"
+            android:name=".mapmanagement.showRoutesActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme">
             <meta-data

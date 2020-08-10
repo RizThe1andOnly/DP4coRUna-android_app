@@ -1,4 +1,4 @@
-package com.example.dp4coruna;
+package com.example.dp4coruna.location;
 
 import java.util.List;
 
