@@ -42,11 +42,6 @@ public class enterDestinationActivity extends AppCompatActivity {
         deststate = findViewById(R.id.deststate);
         destzipcode = findViewById(R.id.destzipcode);
 
-        // (!!!) instead of creating a Location Grabber object create a Location object and access data from there
-        //LocationGrabber lg = new LocationGrabber(this, this);
-        //lg.setupLocation();
-        //List<Address> addresses = null; //(!!! needs to be fixed)
-
         LocationObject lo = new LocationObject(this, this);
         lo.setupLocation();
         List<Address> addresses = lo.getListOfAddresses();
@@ -54,20 +49,15 @@ public class enterDestinationActivity extends AppCompatActivity {
         if (addresses != null) {
             if (addresses.get(0).getSubThoroughfare() != null && addresses.get(0).getThoroughfare() != null) {
                 originstreetaddress.setText(addresses.get(0).getSubThoroughfare() + " " + addresses.get(0).getThoroughfare());
-                //streetaddress.setText(addresses.get(0).getSubThoroughfare() + " " + addresses.get(0).getThoroughfare());
-                // show = (addresses.get(0).getSubThoroughfare() + " " + addresses.get(0).getThoroughfare()+ '\n');
             }
             if (addresses.get(0).getLocality() != null) {
                 origincity.setText(addresses.get(0).getLocality());
-                //show = show + addresses.get(0).getLocality() + ", ";
             }
             if (addresses.get(0).getAdminArea() != null) {
                 originstate.setText(addresses.get(0).getAdminArea());
-                // show = show + addresses.get(0).getAdminArea() + " ";
             }
             if (addresses.get(0).getPostalCode() != null) {
                 originzipcode.setText(addresses.get(0).getPostalCode());
-                //show = show + addresses.get(0).getPostalCode();
             }
 
 

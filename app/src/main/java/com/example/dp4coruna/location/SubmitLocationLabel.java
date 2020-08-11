@@ -15,7 +15,7 @@ import com.example.dp4coruna.location.LocationGrabber;
 import java.util.List;
 
 public class SubmitLocationLabel extends AppCompatActivity {
-    
+
     TextView latlong;
     TextView addresscurrent;
 
@@ -29,18 +29,17 @@ public class SubmitLocationLabel extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         //List<Address>  addresses = bundle.getParcelableArrayList("addresses");
 
-        LocationGrabber lg = new LocationGrabber(this, this);
-        lg.setupLocation();
-
-        List<Address>  addresses = lg.addresses;
+        //create LocationObject and parse data to obtain street address etc for UI
+        LocationObject lo = new LocationObject(this, this);
+        lo.setupLocation();
+        List<Address> addresses = lo.getListOfAddresses();
 
         //connects UI components
-                latlong = findViewById(R.id.latlong);
+        latlong = findViewById(R.id.latlong);
         buildingname = findViewById(R.id.buildingname);
         roomname = findViewById(R.id.roomname);
         roomnumber = findViewById(R.id.roomnumber);
-    addresscurrent = findViewById(R.id.addresscurrent);
-
+        addresscurrent = findViewById(R.id.addresscurrent);
 
         String show = "";
         //On create, populate text fields with location data
@@ -68,7 +67,7 @@ public class SubmitLocationLabel extends AppCompatActivity {
                 show = show + '\n' + addresses.get(0).getCountryName();
             }
             addresscurrent.setText(show);
-            //(!!!)latlong.setText("Latitude: " + lg.getLatitude() + "\nLongitude: " + lg.getLongitude());
+            latlong.setText("Latitude: " + lo.getLatitude() + "\nLongitude: " + lo.getLongitude());
 
 
         }
@@ -80,7 +79,7 @@ public class SubmitLocationLabel extends AppCompatActivity {
      */
     public void submitButtonPressed(View view){
 
-        //This is only needed if we allow user to alter their address
+        //This is only needed if we allow user to alter their current address
         /*
         String StreetAddress = streetAddress.getText().toString();
         String City = city.getText().toString();
@@ -96,14 +95,15 @@ public class SubmitLocationLabel extends AppCompatActivity {
 
 
         //Store GPS and UI data in LocationObject
-        //(!!!)LocationObject lo = LocationObject.getLocationObjectWithLocationData(this,this);
-        //(!!!)lo.setBuildingName(buildingName);
-        //(!!!)lo.setRoomName(roomName);
-        //(!!!)lo.setRoomNumber(roomNumber);
+        LocationObject lo = new LocationObject(this, this);
+        lo.setupLocation();
+
+        lo.setBuildingName(buildingName);
+        lo.setRoomName(roomName);
+        lo.setRoomNumber(roomNumber);
 
         //will need to add sensor information to this location object
-        //then send to databasehelper to parse and insert into DB
-
+        //then call methods in DatabaseHelper to parse and insert into DB
 
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, MainActivity.class);
