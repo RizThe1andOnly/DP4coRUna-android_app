@@ -15,22 +15,13 @@ import com.example.dp4coruna.location.LocationGrabber;
 import java.util.List;
 
 public class SubmitLocationLabel extends AppCompatActivity {
-
-    TextView currentaddress;
-    //TextView streetaddress;
-    TextView city;
-    TextView state;
-    TextView zipcode;
-    TextView country;
+    
     TextView latlong;
-    TextView z;
-    TextView ca;
     TextView addresscurrent;
 
     EditText buildingname;
     EditText roomname;
     EditText roomnumber;
-
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,23 +32,9 @@ public class SubmitLocationLabel extends AppCompatActivity {
         LocationGrabber lg = new LocationGrabber(this, this);
         lg.setupLocation();
 
-        /*
-        while (lg.addresses==null){
-            lg = new LocationGrabber(this, this);
-            lg.setupLocation();
-            try {
-                wait(99999999);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-         */
         List<Address>  addresses = lg.addresses;
 
         //connects UI components
-      //  z = findViewById(R.id.curraddress);
-        //ca = findViewById(R.id.ca);
                 latlong = findViewById(R.id.latlong);
         buildingname = findViewById(R.id.buildingname);
         roomname = findViewById(R.id.roomname);

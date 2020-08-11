@@ -2,14 +2,20 @@ package com.example.dp4coruna.mapmanagement;
 
 import androidx.fragment.app.FragmentActivity;
 
+import android.location.Address;
 import android.os.Bundle;
 
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.location.LocationGrabber;
+import com.example.dp4coruna.location.LocationObject;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -39,21 +45,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        //LocationObject lo = LocationObject.getLocationObjectWithLocationData(this,this);
-        //lo.setup();
-        LocationGrabber lo = new LocationGrabber(this, this);
+        LocationObject lo = new LocationObject(this, this);
         lo.setupLocation();
+        List<Address> addresses = lo.getListOfAddresses();
 
-        //double latitude = lo.getLatitude();
-        //double longitude = lo.getLongitude();
+        double latitude = lo.getLatitude();
+        double longitude = lo.getLongitude();
 
-        // Add a marker in Sydney and move the camera
-        //LatLng currentlocation = new LatLng(latitude, longitude);
-        LatLng sydney = new LatLng(-34, 151);
-        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker at Current Location"));
-        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
-        //mMap.addMarker(new MarkerOptions().position(currentlocation).title("Marker at Current Location"));
-        //mMap.moveCamera(CameraUpdateFactory.newLatLng(currentlocation));
+        // Add a marker at the current location and move the camera
+        LatLng currentlocation = new LatLng(latitude, longitude);
+        mMap.addMarker(new MarkerOptions().position(currentlocation).title("Marker at Current Location"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentlocation));
     }
 }

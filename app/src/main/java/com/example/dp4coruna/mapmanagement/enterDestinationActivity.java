@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.location.LocationGrabber;
+import com.example.dp4coruna.location.LocationObject;
 
 import java.util.List;
 
@@ -42,9 +43,13 @@ public class enterDestinationActivity extends AppCompatActivity {
         destzipcode = findViewById(R.id.destzipcode);
 
         // (!!!) instead of creating a Location Grabber object create a Location object and access data from there
-        LocationGrabber lg = new LocationGrabber(this, this);
-        lg.setupLocation();
-        List<Address> addresses = null; //(!!! needs to be fixed)
+        //LocationGrabber lg = new LocationGrabber(this, this);
+        //lg.setupLocation();
+        //List<Address> addresses = null; //(!!! needs to be fixed)
+
+        LocationObject lo = new LocationObject(this, this);
+        lo.setupLocation();
+        List<Address> addresses = lo.getListOfAddresses();
 
         if (addresses != null) {
             if (addresses.get(0).getSubThoroughfare() != null && addresses.get(0).getThoroughfare() != null) {
