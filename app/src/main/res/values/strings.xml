@@ -23,6 +23,6 @@
     <string name="origin_location_instruc">Origin Location:</string>
     <string name="show_safe_routes">Show Safe Routes</string>
     <string name="title_activity_maps">Map</string>
-    <string name="ReportPositiveTestPrompt">Would you like to report a positive COVID-19 test? Clicking "I am COVID-19 Positive" will alert anyone who has been in the same locations you have been in, in the last 14 days, to get tested. Your identitfy will remain anonymous.</string>
+    <string name="ReportPositiveTestPrompt">Would you like to report a positive COVID-19 test? Clicking \'I am COVID-19 Positive\' will alert anyone who has been in the same locations you have been in, in the last 14 days, to get tested. Your identity will remain anonymous.</string>
     <string name="covidpositivebutton">I am COVID-19 positive</string>
 </resources>
