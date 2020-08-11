@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="45dp" />
+
+    <TextView
+        android:id="@+id/ReportPositiveTestPrompt"
+        android:layout_width="319dp"
+        android:layout_height="wrap_content"
+        android:text="@string/ReportPositiveTestPrompt" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="28dp" />
+
+    <Button
+        android:id="@+id/covidpostitivebutton"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="203dp"
+        android:layout_height="wrap_content"
+        android:onClick="covidPositiveButtonPressed"
+        android:text="@string/covidpositivebutton" />
+
+    <Button
+        android:id="@+id/cancelbutton"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="203dp"
+        android:layout_height="wrap_content"
+        android:onClick="cancelButtonPressed"
+        android:text="@android:string/cancel" />
+</LinearLayout>

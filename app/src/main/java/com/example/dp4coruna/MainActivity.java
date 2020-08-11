@@ -103,4 +103,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void reportPositiveTest(View view){
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent(this,reportPositiveTestActivity.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
 }

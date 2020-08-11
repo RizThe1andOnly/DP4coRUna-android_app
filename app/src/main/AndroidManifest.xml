@@ -75,6 +75,15 @@
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="com.example.dp4coruna.TempResultsActivity"/>
         </activity>
+
+        <activity
+            android:name=".reportPositiveTestActivity"
+            android:label="DP4coRUna"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.dp4coruna.reportPositiveTestActivity"/>
+        </activity>
     </application>
 
 </manifest>
