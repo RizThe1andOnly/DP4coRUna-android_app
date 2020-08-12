@@ -122,6 +122,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         Cursor data = db.rawQuery("SELECT * FROM "+ TABLE_NAME,null);
 
+
         return data;
 
     }
