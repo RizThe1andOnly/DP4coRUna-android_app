@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.location.Address;
 
+import com.google.gson.Gson;
+
 import java.util.List;
 
 
@@ -18,7 +20,7 @@ import java.util.List;
 public class LocationObject extends SensorReader {
     public String locationLabel;
 
-    protected String knownFeatureName; //from address, ie "Brooklyn Bridge"
+    //protected String knownFeatureName; //from address, ie "Brooklyn Bridge"
 
     //location attributes from UI
     protected String buildingName;
@@ -161,6 +163,18 @@ public class LocationObject extends SensorReader {
         return this.knownFeatureName;
     }
 
+    public String getBuildingName(){
+        return this.buildingName;
+    }
+
+    public String getRoomName(){
+        return this.roomName;
+    }
+
+    public String getRoomNumber(){
+        return this.roomNumber;
+    }
+
     /**
      * Returns the list of wifi access points found with scan.
      * Each element a WiFiAccessPoint object has content:
@@ -260,5 +274,12 @@ public class LocationObject extends SensorReader {
     public Object getLocationField(String request){
         return 0;
     }
+
+    public String convertLocationToJSON(){
+        Gson gson = new Gson();
+        String json = gson.toJson(new LocationObjectData(this));
+        return json;
+    }
+
 }
 

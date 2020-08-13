@@ -3,6 +3,7 @@ package com.example.dp4coruna.location;
 import android.content.Intent;
 import android.location.Address;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -11,6 +12,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.MainActivity;
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.location.LocationGrabber;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import java.util.List;
 
@@ -32,6 +37,7 @@ public class SubmitLocationLabel extends AppCompatActivity {
         //create LocationObject and parse data to obtain street address etc for UI
         LocationObject lo = new LocationObject(this, this);
         lo.setupLocation();
+        //lo.updateLocationData();
         List<Address> addresses = lo.getListOfAddresses();
 
         //connects UI components
@@ -96,14 +102,31 @@ public class SubmitLocationLabel extends AppCompatActivity {
 
         //Store GPS and UI data in LocationObject
         LocationObject lo = new LocationObject(this, this);
-        lo.setupLocation();
+        //lo.setupLocation();
+        lo.updateLocationData();
+
 
         lo.setBuildingName(buildingName);
         lo.setRoomName(roomName);
         lo.setRoomNumber(roomNumber);
 
-        //will need to add sensor information to this location object
-        //then call methods in DatabaseHelper to parse and insert into DB
+        //this location object now has all fields for location and sensor data filled
+        //will need to call methods from DatabaseHelper to parse and insert into DB
+
+        //testing - convert object to JSON
+        String JSONstring = lo.convertLocationToJSON();
+        Log.d("JSON", JSONstring);
+
+        //testing - convert from JSON back to LocationObjectData
+        LocationObjectData data = LocationObjectData.convertJSONToLocationObjectData(JSONstring);
+        Log.d("JSON", data.getAddress());
+
+        //better printing
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        JsonParser jp = new JsonParser();
+        JsonElement je = jp.parse(JSONstring);
+        String easyReadJSONString = gson.toJson(je);
+        Log.d("JSON", easyReadJSONString);
 
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, MainActivity.class);
