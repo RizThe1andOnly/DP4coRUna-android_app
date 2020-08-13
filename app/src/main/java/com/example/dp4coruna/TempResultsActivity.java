@@ -1,11 +1,13 @@
 package com.example.dp4coruna;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.ml.MLModel;
 
 
 public class TempResultsActivity extends AppCompatActivity {
@@ -21,8 +23,8 @@ public class TempResultsActivity extends AppCompatActivity {
 
         //this.checkForPermissions(getApplicationContext());
 
-        dataView = findViewById(R.id.dataViewBox);
-        lo = new LocationObject(TempResultsActivity.this,getApplicationContext());
+//        dataView = findViewById(R.id.dataViewBox);
+//        lo = new LocationObject(TempResultsActivity.this,getApplicationContext());
     }
 
 
@@ -31,7 +33,20 @@ public class TempResultsActivity extends AppCompatActivity {
      * @param view triggerSampleButton
      */
     public void onTriggerSamplingButtonPress(View view){
-        lo.updateLocationData();
-        dataView.append(lo.toString() + "\n");
+//        lo.updateLocationData();
+//        dataView.append(lo.toString() + "\n");
+
+        final MLModel mm = new MLModel();
+        mm.obtainDataSet(TempResultsActivity.this);
+
+        Thread thr = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mm.createMlModel();
+                Log.i("ReportParams",mm.mln.params().toStringFull());
+            }
+        },"mltestthread");
+        thr.start();
+
     }
 }

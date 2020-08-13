@@ -23,6 +23,13 @@ android {
 
 }
 
+android {
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -35,16 +42,16 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:17.0.0'
     implementation 'com.google.code.gson:gson:2.8.5'
 
-    implementation (group: 'org.deeplearning4j', name: 'deeplearning4j-core', version: '1.0.0-beta7') {
+    implementation (group: 'org.deeplearning4j', name: 'deeplearning4j-core', version: '1.0.0-beta6') {
         exclude group: 'org.bytedeco', module: 'opencv-platform'
         exclude group: 'org.bytedeco', module: 'leptonica-platform'
         exclude group: 'org.bytedeco', module: 'hdf5-platform'
     }
-    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7'
-    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7', classifier: "android-arm"
-    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7', classifier: "android-arm64"
-    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7', classifier: "android-x86"
-    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7', classifier: "android-x86_64"
+    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta6'
+    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta6', classifier: "android-arm"
+    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta6', classifier: "android-arm64"
+    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta6', classifier: "android-x86"
+    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta6', classifier: "android-x86_64"
     implementation group: 'org.bytedeco', name: 'openblas', version: '0.3.9-1.5.3'
     implementation group: 'org.bytedeco', name: 'openblas', version: '0.3.9-1.5.3', classifier: "android-arm"
     implementation group: 'org.bytedeco', name: 'openblas', version: '0.3.9-1.5.3', classifier: "android-arm64"
@@ -60,4 +67,6 @@ dependencies {
     implementation group: 'org.bytedeco', name: 'leptonica', version: '1.79.0-1.5.3', classifier: "android-arm64"
     implementation group: 'org.bytedeco', name: 'leptonica', version: '1.79.0-1.5.3', classifier: "android-x86"
     implementation group: 'org.bytedeco', name: 'leptonica', version: '1.79.0-1.5.3', classifier: "android-x86_64"
+
+    implementation 'com.opencsv:opencsv:5.2'
 }

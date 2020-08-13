@@ -1,34 +1,28 @@
 package com.example.dp4coruna.ml;
 
+import android.app.Activity;
 import android.util.Log;
-<<<<<<< HEAD
-import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
-import org.nd4j.common.io.ClassPathResource;
 
-
-
-
-import java.io.IOException;
-
-public class MLModel {
-=======
-import org.datavec.api.records.reader.RecordReader;
-import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
-import org.datavec.api.split.FileSplit;
-import org.datavec.api.writable.Writable;
-import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
+import com.example.dp4coruna.R;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.activations.Activation;
-import org.nd4j.linalg.dataset.api.DataSet;
-import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
-import org.nd4j.linalg.io.ClassPathResource;
+//import org.nd4j.linalg.dataset.api.DataSet;
+import org.nd4j.linalg.dataset.DataSet;
+
 import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.cpu.nativecpu.NDArray;
+
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -44,67 +38,109 @@ import java.util.List;
 public class MLModel {
 
     //constants:
-    private final int NUMBER_OF_FEATURES = 6;
+    private final int NUMBER_OF_FEATURES = 7;
 
     //call vars:
     public MultiLayerNetwork mln;
     private DataSet trainingData;
+    private NDArray obtainedDataset;
+    private float[][] obtainedDataValues;
+
 
     /**
      * (!!!) Constructor will be updated later.
      */
->>>>>>> 7e975221405df060b82451c1e02e2a62182d2eab
     public MLModel(){
 
     }
 
     /**
-<<<<<<< HEAD
      * Will read provided data (from csv for now) and format it to be used by machine learning model
      */
-    public void obtainDataSet(){
-        int linesToSkip = 1;
-        char delimiter = ',';
-        String log_tag = "FromObtainData"; //(!!!)
+    public void obtainDataSet(Activity activity){
+        CSVReader cr = new CSVReader(new InputStreamReader(activity.getResources().openRawResource(R.raw.dl4jsampledata)));
+        List<List<String>> dataString = new ArrayList<>();
 
-        Log.i(log_tag,"Got here at leaste");
-        RecordReader rr = new CSVRecordReader(linesToSkip,delimiter);
-
+        int k = 0;
         try {
-            rr.initialize(new FileSplit(new ClassPathResource("dl4jsampledata.csv").getFile()));
+            cr.readNext(); //read first line of titles for data
+
+            String[] rowString;
+            while((rowString = cr.readNext())!=null){
+                k++;
+                List<String> tempStringList = new ArrayList<>();
+                for(int i=1;i< rowString.length;i++){ //(!!!) i=1 for start because we don't want the id and want to start at "label" column
+                    tempStringList.add(rowString[i]);
+                }
+                dataString.add(tempStringList);
+            }
+
         } catch (IOException e) {
-            Log.i(log_tag,"IO exception");
+            Log.i("FromObtainData","Problem reading");
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            Log.i(log_tag,"InterruptException");
+        } catch (CsvValidationException e) {
+            Log.i("FromObtainData","Problem reading csv");
             e.printStackTrace();
         }
 
-        DataSetIterator dsi = new RecordReaderDataSetIterator.Builder(rr,5).regression(0,2).build(); //working on it
-        DataSet ds = dsi.next();
-        INDArray ia = ds.getFeatures();
-        Log.i(log_tag,String.valueOf(ia.length()));
+        float[][] dataMatrix = generateFloatMatrix(dataString);
+
+        //separate dataMatrix into labels and features:
+        float[][] featuresMatrix = new float[dataMatrix.length][NUMBER_OF_FEATURES-1];
+        for(int i=0;i< dataMatrix.length;i++){
+            for(int j=0;j<NUMBER_OF_FEATURES-1;j++){
+                featuresMatrix[i][j] = dataMatrix[i][j+1];
+            }
+        }
+        float[] labelArray = new float[dataMatrix.length];
+        for(int i=0;i< dataMatrix.length;i++){
+            labelArray[i] = dataMatrix[i][0];
+        }
+
+        this.trainingData = new DataSet(new NDArray(labelArray),new NDArray(featuresMatrix));
+
     }
 
 
-=======
-     * Goal for 8/12/2020 11:48 AM - ? : Build and train softmax model and be able to get probabilities for input with random data
-     * Specific Tasks:
-     *  - Create method(s) to create the model and specify its properties and parameters. This method should also train
-     *    model with given data.
-     *
-     *  - Create method(s) to read data from sql database and format it for use by above task.
-     *
+    /**
+     * Convert matrix of string data into a matrix of float data
+     * @param stringData
+     * @return float[][]
      */
+    private float[][] generateFloatMatrix(List<List<String>> stringData){
+        int numberOfSamples = stringData.size();
+
+        float[][] matrix = new float[numberOfSamples][NUMBER_OF_FEATURES];
+
+        for(int i=0;i<numberOfSamples;i++){
+            List<String> sampleRow = stringData.get(i);
+            for(int j=0;j<NUMBER_OF_FEATURES;j++){
+                matrix[i][j] = Float.parseFloat(sampleRow.get(j));
+            }
+        }
+
+        return matrix;
+    }
+
+    /**
+     * Will convert provided string into a sample/row that can be added to Dataset to be processed by
+     * machine learning model.
+     *
+     * @param rowString features for a single sample in string format
+     */
+    private void createRow(String[] rowString){
+
+    }
+
 
     /**
      * Will create and adjust a multinomial logistic regression (softmax) model.
      */
-    private void createMlModel(){
+    public void createMlModel(){
         //vars to be used in model adjustments:
         long seed = (new Date().getTime());
         double learningRate = 0.1;
-        int numberOfEpochs = 10;
+        int numberOfEpochs = 3;
 
         //create model configurations then initialize model with configuration:
         MultiLayerConfiguration config = new NeuralNetConfiguration.Builder()
@@ -123,7 +159,7 @@ public class MLModel {
          * Fit model to data below.
          *
          * Note(s): (!!!)
-         *  - Don't know what proper number for epochs should be so will use 10 for now
+         *  - Don't know what proper number for epochs should be so will use 3 for now
          */
         for(int i=0;i<numberOfEpochs;i++){
             this.mln.fit(this.trainingData);
@@ -131,27 +167,5 @@ public class MLModel {
     }
 
 
-    /**
-     * Will read provided data (from csv for now) and format it to be used by machine learning model
-     */
-    public void obtainDataSet(){
-        int linesToSkip = 0;
-        char delimiter = ',';
-        String log_tag = "FromObtainData"; //(!!!)
 
-        RecordReader rr = new CSVRecordReader(linesToSkip,delimiter);
-        try {
-            rr.initialize(new FileSplit(new ClassPathResource("dl4jsampledata.csv").getFile()));
-        } catch (IOException e) {
-            Log.e(log_tag,"IO exception");
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            Log.e(log_tag,"InterruptException");
-            e.printStackTrace();
-        }
-
-        //DataSetIterator dsi = new RecordReaderDataSetIterator.Builder(rr,5).regression().build(); //working on it
-    }
-
->>>>>>> 7e975221405df060b82451c1e02e2a62182d2eab
 }
