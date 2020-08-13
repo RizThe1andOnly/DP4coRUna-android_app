@@ -15,7 +15,8 @@ public class LocationObjectData {
     private List<Address> addresses;
     private double longitude;
     private double latitude;
-    private String address;
+    private String address; //full address including city, state zip
+    private String streetaddress; //ex. 32 Cherry Way
     private String city;
     private String state;
     private String country;
@@ -39,7 +40,7 @@ public class LocationObjectData {
 
     public LocationObjectData(LocationObject locobj){
         this.addresses = locobj.getListOfAddresses();
-        this.longitude = locobj.getLatitude();
+        this.longitude = locobj.getLongitude();
         this.latitude = locobj.getLatitude();
         this.address = locobj.getAddress();
         this.city = locobj.getCity();
@@ -59,6 +60,7 @@ public class LocationObjectData {
         this.buildingName = locobj.getBuildingName();
         this.roomName = locobj.getRoomName();
         this.roomNumber = locobj.getRoomNumber();
+        this.streetaddress = locobj.getStreetAddress();
     }
 
     public List<Address> getAddresses() {
@@ -75,6 +77,10 @@ public class LocationObjectData {
 
     public String getAddress() {
         return this.address;
+    }
+
+    public String getStreetAddress() {
+        return this.streetaddress;
     }
 
     public String getCity() {
@@ -133,8 +139,39 @@ public class LocationObjectData {
         return this.cellSignalStrength;
     }
 
+    public String getBuildingName(){
+        return this.buildingName;
+    }
+
+    public String getRoomName(){
+        return this.roomName;
+    }
+
+    public String getRoomNumber(){
+        return this.roomNumber;
+    }
+
+    public void setBuildingName(String buildingName){
+        this.buildingName = buildingName;
+    }
+
+    public void setRoomName(String roomName){
+        this.roomName = roomName;
+    }
+
+    public void setRoomNumber(String roomNumber){
+        this.roomNumber = roomNumber;
+    }
+
+
     public static LocationObjectData convertJSONToLocationObjectData(String JSONString){
         LocationObjectData data = new Gson().fromJson(JSONString, LocationObjectData.class);
         return data;
+    }
+
+    public String convertLocationObjectDataToJSON(){
+        Gson gson = new Gson();
+        String json = gson.toJson(this);
+        return json;
     }
 }

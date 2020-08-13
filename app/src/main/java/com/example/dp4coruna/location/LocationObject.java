@@ -175,6 +175,9 @@ public class LocationObject extends SensorReader {
         return this.roomNumber;
     }
 
+    public String getStreetAddress(){
+        return this.streetaddress;
+    }
     /**
      * Returns the list of wifi access points found with scan.
      * Each element a WiFiAccessPoint object has content:

@@ -61,7 +61,8 @@ public class LocationGrabber {
 
     protected double longitude;
     protected double latitude;
-    protected String address;
+    protected String address; //full address, includes city, state zip and country
+    protected String streetaddress; //ex 17 Wayfare St
     protected String city;
     protected String state;
     protected String country;
@@ -197,6 +198,7 @@ public class LocationGrabber {
             this.country = this.addresses.get(0).getCountryName();
             this.zipcode = this.addresses.get(0).getPostalCode();
             this.knownFeatureName = this.addresses.get(0).getFeatureName();
+            this.streetaddress = this.addresses.get(0).getSubThoroughfare() + " " + this.addresses.get(0).getThoroughfare();
         }
         else if( (!geocoder.isPresent()) || (location == null) ){
             this.latitude = 0;
