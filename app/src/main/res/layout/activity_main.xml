@@ -58,6 +58,30 @@
             android:onClick="reportPositiveTest"
             android:text="Report Positive COVID-19 Test" />
 
+        <Button
+            android:id="@+id/receivebutton"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:onClick="receive"
+            android:text="Receive" />
+
+        <Button
+            android:id="@+id/relaybutton"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:onClick="relay"
+            android:text="Relay" />
+
+        <Button
+            android:id="@+id/transmitbutton"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:onClick="transmit"
+            android:text="Transmit" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -20,6 +20,9 @@ import com.example.dp4coruna.location.LocationObject;
 import com.example.dp4coruna.location.LocationObjectData;
 import com.example.dp4coruna.location.SubmitLocationLabel;
 import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
+import com.example.dp4coruna.network.NetworkReceive;
+import com.example.dp4coruna.network.NetworkRelay;
+import com.example.dp4coruna.network.NetworkTransmit;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.gson.Gson;
 
@@ -127,6 +130,27 @@ public class MainActivity extends AppCompatActivity {
     public void reportPositiveTest(View view){
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this,reportPositiveTestActivity.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    public void receive(View view){
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent(this, NetworkReceive.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    public void relay(View view){
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent(this, NetworkRelay.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    public void transmit(View view){
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent(this, NetworkTransmit.class);
         intent.putExtras(bundle);
         startActivity(intent);
     }

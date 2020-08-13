@@ -84,6 +84,34 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.dp4coruna.reportPositiveTestActivity"/>
         </activity>
+
+        <activity
+        android:name=".network.NetworkReceive"
+        android:label="DP4coRUna"
+        android:theme="@style/AppTheme">
+        <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value="com.example.dp4coruna.network.NetworkReceive"/>
+    </activity>
+
+        <activity
+            android:name=".network.NetworkRelay"
+            android:label="DP4coRUna"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.dp4coruna.network.NetworkRelay"/>
+        </activity>
+
+        <activity
+            android:name=".network.NetworkTransmit"
+            android:label="DP4coRUna"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.dp4coruna.network.NetworkTransmit"/>
+        </activity>
+
     </application>
 
 </manifest>
