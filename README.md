@@ -1,6 +1,9 @@
-# DP4coRUna Android
-Current Major Changes include:
-- Creation of packages and seperation of classes/files.<br>
-Now if a variable is declared "protected" it can't be accessed from a file/class in a different package, either it has to become "public" or public getter has to be created.
+# DP4coRUna Android-App
 
-- LocationObject extends SensorReader which extends LocationGrabber. This means each SensorReader has access to LocationGrabber functions/variables (non-private ones) and LocationObject has access to SensorReader and LocationGrabber stuff. From now on use LocationObject instead of just SensorReader or LocationGrabber. 
+Current Objective: Integrate Local Learning, Network, and Machine Learning components.
+
+- Local Learning will sample location data and sensor based features and create JSON object with data.
+
+- Networking will take JSON and transmit to another device through socket connections.
+
+- Machine Learning will try to match lable of location with labels in receiving devices and/or use Multinomial Logistic Regression to obtain set of probabilities on which existing location the received location features match with. **The probabilities or labels will be returned via the network.**
