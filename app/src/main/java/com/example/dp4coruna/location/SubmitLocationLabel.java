@@ -1,25 +1,35 @@
 package com.example.dp4coruna.location;
 
+import android.Manifest;
 import android.content.Intent;
+import android.database.Cursor;
 import android.location.Address;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.MainActivity;
 import com.example.dp4coruna.R;
+import com.example.dp4coruna.datamanagement.DatabaseTest;
 import com.example.dp4coruna.location.LocationGrabber;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SubmitLocationLabel extends AppCompatActivity {
+
+
 
     TextView latlong;
     TextView addresscurrent;
@@ -28,7 +38,18 @@ public class SubmitLocationLabel extends AppCompatActivity {
     EditText roomname;
     EditText roomnumber;
 
+
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+
     LocationObjectData lod;
+    private static final String TAG = "ListDataActivity";
+
+    DatabaseTest myDatabaseHelper;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +62,7 @@ public class SubmitLocationLabel extends AppCompatActivity {
 
         Log.d("JSON", JSONObjectString);
 
+        myDatabaseHelper = new DatabaseTest(this);
 
         //connects UI components
         latlong = findViewById(R.id.latlong);
@@ -86,6 +108,45 @@ public class SubmitLocationLabel extends AppCompatActivity {
         //will need to call methods from DatabaseHelper to parse and insert into DB from here
 
 
+
+        /*ADDING LOCATION DATA TO THE DATABASE
+
+
+
+         */
+
+        AddData(lod.getBuildingName(), "GPS");
+        AddData(lod.getRoomName(), "GPS");
+        AddData(lod.getRoomNumber(),"GPS");
+        AddData(lod.getLongitude()+ " ","GPS");
+        AddData(lod.getLatitude()+" ","GPS");
+        AddData(lod.getAddress(),"GPS");
+        AddData(lod.getStreetAddress(),"GPS");
+        AddData(lod.getCity(),"GPS");
+        AddData(lod.getState(),"GPS");
+
+        /*  ADDING SENSOR DATA TO THE DATABASE
+
+
+         */
+
+
+        AddData(lod.getLightLevel()+" ","SENSORDATA");
+        AddData(lod.getSoundLevel()+ " ","SENSORDATA");
+
+        AddData(lod.getGeoMagenticValue()+" ","SENSORDATA");
+
+        /*ADDING AP TO THE DATABASE */
+
+        AddData(lod.getwifiApList()+" ","AP");
+
+
+        Log.d("TEST", "I AM HERE AFTER ADDING DATA TO DATABASE");
+
+        populateListView();
+
+
+
         //convert LocationObjectData to JSON
         String JSONstring = lod.convertLocationObjectDataToJSON();
         Log.d("JSON", JSONstring);
@@ -102,4 +163,90 @@ public class SubmitLocationLabel extends AppCompatActivity {
         intent.putExtras(bundle);
         startActivity(intent);
     }
+
+    public void AddData(String item1, String type) {
+
+
+
+        boolean insertData = myDatabaseHelper.addData(item1, type);
+
+        if(!insertData){
+
+            toastMessage("Error");
+        }
+        else
+        {
+
+            toastMessage("Successfully inserted.");
+
+
+        }
+    }
+
+    public void toastMessage(String message){
+
+        Toast.makeText(this,message, Toast.LENGTH_SHORT).show();
+    }
+
+
+    private void populateListView(){
+
+        Log.d(TAG, "Populate ListView:  Displaying data in the list view");
+
+        Cursor data = myDatabaseHelper.getListContents("GPS");
+
+        Cursor data2 = myDatabaseHelper.getListContents("SENSORDATA");
+
+        Cursor data3 = myDatabaseHelper.getListContents("AP");
+
+        ArrayList<String> gpsList = new ArrayList();
+        ArrayList<String> sensorList = new ArrayList<>();
+        ArrayList<String> apList = new ArrayList<>();
+
+
+        if(data.getCount()!=0) {  //If the gps data is not empty, then add to ArrayList
+
+            while (data.moveToNext()) {
+
+                gpsList.add(data.getString(1));
+
+
+            }
+
+        }
+
+        if(data2.getCount()!=0) {  //If the sensor data is not empty, then add to ArrayList
+
+            while (data2.moveToNext()) {
+
+                sensorList.add(data2.getString(1));
+
+
+            }
+
+        }
+
+        if(data3.getCount()!=0) {  //If the AP data is not empty, then add to ArrayList
+
+            while (data3.moveToNext()) {
+
+                apList.add(data3.getString(1));
+
+
+            }
+
+        }
+
+
+        for (int x=0;x<gpsList.size();x++){
+
+            Log.d(TAG, "PRINTING DATABASE FIELD: "+ gpsList.get(x));
+
+
+        }
+
+
+    }
+
+
 }
