@@ -1,4 +1,4 @@
-package com.example.databasetest;
+package com.example.dp4coruna.datamanagement;
 
 import android.content.ContentValues;
 import android.content.Context;
