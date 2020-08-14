@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.location.LocationGrabber;
 import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.location.LocationObjectData;
 
 import java.util.List;
 
@@ -27,11 +28,18 @@ public class enterDestinationActivity extends AppCompatActivity {
     EditText deststate;
     EditText destzipcode;
 
+    LocationObjectData lod;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_enter_destination);
         Bundle bundle = getIntent().getExtras();
 
+        //Get JSON from previous activity and convert into LocationObjectData to retrieve data fields
+        String JSONObjectString = bundle.getString("LocationObjectData");
+        lod = LocationObjectData.convertJSONToLocationObjectData(JSONObjectString);
+
+        //connect UI Components
         originstreetaddress = findViewById(R.id.originstreetaddress);
         origincity = findViewById(R.id.origincity);
         originstate = findViewById(R.id.originstate);
@@ -42,26 +50,12 @@ public class enterDestinationActivity extends AppCompatActivity {
         deststate = findViewById(R.id.deststate);
         destzipcode = findViewById(R.id.destzipcode);
 
-        LocationObject lo = new LocationObject(this, this);
-        lo.setupLocation();
-        List<Address> addresses = lo.getListOfAddresses();
+        //fill origin fields with location data
+        originstreetaddress.setText(lod.getStreetAddress());
+        origincity.setText(lod.getCity());
+        originstate.setText(lod.getState());
+        originzipcode.setText(lod.getZipcode());
 
-        if (addresses != null) {
-            if (addresses.get(0).getSubThoroughfare() != null && addresses.get(0).getThoroughfare() != null) {
-                originstreetaddress.setText(addresses.get(0).getSubThoroughfare() + " " + addresses.get(0).getThoroughfare());
-            }
-            if (addresses.get(0).getLocality() != null) {
-                origincity.setText(addresses.get(0).getLocality());
-            }
-            if (addresses.get(0).getAdminArea() != null) {
-                originstate.setText(addresses.get(0).getAdminArea());
-            }
-            if (addresses.get(0).getPostalCode() != null) {
-                originzipcode.setText(addresses.get(0).getPostalCode());
-            }
-
-
-        }
     }
 
     public void showRoutes(View view) {
@@ -87,9 +81,6 @@ public class enterDestinationActivity extends AppCompatActivity {
         intent.putExtra(destinationCity, destinationCity);
         intent.putExtra(destinationState, destinationState);
         intent.putExtra(destinationZipcode, destinationZipcode);
-
-
-
 
         startActivity(intent);
     }

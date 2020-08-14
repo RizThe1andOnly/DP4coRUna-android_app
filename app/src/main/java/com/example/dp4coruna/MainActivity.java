@@ -13,11 +13,20 @@ import android.os.Bundle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.os.Parcelable;
 import android.view.View;
 
+import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.location.LocationObjectData;
 import com.example.dp4coruna.location.SubmitLocationLabel;
 import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
+import com.example.dp4coruna.network.NetworkReceive;
+import com.example.dp4coruna.network.NetworkRelay;
+import com.example.dp4coruna.network.NetworkTransmit;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.gson.Gson;
+
+import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -30,11 +39,16 @@ public class MainActivity extends AppCompatActivity {
 
     private FusedLocationProviderClient fusedLocationClient;
 
+    public LocationObject lo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkForPermissions(getApplicationContext());
+
+        // initializing this here allows location data to be retrieved on each subsequent activity
+        lo = new LocationObject(MainActivity.this,getApplicationContext());
     }
 
 
@@ -89,18 +103,28 @@ public class MainActivity extends AppCompatActivity {
     public void enterLocationData(View view) {
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, SubmitLocationLabel.class);
-        //LocationGrabber lg = new LocationGrabber(this, this);
-        //lg.setupLocation();
-        //bundle.putParcelableArrayList("addresses", (ArrayList<? extends Parcelable>) lg.addresses);
 
+        //fill Location Object with all datafields
+        lo.updateLocationData();
+
+        //convert location object to JSON to pass through bundle to next activity
+        String JSONLOD = lo.convertLocationToJSON();
         intent.putExtras(bundle);
+        intent.putExtra("LocationObjectData", JSONLOD);
         startActivity(intent);
     }
 
     public void chooseSafeRoute(View view) {
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, enterDestinationActivity.class);
+
+        //fill Location Object with all datafields
+        lo.updateLocationData();
+
+        //convert location object to JSON to pass through bundle to next activity
+        String JSONLOD = lo.convertLocationToJSON();
         intent.putExtras(bundle);
+        intent.putExtra("LocationObjectData", JSONLOD);
         startActivity(intent);
     }
 
@@ -114,6 +138,27 @@ public class MainActivity extends AppCompatActivity {
     public void reportPositiveTest(View view){
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this,reportPositiveTestActivity.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    public void receive(View view){
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent(this, NetworkReceive.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    public void relay(View view){
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent(this, NetworkRelay.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    public void transmit(View view){
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent(this, NetworkTransmit.class);
         intent.putExtras(bundle);
         startActivity(intent);
     }
