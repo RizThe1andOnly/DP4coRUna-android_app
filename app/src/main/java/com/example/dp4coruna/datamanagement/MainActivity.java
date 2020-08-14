@@ -1,4 +1,4 @@
-package com.example.databasetest;
+package com.example.dp4coruna.datamanagement;
 
 import android.database.Cursor;
 import android.os.Bundle;
@@ -18,6 +18,7 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+import com.example.dp4coruna.R;
 
 import java.util.ArrayList;
 

@@ -31,7 +31,7 @@ import java.util.List;
  * Will create machine learning model with required properties and train it by fitting it to given data.
  * The model will be able to generate probability model for the input features based on training.
  *
- * (!!! 8/12/2020) Changes will be made to class when ready to integrate to:
+ * (!!!) Changes will be made to class when ready to integrate to:
  *  - Database code
  *  - Whole app
  * For now will be working with this as a standalone class which is not dependent on any other class in this app
@@ -49,11 +49,18 @@ import java.util.List;
  *          - NDArray is the DL4J analogue of a numpy array and takes in arrays as parameters for constructor and builds
  *            an NDArray object.
  *
- *  - Note this for the labels: They essentially need to be in one-hot-encoding format. This will be achieved through
+ *  - Note this for the labels: They essentially need to be in one-hot-encoded format. This will be achieved through
  *                              creating an array for each label and having all zeros except for one element which will
  *                              be '1' corresponding to the label. It will be a matrix with rows and columns equal to
  *                              number of labels/samples. Each row will represent a label and the column with column
  *                              index matching the row index will be value '1' otherwise '0'.
+ *
+ *
+ *   (!!!Guide) -- To use this class --
+ *   1- Create instance in another class or activity.
+ *   2- Call the obtain data method, passing in activity as parameter.
+ *   3- Call createMlModel
+ *   4- Use the "mln" field then to carry out tasks with trained model.
  */
 public class MLModel {
 
@@ -63,8 +70,6 @@ public class MLModel {
     //call vars:
     public MultiLayerNetwork mln;
     private DataSet trainingData;
-    private NDArray obtainedDataset;
-    private float[][] obtainedDataValues;
 
 
     /**
@@ -166,6 +171,13 @@ public class MLModel {
      * adjusted based on how many epoch we want for this data.
      *
      *  --Look at top of class for description on how data needs to be setup--
+     *
+     *  --- To Use this method --- (!!!Guide)
+     *   1- Create a MLModel instance.
+     *   2- Use the MLModel instance created to call obtain data to get data to train this model
+     *   3- Use the MLModel instance to then call this method.
+     *          --Doing this will set up and train the model
+     *   4- Use the "mln" field of the MLModel instance/object to then use the model functionalities like predictions.
      *
      */
     public void createMlModel(){
