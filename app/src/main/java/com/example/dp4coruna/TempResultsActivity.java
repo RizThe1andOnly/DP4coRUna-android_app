@@ -12,6 +12,8 @@ import com.example.dp4coruna.location.LocationObject;
 import com.example.dp4coruna.location.WiFiAccessPoint;
 import com.example.dp4coruna.ml.MLModel;
 import android.database.Cursor;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.cpu.nativecpu.NDArray;
 
 import java.util.List;
 
@@ -25,6 +27,8 @@ public class TempResultsActivity extends AppCompatActivity {
     private DatabaseTest dbt;
 
     private Cursor crs;
+
+    private MLModel mlm;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -46,7 +50,13 @@ public class TempResultsActivity extends AppCompatActivity {
      */
     public void onTriggerSamplingButtonPress(View view){
         lo.updateLocationData();
-        dbt.addData(lo);
+        String printDummyTest = lo.getLightLevel() + " , " + lo.getSoundLevel() + " , " + lo.getGeoMagneticFieldStrength() + " , " + lo.getCellId() + " , " + lo.getAreaCode() + " , " + lo.getCellSignalStrength();
+        dataView.append(printDummyTest);
+        //dbt.addData(lo);
+
+        //mlm = new MLModel(getApplicationContext());
+        //mlm.trainAndSaveModel();
+        //dataView.append("Successfully (maybe?) trained model and saved to device.\n");
     }
 
 
@@ -57,7 +67,7 @@ public class TempResultsActivity extends AppCompatActivity {
     public void onShowDataBaseDataButtonPress(View view){
         String toBePrinted = "";
 
-        if(crs == null) crs = dbt.getListContents();
+        //if(crs == null) crs = dbt.getListContents();
 
 //        String[] cnames = crs.getColumnNames();
 //
@@ -67,7 +77,13 @@ public class TempResultsActivity extends AppCompatActivity {
 //
 //        toBePrinted += "\n";
 
-        toBePrinted = this.getMLDataObj();
+        //toBePrinted = this.getMLDataObj();
+
+        mlm = new MLModel(getApplicationContext(),MLModel.YES_LOAD_MODEL_FROM_DEVICE);
+        NDArray input = obtainDummyInputData();
+        INDArray output = mlm.mln.output(input,false);
+
+        toBePrinted += output.toStringFull();
 
         dataView.append(toBePrinted);
     }
@@ -145,7 +161,7 @@ public class TempResultsActivity extends AppCompatActivity {
         MLData mld = dbt.getMLDataFromDatabase();
 
         float[][] fdata = mld.features;
-        int[] ldata = mld.encodedLabels;
+        float[][] ldata = mld.encodedLabels;
 
         toBeReturned += "Features: {\n";
         for(int i=0;i<fdata.length;i++){
@@ -159,9 +175,23 @@ public class TempResultsActivity extends AppCompatActivity {
         toBeReturned += "\n\nencodedlabels: {\n";
 
         for(int i=0;i< ldata.length;i++){
-            toBeReturned += ldata[i] + "\n";
+            toBeReturned += ldata[i][i] + "\n";
         }
 
         return toBeReturned;
+    }
+
+    private NDArray obtainDummyInputData(){
+        String queryString = "SELECT light,sound,geo_magnetic_field_strength,cell_tower_id,area_code,cell_signal_strength FROM mylist_data WHERE ID = 1";
+        Cursor dataRow = dbt.getReadableDatabase().rawQuery(queryString,null);
+        float[] sample = new float[6];
+        dataRow.moveToNext();
+        for(int i=0;i<6;i++){
+            sample[i] = dataRow.getFloat(i);
+        }
+
+        NDArray inputArr = new NDArray(new float[] {0,0,0,0,0,0});
+
+        return inputArr;
     }
 }

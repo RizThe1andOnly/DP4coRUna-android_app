@@ -5,15 +5,17 @@ import java.util.Map;
 
 public class MLData {
     public float[][] features;
-    public int[] encodedLabels;
-    public Map<String,Integer> labelMappings;
+    public float[][] encodedLabels;
+    public Map<String,float[]> labelMappings;
     public List<String> labels;
+    public int numberOfLocations; //set through the size of the labels list since that reflects the number of locations; acts as number of classes for softmax
 
-    public MLData(float[][] features, int[] encodedLabels, Map<String,Integer> labelMap, List<String> labels){
+    public MLData(float[][] features, float[][] encodedLabels, Map<String,float[]> labelMap, List<String> labels){
         this.features = features;
         this.encodedLabels = encodedLabels;
         this.labelMappings = labelMap;
         this.labels = labels;
+        this.numberOfLocations = labels.size();
     }
 
     /**
@@ -27,7 +29,7 @@ public class MLData {
     }
 
     //setters:
-    public boolean setEncodedLabels(int[] encodedLabels) {
+    public boolean setEncodedLabels(float[][] encodedLabels) {
         if(encodedLabels == null) return false;
 
         this.encodedLabels = encodedLabels;
@@ -41,7 +43,7 @@ public class MLData {
         return true;
     }
 
-    public boolean setLabelMappings(Map<String,Integer> map){
+    public boolean setLabelMappings(Map<String,float[]> map){
         if(map == null) return false;
         this.labelMappings = map;
         return true;
@@ -50,6 +52,7 @@ public class MLData {
     public boolean setLables(List<String> labels){
         if(labels == null) return false;
         this.labels = labels;
+        this.numberOfLocations = labels.size();
         return false;
     }
 }

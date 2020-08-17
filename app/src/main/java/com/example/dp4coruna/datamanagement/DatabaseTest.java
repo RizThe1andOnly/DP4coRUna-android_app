@@ -290,19 +290,19 @@ public class DatabaseTest extends SQLiteOpenHelper {
     }
 
 
-    /** !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      * Below is the section for obtaining data for the machine learning section. The below methods will gather all
      * necessary data and compile them into a MLData object.
      *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      */
 
     /**
-     * Gathers all required data for the machine learning model and returns them inside of a MLData Object.
+     * Gathers all required data for the machine learning model and returns them inside of a MLData Object (in this package).
      * The data within the MLData object include: (description : name in MLData class)
      *  - 2d float array of features (will be used to create the NDArray for ML model) : features
      *  - array of encoded labels : encodedLabels
      *  - list of location labels : lables
-     *  - mapping of lables to encoded labels : labelMap
+     *  - mapping of labels to encoded labels : labelMap
      * @return
      */
     public MLData getMLDataFromDatabase(){
@@ -310,8 +310,8 @@ public class DatabaseTest extends SQLiteOpenHelper {
         List<String> labels = this.getAllLocationLabels();
 
         //create map instance and populate it, while getting labels encoded, using encodeLocationLabels:
-        Map<String,Integer> locLabelMap = new HashMap<>();
-        int[] encodedLabels = this.encodeLocationLabels(labels,locLabelMap);
+        Map<String,float[]> locLabelMap = new HashMap<>();
+        float[][] encodedLabels = this.encodeLocationLabels(labels,locLabelMap);
 
         MLData toBeReturned = new MLData(featureData,encodedLabels,locLabelMap,labels);
 
@@ -402,18 +402,17 @@ public class DatabaseTest extends SQLiteOpenHelper {
      * @param map will be mapping between the strings and their  integer counterpart; populated in this method
      * @return int[] array of labels.
      */
-    private int[] encodeLocationLabels(List<String> locationLabels, Map<String,Integer> map){
+    private float[][] encodeLocationLabels(List<String> locationLabels, Map<String,float[]> map){
         int numberOfCategories = locationLabels.size();
-        int encodedLables[] = new int[numberOfCategories];
+        float encodedLables[][] = new float[numberOfCategories][numberOfCategories];
         for(int i=0;i<numberOfCategories;i++){
             if(i==0){
-                encodedLables[i] = 0;
-                map.put(locationLabels.get(i),0);
+                encodedLables[i][i] = 0;
+                map.put(locationLabels.get(i),encodedLables[i]);
                 continue;
             }
-            int encLabel =(int)Math.pow(10,i);
-            encodedLables[i] = encLabel;
-            map.put(locationLabels.get(i),encLabel);
+            encodedLables[i][i] = 1;
+            map.put(locationLabels.get(i),encodedLables[i]);
         }
         return encodedLables;
     }
