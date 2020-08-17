@@ -49,14 +49,13 @@ public class TempResultsActivity extends AppCompatActivity {
      * @param view triggerSampleButton
      */
     public void onTriggerSamplingButtonPress(View view){
-        lo.updateLocationData();
-        String printDummyTest = lo.getLightLevel() + " , " + lo.getSoundLevel() + " , " + lo.getGeoMagneticFieldStrength() + " , " + lo.getCellId() + " , " + lo.getAreaCode() + " , " + lo.getCellSignalStrength();
-        dataView.append(printDummyTest);
-        //dbt.addData(lo);
 
-        //mlm = new MLModel(getApplicationContext());
-        //mlm.trainAndSaveModel();
-        //dataView.append("Successfully (maybe?) trained model and saved to device.\n");
+    }
+
+    public void trainButtonEvent(View view){
+        mlm = new MLModel(getApplicationContext());
+        mlm.trainAndSaveModel();
+        dataView.append("Successfully (maybe?) trained model and saved to device.\n");
     }
 
 

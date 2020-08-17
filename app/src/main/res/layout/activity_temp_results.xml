@@ -18,15 +18,23 @@
             android:id="@+id/triggerSamplingButton"
             android:onClick="onTriggerSamplingButtonPress"
             tools:visibility="visible"
-            android:visibility="visible" app:layout_constraintEnd_toStartOf="@+id/showDataBaseData"
+            android:visibility="visible"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintHorizontal_bias="0.472"
-            android:layout_marginBottom="16dp"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="16dp" android:layout_marginStart="28dp"/>
     <Button
             android:text="Database"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="84dp"
+            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="32dp"
             app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="16dp"
             android:id="@+id/showDataBaseData" android:onClick="onShowDataBaseDataButtonPress"/>
+    <Button
+            android:text="TrainML"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/trainButton"
+            app:layout_constraintEnd_toStartOf="@+id/showDataBaseData"
+            app:layout_constraintStart_toEndOf="@+id/triggerSamplingButton"
+            app:layout_constraintHorizontal_bias="0.537" app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="16dp" android:onClick="trainButtonEvent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
