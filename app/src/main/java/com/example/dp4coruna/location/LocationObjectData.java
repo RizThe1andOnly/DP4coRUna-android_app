@@ -163,6 +163,10 @@ public class LocationObjectData {
         this.roomNumber = roomNumber;
     }
 
+    public void setLabel(String label){
+
+    }
+
 
     public static LocationObjectData convertJSONToLocationObjectData(String JSONString){
         LocationObjectData data = new Gson().fromJson(JSONString, LocationObjectData.class);

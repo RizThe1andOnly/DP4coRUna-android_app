@@ -105,7 +105,7 @@ public class DataBaseTestActivity extends AppCompatActivity {
 
 
 
-        boolean insertData = myDatabaseHelper.addData(newEntry);
+        boolean insertData = myDatabaseHelper.addData(newEntry,null); //(!!! asked for a type didn't know what to put so put null to suppress error, sorry if i screwed it up. Rizwan)
 
         if(!insertData){
 
@@ -130,7 +130,7 @@ public class DataBaseTestActivity extends AppCompatActivity {
 
         Log.d(TAG, "Populate ListView:  Displaying data in the list view");
 
-        Cursor data = myDatabaseHelper.getListContents();
+        Cursor data = myDatabaseHelper.getListContents(); //(!!!) put null here because error was showing up, probably my fault. Rizwan
 
         ArrayList<String> listData = new ArrayList();
 

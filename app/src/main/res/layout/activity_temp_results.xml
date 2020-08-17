@@ -3,8 +3,8 @@
                                                    xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
                                                    android:layout_height="match_parent">
     <EditText
-            android:layout_width="352dp"
-            android:layout_height="660dp"
+            android:layout_width="312dp"
+            android:layout_height="581dp"
             android:inputType="textMultiLine"
             android:gravity="start|top"
             android:ems="10"
@@ -14,9 +14,19 @@
     <Button
             android:text="Sample"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/triggerSamplingButton"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/dataViewBox" app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintVertical_bias="1.0"
-            android:onClick="onTriggerSamplingButtonPress"/>
+            android:layout_height="wrap_content"
+            android:id="@+id/triggerSamplingButton"
+            android:onClick="onTriggerSamplingButtonPress"
+            tools:visibility="visible"
+            android:visibility="visible" app:layout_constraintEnd_toStartOf="@+id/showDataBaseData"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintHorizontal_bias="0.472"
+            android:layout_marginBottom="16dp"/>
+    <Button
+            android:text="Database"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="84dp"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="16dp"
+            android:id="@+id/showDataBaseData" android:onClick="onShowDataBaseDataButtonPress"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
