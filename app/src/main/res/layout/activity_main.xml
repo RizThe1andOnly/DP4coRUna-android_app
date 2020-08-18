@@ -19,8 +19,8 @@
 
         <ImageView
             android:id="@+id/imageView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="157dp"
+            android:layout_height="174dp"
             app:srcCompat="@drawable/scarlet_knight_logo" />
 
         <TextView
