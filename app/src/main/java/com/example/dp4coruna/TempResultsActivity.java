@@ -78,7 +78,7 @@ public class TempResultsActivity extends AppCompatActivity {
 
         //toBePrinted = this.getMLDataObj();
 
-        mlm = new MLModel(getApplicationContext(),MLModel.YES_LOAD_MODEL_FROM_DEVICE);
+        mlm = new MLModel(getApplicationContext(),MLModel.LOAD_MODEL_FROM_DEVICE);
         NDArray input = obtainDummyInputData();
         INDArray output = mlm.mln.output(input,false);
 

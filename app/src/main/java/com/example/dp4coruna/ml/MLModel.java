@@ -90,8 +90,8 @@ public class MLModel {
     private final String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MlModel.zip";
 
     //static constants to be used by other classes to access functionalities:
-    public static final boolean YES_LOAD_MODEL_FROM_DEVICE = true;
-    public static final boolean DO_NOT_LOAD_MODEL_FROM_DEVICE = false;
+    public static final int LOAD_MODEL_FROM_DEVICE = 0;
+    public static final int TRAIN_MODEL_AND_SAVE_IN_DEVICE = 1;
 
     //ml training constants:
     private final int NUMBER_OF_FEATURES = 7;
@@ -115,13 +115,17 @@ public class MLModel {
      *
      *
      * @param context application context obtained through getApplicationContext in an Activity that extends AppCompatActivity
-     * @param reqLoadModel whether or not to immediately load model stored in device. true for yes, false for no. Can also use constants provided by class.
+     * @param request int value indicating the action to be taken by the machine learning model.
      */
-    public MLModel(Context context, boolean reqLoadModel){
+    public MLModel(Context context, int request){
         this.context = context;
-        if(reqLoadModel == YES_LOAD_MODEL_FROM_DEVICE){
+        if(request == LOAD_MODEL_FROM_DEVICE){
             loadModel();
         }
+        else if(request == TRAIN_MODEL_AND_SAVE_IN_DEVICE){
+            trainAndSaveModel();
+        }
+
     }
 
 

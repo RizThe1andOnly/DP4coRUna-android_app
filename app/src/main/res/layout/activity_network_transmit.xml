@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                                   android:layout_width="match_parent"
+                                                   xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
                                                    android:layout_height="match_parent">
 
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/getDataButton_networkTransmit"
+            tools:layout_editor_absoluteY="50dp"
+            tools:layout_editor_absoluteX="78dp" android:text="GetData"/>
+    <Button
+            android:text="Transmit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/transmitData_networkTransmit"
+            tools:layout_editor_absoluteY="47dp"
+            tools:layout_editor_absoluteX="237dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
