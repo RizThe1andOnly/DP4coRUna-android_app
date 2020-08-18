@@ -13,20 +13,15 @@ import android.os.Bundle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import android.os.Parcelable;
 import android.view.View;
 
 import com.example.dp4coruna.location.LocationObject;
-import com.example.dp4coruna.location.LocationObjectData;
 import com.example.dp4coruna.location.SubmitLocationLabel;
 import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
-import com.example.dp4coruna.network.NetworkReceive;
-import com.example.dp4coruna.network.NetworkRelay;
-import com.example.dp4coruna.network.NetworkTransmit;
+import com.example.dp4coruna.network.NetworkReceiveActivity;
+import com.example.dp4coruna.network.NetworkRelayActivity;
+import com.example.dp4coruna.network.NetworkTransmitActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.gson.Gson;
-
-import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -136,21 +131,21 @@ public class MainActivity extends AppCompatActivity {
 
     public void receive(View view){
         Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, NetworkReceive.class);
+        Intent intent = new Intent(this, NetworkReceiveActivity.class);
         intent.putExtras(bundle);
         startActivity(intent);
     }
 
     public void relay(View view){
         Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, NetworkRelay.class);
+        Intent intent = new Intent(this, NetworkRelayActivity.class);
         intent.putExtras(bundle);
         startActivity(intent);
     }
 
     public void transmit(View view){
         Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, NetworkTransmit.class);
+        Intent intent = new Intent(this, NetworkTransmitActivity.class);
         intent.putExtras(bundle);
         startActivity(intent);
     }
