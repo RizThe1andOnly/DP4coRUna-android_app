@@ -20,6 +20,7 @@ public class NetworkReceive extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_network_receive);//(!!!) if this class's name is changed please change corresponding res's name in res->layout and here
         outputText = findViewById(R.id.outputTextView_networkreceive);
+        dbt = new DatabaseTest(getApplicationContext());
     }
 
 
@@ -52,6 +53,7 @@ public class NetworkReceive extends AppCompatActivity {
     public void getPredictionProbabilities(View view){
         MLModel mlm = new MLModel(getApplicationContext(),MLModel.LOAD_MODEL_FROM_DEVICE);
         //for now:(!!!) prints the parameters of the model, in the future will decode json from network and print
+        //prediction probabilities
         String strng = mlm.mln.params().toStringFull();
         outputText.append(strng);
     }
