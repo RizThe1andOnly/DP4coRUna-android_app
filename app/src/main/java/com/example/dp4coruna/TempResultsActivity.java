@@ -49,7 +49,9 @@ public class TempResultsActivity extends AppCompatActivity {
      * @param view triggerSampleButton
      */
     public void onTriggerSamplingButtonPress(View view){
-
+        lo.updateLocationData();
+        String toBePrinted = lo.convertLocationToJSON();
+        dataView.append(toBePrinted);
     }
 
     public void trainButtonEvent(View view){

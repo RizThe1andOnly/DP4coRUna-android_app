@@ -163,9 +163,6 @@ public class LocationObjectData {
         this.roomNumber = roomNumber;
     }
 
-    public void setLabel(String label){
-
-    }
 
 
     public static LocationObjectData convertJSONToLocationObjectData(String JSONString){
@@ -178,4 +175,6 @@ public class LocationObjectData {
         String json = gson.toJson(this);
         return json;
     }
+
+
 }

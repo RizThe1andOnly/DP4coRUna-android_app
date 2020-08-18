@@ -256,33 +256,12 @@ public class LocationObject extends SensorReader {
     }
 
 
-    // (!!!) alternative to all of the getters above; NOT FINISHED YET:
-    public static final String REQ_ADDRESS = "address";
-    public static final String REQ_LATITUDE = "latitude";
-    public static final String REQ_LONGITUDE = "longitude";
-    public static final String REQ_ALTITUDE = "altitude";
-    public static final String REQ_CITY = "city";
-    public static final String REQ_STATE = "state";
-    public static final String REQ_COUNTRY = "country";
-    public static final String REQ_ZIPCODE = "zipcode";
-    public static final String REQ_WIFI_ACCESS_POINT_LIST = "wifiapl";
-    public static final String REQ_LIGHT = "lightlevel";
-    public static final String REQ_GEOMAG = "geomag";
-    public static final String REQ_SOUND = "soundlevel";
-    public static final String REQ_CELLDATA = "celldataobject";
-    public static final String REQ_CELL_TOWER_ID = "celltowerid";
-    public static final String REQ_CELL_SIGNAL_STRENGTH = "cellsignalstrength";
-    public static final String REQ_AREA_CODE = "areacode";
-
-    public Object getLocationField(String request){
-        return 0;
-    }
-
     public String convertLocationToJSON(){
         Gson gson = new Gson();
-        String json = gson.toJson(new LocationObjectData(this));
+        String json = gson.toJson(this);
         return json;
     }
+
 
 }
 

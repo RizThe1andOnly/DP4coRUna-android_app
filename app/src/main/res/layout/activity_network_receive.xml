@@ -8,20 +8,22 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:id="@+id/getDataButton"
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="36dp" android:layout_marginStart="48dp"/>
+            android:layout_marginTop="36dp" android:layout_marginStart="48dp" android:onClick="sampleData"/>
     <Button
             android:text="TrainModel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:id="@+id/trainButton"
-            app:layout_constraintStart_toEndOf="@+id/getDataButton" app:layout_constraintEnd_toStartOf="@+id/predictButton"
+            app:layout_constraintStart_toEndOf="@+id/getDataButton"
+            app:layout_constraintEnd_toStartOf="@+id/predictButton"
             app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="36dp"
-            app:layout_constraintHorizontal_bias="0.423"/>
+            app:layout_constraintHorizontal_bias="0.423" android:onClick="trainMLModel"/>
     <Button
             android:text="Predict"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:id="@+id/predictButton"
             app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="36dp" android:layout_marginEnd="40dp"/>
+            android:layout_marginTop="36dp" android:layout_marginEnd="40dp"
+            android:onClick="getPredictionProbabilities"/>
     <Button
             android:text="Button"
             android:layout_width="wrap_content"
