@@ -31,10 +31,11 @@ public class NetworkTransmitActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_network_transmit);//(!!!) if this class's name is changed please change corresponding res's name in res->layout and here
         // Get the progress bar and TextView for the location object output.
-        timer = findViewById(R.id.location_measurements_progress);
-        locMeasurementsField = findViewById(R.id.loc_measurement_text);
+        //timer = findViewById(R.id.location_measurements_progress);
+        //locMeasurementsField = findViewById(R.id.loc_measurement_text);
         // Initialize the location object.
         networkLocObj = new LocationObject(NetworkTransmitActivity.this, getApplicationContext());
+
         // Get the list of deviceAddresses and public keys (hard-coded for now) from the bundle.
 //        Intent intentFromMain = getIntent();
 //        Bundle argsFromMain = intentFromMain.getBundleExtra("Bundle");
@@ -42,7 +43,7 @@ public class NetworkTransmitActivity extends AppCompatActivity {
 //        rsaEncryptKeys = (ArrayList<PublicKey>) argsFromMain.getSerializable("rsaEncryptKeys");
         
         // Initialize the countdown timer for what to do every 10 seconds.
-        CountDownTimer countDownTimer = new CountDownTimer(10000, 50) {
+        /*CountDownTimer countDownTimer = new CountDownTimer(10000, 50) {
             @Override
             public void onTick(long msLeft) {
                 timer.setProgress((int)(10000 - msLeft) / (100));
@@ -70,11 +71,20 @@ public class NetworkTransmitActivity extends AppCompatActivity {
 
 
             }
-        };
+        };*/
 
-        while (true) {
-            countDownTimer.start();
-        }
+//        while (true) {
+//            countDownTimer.start();
+//        }
+
+    }
+
+    public void getData(View view){
+        networkLocObj.updateLocationData();
+
+    }
+
+    public void transmitData(View view){
 
     }
 }

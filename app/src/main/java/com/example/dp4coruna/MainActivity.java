@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int RECORD_AUDIO_REQUEST_CODE = 102;
     private static final int WRITE_TO_EXTERNAL_STORAGE_CODE = 103;
     private static final int ACCESS_WIFISTATE_REQUEST_CODE = 104;
+    private static final int READ_EXTERNAL_STORAGE_CODE = 105;
 
     private FusedLocationProviderClient fusedLocationClient;
 
@@ -81,6 +82,13 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(MainActivity.this,
                                                 new String[]{Manifest.permission.ACCESS_WIFI_STATE},
                                                 ACCESS_WIFISTATE_REQUEST_CODE);
+        }
+
+        if(ContextCompat.checkSelfPermission(context,Manifest.permission.READ_EXTERNAL_STORAGE)==
+                PackageManager.PERMISSION_DENIED){
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    READ_EXTERNAL_STORAGE_CODE);
         }
 
     }

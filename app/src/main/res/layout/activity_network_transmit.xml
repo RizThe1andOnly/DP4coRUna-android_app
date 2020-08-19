@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-                                                   android:layout_height="match_parent">
+    android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/network_transmit_welcome"
@@ -46,5 +46,33 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/location_measurements_progress" />
+
+    <Button
+        android:id="@+id/getDataButton_networkTransmit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="442dp"
+        android:layout_marginEnd="50dp"
+        android:layout_marginBottom="116dp"
+        android:text="GetData"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/transmitData_networkTransmit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/network_transmit_welcome" />
+
+    <Button
+        android:id="@+id/transmitData_networkTransmit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="148dp"
+        android:layout_marginTop="442dp"
+        android:layout_marginEnd="34dp"
+        android:layout_marginBottom="116dp"
+        android:text="Transmit"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/getDataButton_networkTransmit"
+        app:layout_constraintTop_toBottomOf="@+id/network_transmit_welcome" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

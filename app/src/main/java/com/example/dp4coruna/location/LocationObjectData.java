@@ -164,6 +164,7 @@ public class LocationObjectData {
     }
 
 
+
     public static LocationObjectData convertJSONToLocationObjectData(String JSONString){
         LocationObjectData data = new Gson().fromJson(JSONString, LocationObjectData.class);
         return data;
@@ -174,4 +175,6 @@ public class LocationObjectData {
         String json = gson.toJson(this);
         return json;
     }
+
+
 }

@@ -109,42 +109,9 @@ public class SubmitLocationLabel extends AppCompatActivity {
 
 
 
-        /*ADDING LOCATION DATA TO THE DATABASE
-
-
-
-         */
-
-        AddData(lod.getBuildingName(), "GPS");
-        AddData(lod.getRoomName(), "GPS");
-        AddData(lod.getRoomNumber(),"GPS");
-        AddData(lod.getLongitude()+ " ","GPS");
-        AddData(lod.getLatitude()+" ","GPS");
-        AddData(lod.getAddress(),"GPS");
-        AddData(lod.getStreetAddress(),"GPS");
-        AddData(lod.getCity(),"GPS");
-        AddData(lod.getState(),"GPS");
-
-        /*  ADDING SENSOR DATA TO THE DATABASE
-
-
-         */
-
-
-        AddData(lod.getLightLevel()+" ","SENSORDATA");
-        AddData(lod.getSoundLevel()+ " ","SENSORDATA");
-
-        AddData(lod.getGeoMagenticValue()+" ","SENSORDATA");
-
-        /*ADDING AP TO THE DATABASE */
-
-        AddData(lod.getwifiApList()+" ","AP");
-
-
-        Log.d("TEST", "I AM HERE AFTER ADDING DATA TO DATABASE");
-
-        populateListView();
-
+        //ADDING LOCATION DATA TO THE DATABASE:
+        myDatabaseHelper.addData(lod);
+        Toast.makeText(getApplicationContext(),"Added Data",Toast.LENGTH_LONG);
 
 
         //convert LocationObjectData to JSON
@@ -165,9 +132,7 @@ public class SubmitLocationLabel extends AppCompatActivity {
     }
 
     public void AddData(String item1, String type) {
-
-
-
+/**
         boolean insertData = myDatabaseHelper.addData(item1, type);
 
         if(!insertData){
@@ -181,6 +146,7 @@ public class SubmitLocationLabel extends AppCompatActivity {
 
 
         }
+ */
     }
 
     public void toastMessage(String message){
@@ -193,11 +159,13 @@ public class SubmitLocationLabel extends AppCompatActivity {
 
         Log.d(TAG, "Populate ListView:  Displaying data in the list view");
 
-        Cursor data = myDatabaseHelper.getListContents("GPS");
+        //(!!!) For the three lines below i got rid of the previous parameter in accordance with getting rid of parameter
+        // tableType in getListContents in DatabaseTest. Rizwan
+        Cursor data = myDatabaseHelper.getListContents();
 
-        Cursor data2 = myDatabaseHelper.getListContents("SENSORDATA");
+        Cursor data2 = myDatabaseHelper.getListContents();
 
-        Cursor data3 = myDatabaseHelper.getListContents("AP");
+        Cursor data3 = myDatabaseHelper.getListContents();
 
         ArrayList<String> gpsList = new ArrayList();
         ArrayList<String> sensorList = new ArrayList<>();

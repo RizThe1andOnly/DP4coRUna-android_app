@@ -22,11 +22,6 @@ import com.example.dp4coruna.R;
 
 import java.util.ArrayList;
 
-/**
- * (Rizwan) changed the name of the activity so it doesn't conflict with the actual MainActivity of the
- * app.
- */
-
 public class DataBaseTestActivity extends AppCompatActivity {
 
     private static final String TAG = "ListDataActivity";
@@ -45,9 +40,11 @@ public class DataBaseTestActivity extends AppCompatActivity {
 
         myDatabaseHelper = new DatabaseTest(this);
 
+
         /**
-         * Below lines cause compiler errors because they reference resources and an activity that
-         * doesn't exist. The activity needs to be created or transferred into the res->layout folder.
+         * The below instructions reference resources that don't exist in this project. Mainly
+         * the layout file associated with this activity isn't in res->layout, so one has to be
+         * created or transfered.
          */
 //        editText = (EditText) findViewById(R.id.editText);
 //        btnAdd = (Button) findViewById(R.id.button_id);
@@ -108,7 +105,7 @@ public class DataBaseTestActivity extends AppCompatActivity {
 
 
 
-        boolean insertData = myDatabaseHelper.addData(newEntry);
+        boolean insertData = myDatabaseHelper.addData(newEntry,null); //(!!! asked for a type didn't know what to put so put null to suppress error, sorry if i screwed it up. Rizwan)
 
         if(!insertData){
 
@@ -133,7 +130,7 @@ public class DataBaseTestActivity extends AppCompatActivity {
 
         Log.d(TAG, "Populate ListView:  Displaying data in the list view");
 
-        Cursor data = myDatabaseHelper.getListContents();
+        Cursor data = myDatabaseHelper.getListContents(); //(!!!) put null here because error was showing up, probably my fault. Rizwan
 
         ArrayList<String> listData = new ArrayList();
 
