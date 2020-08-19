@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.location.Address;
 
+import android.widget.Toast;
 import com.google.gson.Gson;
 
 import java.util.List;
@@ -14,10 +15,19 @@ import java.util.List;
  * (see SensorReader and LocationObject classes which this class extends). Each of these location objects can be a
  * room or building based on data.
  *
- * (!!!) android_app_demo note: I got rid of the "this.label = ..." statement in the constructor, put it back when
- *                              required. Rizwan
+ *
+ * -----------------FOR THE PURPOSES OF JSON-------------------
+ * The functionality of trasforming a LocationObject object into a JSON string and turning is back is supported in this
+ * class through the convertLocationToJSON() and (static method) getLocationFromJSON(String locationJSON) methods.
+ *
+ * Note: getLocationFromJSON will return a location object only with data in it, that object will not be able to use
+ * updateLocationData. To do that simply create a new LocationObject.
  */
 public class LocationObject extends SensorReader {
+
+    //chekcer variable to make sure the context and activities have been set:
+    private boolean updateable;
+
     public String locationLabel;
 
     //protected String knownFeatureName; //from address, ie "Brooklyn Bridge"
@@ -28,6 +38,7 @@ public class LocationObject extends SensorReader {
     protected String roomNumber;
 
 
+
     /**
      * Creates an instance of Location utilizing parent and grandparent SensorReader and LocationGrabber.
      * Here super() calls on SensorReader constructor.
@@ -36,17 +47,66 @@ public class LocationObject extends SensorReader {
      */
     public LocationObject(Activity inheritedActivity, Context inheritedContext){
         super(inheritedActivity,inheritedContext);
+        this.updateable = true;
         //(!!!)this.updateLocationData(); //while creating this object its fields will be set with data available at time
     }
 
     /**
+     * Private constructor solely for the purpose of transforming a LocationObject JSON to a LocationObject object.
+     * This location object cannot call updateLocationData.
+     * @param locobj
+     */
+    private LocationObject(LocationObjectData locobj){
+        super();
+
+        this.updateable = false; // to keep from calling update on this class by accident (can't do since context and activity not present).
+
+        this.addresses = locobj.getAddresses();
+        this.longitude = locobj.getLongitude();
+        this.latitude = locobj.getLatitude();
+        this.address = locobj.getAddress();
+        this.city = locobj.getCity();
+        this.state = locobj.getState();
+        this.country = locobj.getCountry();
+        this.zipcode = locobj.getZipcode();
+        this.knownFeatureName = locobj.getKnownFeatureName();
+        this.altitude_inMeters = locobj.getAltitude();
+        this.wifiApList = locobj.getwifiApList();
+        this.lightLevel = locobj.getLightLevel();
+        this.geoMagenticValue = locobj.getGeoMagenticValue();
+        this.soundLevel = locobj.getSoundLevel();
+        this.currentCellData = locobj.getCurrentCellData();
+        this.cellId = locobj.getCellId();
+        this.areaCode = locobj.getAreaCode();
+        this.cellSignalStrength=locobj.getCellSignalStrength();
+        this.buildingName = locobj.getBuildingName();
+        this.roomName = locobj.getRoomName();
+        this.roomNumber = locobj.getRoomNumber();
+        this.streetaddress = locobj.getStreetAddress();
+    }
+
+
+    /**
      * Sets the fields of the calling LocationObject instance with the most recent and available data from sensors and
      * google location api.
+     *
+     * This method calls super.sense() = SensorReader.sense() which itself will call super.sense() = LocationGrabber.setupLocation().
+     * These methods will call of the other methods in their respective classes to obtain sensor and location data.
+     *
+     * This method may be called as many time as necessary, and will update the data each time by calling data gathering
+     * methods.
+     *
+     * Note: if this object was create through getLocationFromJSON then calling this method will do nothing.
      */
     public void updateLocationData(){
+        if(!this.updateable) return;
         super.sense();
     }
 
+    /**
+     * Returns an original string representation of the class for testing purposes.
+     * @return String representation of the locationobject instance
+     */
     @Override
     public String toString() {
         return "LocationObject{" +
@@ -64,6 +124,12 @@ public class LocationObject extends SensorReader {
                 "   "+" "+ WiFiAccessPoint.getListStringRepresent(this.wifiApList)+"\n" +
                 "}";
     }
+
+
+
+    /*
+        ---------------------------------Getter/Setter section.----------------------------------
+     */
 
     /**
      * Setter for building name, must be set from UI
@@ -256,10 +322,35 @@ public class LocationObject extends SensorReader {
     }
 
 
+
+    /*
+        --------------------------------------Below is the JSON section.------------------------------------
+        Responsible for creating JSON string from object and returning LocationObject from JSON string.
+        Note: getLocationFromJSON is a static method.
+     */
+
+
+    /**
+     * Converts this current LocationObject to it JSON string representation and returns the string.
+     * @return String the JSON reprsentation of the object.
+     */
     public String convertLocationToJSON(){
         Gson gson = new Gson();
-        String json = gson.toJson(this);
+        String json = gson.toJson(new LocationObjectData(this));
         return json;
+    }
+
+    /**
+     * Creates a LocationObject from json passed in as an argument. Uses the LocationObjectData class as an intermediary
+     * to create the location object.
+     *
+     * @param locationJSON json string representing the location object
+     * @return LocationObject
+     */
+    public static LocationObject getLocationFromJSON(String locationJSON){
+        LocationObjectData data = new Gson().fromJson(locationJSON, LocationObjectData.class);
+        LocationObject holderLocationObject = new LocationObject(data);
+        return holderLocationObject;
     }
 
 

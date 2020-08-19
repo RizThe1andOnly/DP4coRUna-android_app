@@ -1,5 +1,6 @@
 package com.example.dp4coruna.network;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -7,20 +8,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.datamanagement.DatabaseTest;
 import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.location.SubmitLocationLabel;
 import com.example.dp4coruna.ml.MLModel;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
 public class NetworkReceive extends AppCompatActivity {
 
     private TextView outputText;
-    private DatabaseTest dbt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_network_receive);//(!!!) if this class's name is changed please change corresponding res's name in res->layout and here
         outputText = findViewById(R.id.outputTextView_networkreceive);
-        dbt = new DatabaseTest(getApplicationContext());
     }
 
 
@@ -29,11 +29,14 @@ public class NetworkReceive extends AppCompatActivity {
      * @param view
      */
     public void sampleData(View view){
+        Intent locationLabelIntent = new Intent(this, SubmitLocationLabel.class);
+        Bundle bndl = new Bundle();
         LocationObject lob = new LocationObject(NetworkReceive.this,getApplicationContext());
         lob.updateLocationData();
-
-        dbt.addData(lob);
-        outputText.append("Added New Location\n");
+        String jsonRep = lob.convertLocationToJSON();
+        locationLabelIntent.putExtras(bndl);
+        locationLabelIntent.putExtra("LocationObjectData", jsonRep);
+        startActivity(locationLabelIntent);
     }
 
 

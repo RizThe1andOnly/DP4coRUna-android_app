@@ -51,7 +51,8 @@ public class TempResultsActivity extends AppCompatActivity {
     public void onTriggerSamplingButtonPress(View view){
         lo.updateLocationData();
         String toBePrinted = lo.convertLocationToJSON();
-        dataView.append(toBePrinted);
+        LocationObject reObtainedLocobj = LocationObject.getLocationFromJSON(toBePrinted);
+        dataView.append(reObtainedLocobj.toString());
     }
 
     public void trainButtonEvent(View view){
