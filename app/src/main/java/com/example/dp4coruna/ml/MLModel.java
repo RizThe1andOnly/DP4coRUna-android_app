@@ -7,7 +7,7 @@ import android.util.Log;
 
 import android.widget.Toast;
 import com.example.dp4coruna.R;
-import com.example.dp4coruna.datamanagement.DatabaseTest;
+import com.example.dp4coruna.datamanagement.AppDatabase;
 import com.example.dp4coruna.datamanagement.MLData;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
@@ -34,57 +34,60 @@ import java.util.List;
 /**
  * Will create machine learning model with required properties and train it by fitting it to given data.
  * The model will be able to generate probability model for the input features based on training.
- *
- * (!!!) Changes will be made to class when ready to integrate to:
- *  - Database code : Somewhat implemented (8/17/2020)
- *  - Whole app
- * For now will be working with this as a standalone class which is not dependent on any other class in this app
- *
- * Currently this section uses random data that is stored in app->res->raw->dp4sampledata.csv
- *
- *
- *      --How the data needs to be formatted to be used in the model (as i know so far)--
- *  DeepLearning4J (DL4J) provides its own classes for machine learning and for holding data, so we need to setup data
- *  in a way to utilize them.
- *
- *  - The model in DL4J takes in a DataSet object for the fit method.
- *      - The DataSet object takes in NDArray objects as parameters, one for labels(will mention below) and one for
- *        features.
- *          - NDArray is the DL4J analogue of a numpy array and takes in arrays as parameters for constructor and builds
- *            an NDArray object.
- *
- *  - Note this for the labels: They need to be in one-hot-encoded format. This will be achieved through
- *                              creating an array for each label and having all zeros except for one element which will
- *                              be '1' corresponding to the label. It will be a matrix with rows and columns equal to
- *                              number of labels/samples. Each row will represent a label and the column with column
- *                              index matching the row index will be value '1' otherwise '0'.
- *
- *
- * (!!!Guide)
- *                              -- TO USE THIS CLASS --
- *     This class will have two broad functionalities: to train model and to use model.
- *
- *     Train model:
- *       This class will be used to train a softmax model based on the currently available data in the device database.
- *       IMPORTANT: should only be called when new location data is added to the device otherwise unnecessary.
- *
- *       Steps for training:
- *          - Create instance of this class.
- *          - Call the method trainAndSaveModel using the instance.
- *              -- This will take care of training the model and then saving the model to device storage, this way
- *              won't have to train model everytime there is a need to use it, only when new data is added.
- *
- *       Steps for using this model:
- *          - Create instance of this class
- *          - Call the method loadModel or create the instance using the constructor MLModel(context,reqLoadModel)
- *              -- This step will load model from device storage into the model instance (this.mln) that belongs to this
- *              class.
- *          - From the instance do: objectName.mln.output(NDArray inputData, false) to get list of probabilities that
- *          make up the softmax output. The output will be type INDArray.
- *
  */
 public class MLModel {
+    /*                          -------------Class Notes-----------------------
+        (!!!) Changes will be made to class when ready to integrate to:
+    - Database code : Somewhat implemented (8/17/2020)
+    - Whole app
+   For now will be working with this as a standalone class which is not dependent on any other class in this app
 
+   Currently this section uses random data that is stored in app->res->raw->dp4sampledata.csv
+
+
+        --How the data needs to be formatted to be used in the model (as i know so far)--
+    DeepLearning4J (DL4J) provides its own classes for machine learning and for holding data, so we need to setup data
+    in a way to utilize them.
+
+    - The model in DL4J takes in a DataSet object for the fit method.
+        - The DataSet object takes in NDArray objects as parameters, one for labels(will mention below) and one for
+          features.
+            - NDArray is the DL4J analogue of a numpy array and takes in arrays as parameters for constructor and builds
+              an NDArray object.
+
+    - Note this for the labels: They need to be in one-hot-encoded format. This will be achieved through
+                                creating an array for each label and having all zeros except for one element which will
+                                be '1' corresponding to the label. It will be a matrix with rows and columns equal to
+                                number of labels/samples. Each row will represent a label and the column with column
+                                index matching the row index will be value '1' otherwise '0'.
+
+
+   (!!!Guide)
+                                -- TO USE THIS CLASS --
+       This class will have two broad functionalities: to train model and to use model.
+
+       Train model:
+         This class will be used to train a softmax model based on the currently available data in the device database.
+         IMPORTANT: should only be called when new location data is added to the device otherwise unnecessary.
+
+         Steps for training:
+            - Create instance of this class.
+            - Call the method trainAndSaveModel using the instance.
+                -- This will take care of training the model and then saving the model to device storage, this way
+                won't have to train model everytime there is a need to use it, only when new data is added.
+
+         Steps for using this model:
+            - Create instance of this class
+            - Call the method loadModel or create the instance using the constructor MLModel(context,reqLoadModel)
+               -- This step will load model from device storage into the model instance (this.mln) that belongs to this
+                class.
+            - From the instance do: objectName.mln.output(NDArray inputData, false) to get list of probabilities that
+            make up the softmax output. The output will be type INDArray.
+     */
+
+
+
+    //                  ------------------ Class Code ---------------------
     private Context context;
 
     private final String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MlModel.zip";
@@ -174,7 +177,7 @@ public class MLModel {
      * create DL4J dataset from said data.
      */
     private void getDataAndCompileDataset(){
-        MLData obtainedData = (new DatabaseTest(this.context)).getMLDataFromDatabase();
+        MLData obtainedData = (new AppDatabase(this.context)).getMLDataFromDatabase();
         this.trainingData = new DataSet(new NDArray(obtainedData.features), new NDArray(obtainedData.encodedLabels));
         this.numberOfLocations = obtainedData.numberOfLocations;
     }
@@ -240,7 +243,7 @@ public class MLModel {
 
 
 
-    /**
+    /*
      * The below section is used for obtaining random data that is stored within the app's directory. IT IS USED TO
      * TEST FUNCTIONALITY OF THE ML MODEL CODE NOT FOR ACTUAL USE AND SHOULD BE DISREGARDED FOR MOST PART, KEPT JUST
      * IN CASE FUNCTIONALITY NEEDS TO BE TEST AGAIN. If using this then un-comment lines with (!!!) at the end.

@@ -3,29 +3,23 @@ package com.example.dp4coruna.location;
 import android.Manifest;
 import android.content.Intent;
 import android.database.Cursor;
-import android.location.Address;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.MainActivity;
 import com.example.dp4coruna.R;
-import com.example.dp4coruna.datamanagement.DatabaseTest;
-import com.example.dp4coruna.location.LocationGrabber;
+import com.example.dp4coruna.datamanagement.AppDatabase;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
 
 public class SubmitLocationLabel extends AppCompatActivity {
 
@@ -49,7 +43,7 @@ public class SubmitLocationLabel extends AppCompatActivity {
     LocationObjectData lod;
     private static final String TAG = "ListDataActivity";
 
-    DatabaseTest myDatabaseHelper;
+    AppDatabase myDatabaseHelper;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,7 +56,7 @@ public class SubmitLocationLabel extends AppCompatActivity {
 
         Log.d("JSON", JSONObjectString);
 
-        myDatabaseHelper = new DatabaseTest(this);
+        myDatabaseHelper = new AppDatabase(this);
 
         //connects UI components
         latlong = findViewById(R.id.latlong);
