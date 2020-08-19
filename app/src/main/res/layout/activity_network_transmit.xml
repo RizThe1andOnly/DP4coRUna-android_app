@@ -19,35 +19,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ProgressBar
-        android:id="@+id/location_measurements_progress"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="182dp"
-        android:layout_marginTop="167dp"
-        android:layout_marginEnd="181dp"
-        android:layout_marginBottom="391dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/network_transmit_welcome" />
-
     <TextView
         android:id="@+id/loc_measurement_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="174dp"
-        android:layout_marginTop="73dp"
+        android:layout_marginTop="413dp"
         android:layout_marginEnd="178dp"
         android:layout_marginBottom="299dp"
         android:text="@string/emptyString"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/location_measurements_progress" />
+        app:layout_constraintTop_toBottomOf="@id/locationMeasurementsProgress" />
 
-    <Button
+    <!--<Button
         android:id="@+id/getDataButton_networkTransmit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -73,6 +59,20 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/getDataButton_networkTransmit"
+        app:layout_constraintTop_toBottomOf="@+id/network_transmit_welcome" />-->
+
+    <ProgressBar
+        android:id="@+id/locationMeasurementsProgress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="180dp"
+        android:layout_marginTop="84dp"
+        android:layout_marginEnd="183dp"
+        android:layout_marginBottom="505dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/network_transmit_welcome" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

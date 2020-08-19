@@ -46,10 +46,24 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
     protected double cellSignalStrength;
 
 
-    public SensorReader(Activity inheritedActivity, Context inheritedContext){
+    /**
+     * Constructor to be used to gather sensor reader and the one that will be used through super(). This one requires
+     * context and activity, which are necessary for gathering sensor information.
+     * @param inheritedActivity
+     * @param inheritedContext
+     */
+    protected SensorReader(Activity inheritedActivity, Context inheritedContext){
         super(inheritedContext,inheritedActivity);
         this.wifiApList = new ArrayList<>();
         this.currentCellData = new CellData();
+    }
+
+    /**
+     * Constructor to be used by LocationObject for the sole purpose of retrieving and holding json data.
+     * NOT FOR ACTUAL USE
+     */
+    protected SensorReader(){
+
     }
 
 

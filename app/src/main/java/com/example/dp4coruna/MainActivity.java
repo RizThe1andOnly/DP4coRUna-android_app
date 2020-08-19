@@ -21,6 +21,7 @@ import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
 import com.example.dp4coruna.network.NetworkReceiveActivity;
 import com.example.dp4coruna.network.NetworkRelayActivity;
 import com.example.dp4coruna.network.NetworkTransmitActivity;
+import com.example.dp4coruna.network.TransmitterService;
 import com.google.android.gms.location.FusedLocationProviderClient;
 
 
@@ -44,6 +45,12 @@ public class MainActivity extends AppCompatActivity {
 
         // initializing this here allows location data to be retrieved on each subsequent activity
         lo = new LocationObject(MainActivity.this,getApplicationContext());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopService(new Intent(this, TransmitterService.class));
     }
 
 
@@ -152,6 +159,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void transmit(View view){
+        // First, start the TransmitterService in the background.
+        startService(new Intent(this, TransmitterService.class));
+        // Then, start the UI activity that will update based on transmissions.
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, NetworkTransmitActivity.class);
         intent.putExtras(bundle);

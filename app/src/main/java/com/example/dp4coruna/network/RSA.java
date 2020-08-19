@@ -6,7 +6,7 @@ import androidx.annotation.RequiresApi;
 
 import javax.crypto.Cipher;
 import java.security.*;
-import java.util.Base64;
+import android.util.Base64;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -26,7 +26,7 @@ public class RSA {
         return null;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+
     public static String encrypt(String plainText, PublicKey publicKey){
         try {
             Cipher encryptCipher = Cipher.getInstance("RSA");
@@ -34,17 +34,17 @@ public class RSA {
 
             byte[] cipherText = encryptCipher.doFinal(plainText.getBytes(UTF_8));
 
-            return Base64.getEncoder().encodeToString(cipherText);
+            return Base64.encodeToString(cipherText, Base64.DEFAULT);
         } catch (Exception e){
             System.out.println("Error while attempting to encrypt: " + e.toString());
         }
         return null;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+
     public static String decrypt(String cipherText, PrivateKey privateKey){
         try {
-            byte[] bytes = Base64.getDecoder().decode(cipherText);
+            byte[] bytes = Base64.decode(cipherText, Base64.DEFAULT);
 
             Cipher decryptCipher = Cipher.getInstance("RSA");
             decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);

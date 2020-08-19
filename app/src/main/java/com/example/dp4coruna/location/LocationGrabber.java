@@ -1,10 +1,12 @@
 package com.example.dp4coruna.location;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 
 
+import android.content.pm.PackageManager;
 import android.os.*;
 
 import android.location.Geocoder;
@@ -15,6 +17,8 @@ import android.util.Log;
 
 import android.location.Address;
 
+import android.widget.Toast;
+import androidx.core.app.ActivityCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -71,10 +75,23 @@ public class LocationGrabber {
     protected double altitude_inMeters;
 
 
-    public LocationGrabber(Context inheritedContext, Activity inheritedActivity){
+    /**
+     * Constructor to be used when gathering data because takes activity and context to use for google api's.
+     * Currently access level is at protected so that only sub-classes can use this constructor.
+     * @param inheritedContext
+     * @param inheritedActivity
+     */
+    protected LocationGrabber(Context inheritedContext, Activity inheritedActivity) {
         this.inheritedContext = inheritedContext;
         this.inheritedActivity = inheritedActivity;
         this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(inheritedActivity);
+    }
+
+    /**
+     * Constructor to be used for holding data and for json data transfer purposes. NOT FOR ACTUAL USE.
+     */
+    protected LocationGrabber() {
+
     }
 
     /** !!!
@@ -85,7 +102,7 @@ public class LocationGrabber {
      *
      *  !!! For now only getLastLocation implemented; will do location update later
      */
-    public synchronized void setupLocation(){
+    public synchronized void setupLocation() {
         final LocationGrabber lgForThreads = LocationGrabber.this;
 
         //get last location
@@ -112,7 +129,7 @@ public class LocationGrabber {
      *
      * Will use HandlerThread class to make async task synchronous; will have main thread block until data is available
      */
-    protected synchronized void updateLocation(){
+    protected synchronized void updateLocation() {
         final LocationRequest mLocationRequest = LocationRequest.create();
         mLocationRequest.setInterval(60000);
         mLocationRequest.setFastestInterval(5000);
@@ -125,7 +142,7 @@ public class LocationGrabber {
             //Asynchronous - called when device location is available
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                Log.i("From callBackHandler","Got here but thread not quitting " + Thread.currentThread().getName());
+                Log.i("From callBackHandler", "Got here but thread not quitting " + Thread.currentThread().getName());
                 if (locationResult == null) {
                     Log.d("here", "no location found");
                     return; //no location found, exit
@@ -138,7 +155,11 @@ public class LocationGrabber {
             }
         };
 
-        this.fusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallback,Looper.myLooper());
+        if (ActivityCompat.checkSelfPermission(this.inheritedContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this.inheritedContext,"Permission for this operation not granted",Toast.LENGTH_LONG).show();
+            return;
+        }
+        this.fusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
 
     }
 
@@ -151,6 +172,10 @@ public class LocationGrabber {
     private synchronized void getLocation(){
         final LocationGrabber lgForOnSuccessListener = LocationGrabber.this;
         try {
+            if (ActivityCompat.checkSelfPermission(this.inheritedContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this.inheritedContext,"Permission for this operation not granted",Toast.LENGTH_LONG).show();
+                return;
+            }
             this.classLocationVar = Tasks.await(this.fusedLocationClient.getLastLocation(),500, TimeUnit.MILLISECONDS);
             this.setAddress(this.classLocationVar);
         } catch (ExecutionException e) {
