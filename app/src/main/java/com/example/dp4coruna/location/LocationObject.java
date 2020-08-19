@@ -20,7 +20,11 @@ import java.util.List;
  * The functionality of trasforming a LocationObject object into a JSON string and turning is back is supported in this
  * class through the convertLocationToJSON() and (static method) getLocationFromJSON(String locationJSON) methods.
  *
- * Note: getLocationFromJSON will return a location object only with data in it, that object will not be able to use
+ * Note-1:
+ *  - getLocationFromJSON is static method and should be used like this when converting JSON into LocationObject:
+ *                          LocationObject lob = LocationObject.getLocationFromJSON(jsonStringArgument);
+ *
+ * Note-2: getLocationFromJSON will return a location object only with data in it, that object will not be able to use
  * updateLocationData. To do that simply create a new LocationObject.
  */
 public class LocationObject extends SensorReader {
