@@ -25,7 +25,7 @@ import java.util.ArrayList;
 public class DataBaseTestActivity extends AppCompatActivity {
 
     private static final String TAG = "ListDataActivity";
-    DatabaseTest myDatabaseHelper;
+    AppDatabase myDatabaseHelper;
     private EditText editText;
     private Button btnAdd, btnViewData;
 //    LocationObject locationObject;
@@ -38,7 +38,7 @@ public class DataBaseTestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        myDatabaseHelper = new DatabaseTest(this);
+        myDatabaseHelper = new AppDatabase(this);
 
 
         /**

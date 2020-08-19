@@ -346,7 +346,7 @@ public class LocationObject extends SensorReader {
 
     /**
      * Creates a LocationObject from json passed in as an argument. Uses the LocationObjectData class as an intermediary
-     * to create the location object.
+     * to create the location object. NOTE: The returned LocationObject cannot call updateLocationData.
      *
      * @param locationJSON json string representing the location object
      * @return LocationObject

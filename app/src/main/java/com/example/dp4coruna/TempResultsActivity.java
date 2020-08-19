@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.dp4coruna.datamanagement.DatabaseTest;
+import com.example.dp4coruna.datamanagement.AppDatabase;
 import com.example.dp4coruna.datamanagement.MLData;
 import com.example.dp4coruna.location.LocationObject;
 import com.example.dp4coruna.location.WiFiAccessPoint;
@@ -24,7 +24,7 @@ public class TempResultsActivity extends AppCompatActivity {
 
     private LocationObject lo;
 
-    private DatabaseTest dbt;
+    private AppDatabase dbt;
 
     private Cursor crs;
 
@@ -40,7 +40,7 @@ public class TempResultsActivity extends AppCompatActivity {
         dataView = findViewById(R.id.dataViewBox);
         lo = new LocationObject(TempResultsActivity.this,getApplicationContext());
 
-        dbt = new DatabaseTest(getApplicationContext());
+        dbt = new AppDatabase(getApplicationContext());
     }
 
 
