@@ -7,7 +7,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.location.LocationObject;
-import com.example.dp4coruna.location.SubmitLocationLabel;
 import com.example.dp4coruna.ml.MLModel;
 
 public class NetworkReceive extends AppCompatActivity {

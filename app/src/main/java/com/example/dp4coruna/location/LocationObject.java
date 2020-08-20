@@ -14,23 +14,28 @@ import java.util.List;
  * Represents a particular location with its name and features. Features include address and other sensor data
  * (see SensorReader and LocationObject classes which this class extends). Each of these location objects can be a
  * room or building based on data.
- *
- *
- * -----------------FOR THE PURPOSES OF JSON-------------------
- * The functionality of trasforming a LocationObject object into a JSON string and turning is back is supported in this
- * class through the convertLocationToJSON() and (static method) getLocationFromJSON(String locationJSON) methods.
- *
- * Note-1:
- *  - getLocationFromJSON is static method and should be used like this when converting JSON into LocationObject:
- *                          LocationObject lob = LocationObject.getLocationFromJSON(jsonStringArgument);
- *
- * Note-2: getLocationFromJSON will return a location object only with data in it, that object will not be able to use
- * updateLocationData. To do that simply create a new LocationObject.
  */
 public class LocationObject extends SensorReader {
+    /*
+                            -----------------FOR THE PURPOSES OF JSON-------------------
+        The functionality of transforming a LocationObject object into a JSON string and turning is back is supported in this
+        class through the convertLocationToJSON() and (static method) getLocationFromJSON(String locationJSON) methods.
+
+        Note-1:
+            - getLocationFromJSON is static method and should be used like this when converting JSON into LocationObject:
+                            LocationObject lob = LocationObject.getLocationFromJSON(jsonStringArgument);
+
+        Note-2: getLocationFromJSON will return a location object only with data in it, that object will not be able to use
+        updateLocationData. To do that simply create a new LocationObject.
+     */
 
     //chekcer variable to make sure the context and activities have been set:
     private boolean updateable;
+
+    //network request type constants and variable ((!!!) Names may need to be changed here for clarity)
+    public static final String SEND_LABEL_REQUEST_FEATURES = "requestingfeatures";
+    public static final String SEND_FEATURES_REQUEST_LABEL = "requestinglableprobabilities";
+    public String requestType;
 
     public String locationLabel;
 
@@ -159,7 +164,14 @@ public class LocationObject extends SensorReader {
         this.roomNumber=roomNumber;
     }
 
-
+    /**
+     * Setter for the type of request this location object will be making on the network. For this please use the
+     * static string constants provided by LocationObject class.
+     * @param requestType LocationObject.SEND_LABEL_REQUEST_FEATURES or LocationObject.SEND_FEATURES_REQUEST_LABEL
+     */
+    public void setRequestType(String requestType){
+        this.requestType = requestType;
+    }
 
     /**
      * Returns latitude in degrees

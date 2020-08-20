@@ -392,14 +392,13 @@ public class AppDatabase extends SQLiteOpenHelper {
     }
 
 
-    /*
-    This method will pass in a location label and then query the database table to check if this location label is equal to one of the labels in the column of location labels.  If it is, it will
-    return all an array list of all the location features.
-
-    @returns ArrayList<String> with sensor data
-
+    /**
+     * This method will pass in a location label and then query the database table to check if this location label is equal to one of the labels in the column of location labels.  If it is, it will
+     * return all an array list of all the location features.
+     *
+     * @returns ArrayList<String> with sensor data
      */
-    public Cursor CheckIfLocationLabelExists(String sampleLabel){
+    public Cursor checkIfLocationLabelExists(String sampleLabel){
 
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -434,14 +433,9 @@ public class AppDatabase extends SQLiteOpenHelper {
 
 
         }
-
-
-
-
         return null;
-
-
-        }
+    }
+    
 
 
     /**
