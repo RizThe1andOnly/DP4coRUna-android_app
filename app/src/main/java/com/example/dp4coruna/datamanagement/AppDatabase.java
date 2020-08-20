@@ -161,30 +161,30 @@ public class AppDatabase extends SQLiteOpenHelper {
      * @param locationObject LocationObject class which contains data on the location
      * @return boolean true if successful, false if not
      */
-    public boolean addData(LocationObject locationObject){
-        //checks for the location object argument:
-        if( (!(locationObject instanceof LocationObject)) || (locationObject == null) ){
-            return false;
-        }
-
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-
-        //insert data:
-        contentValues.put(LOCATION_TABLE_COL_LABEL,locationObject.locationLabel);
-        contentValues.put(LOCATION_TABLE_COL_LIGHT,(float)locationObject.getLightLevel());
-        contentValues.put(LOCATION_TABLE_COL_SOUND,(float)locationObject.getSoundLevel());
-        contentValues.put(LOCATION_TABLE_COL_GMFS,(float)locationObject.getGeoMagneticFieldStrength());
-        contentValues.put(LOCATION_TABLE_COL_CELL_TID,(float)locationObject.getCellId());
-        contentValues.put(LOCATION_TABLE_COL_AREA_CODE,(float)locationObject.getAreaCode());
-        contentValues.put(LOCATION_TABLE_COL_SIGNAL_STRENGTH,(float)locationObject.getCellSignalStrength());
-
-        //insert the row:
-        long result = db.insert(LOCATION_TABLE, null, contentValues);
-
-        if(result == -1) return false;
-        return true;
-    }
+//    public boolean addData(LocationObject locationObject){
+//        //checks for the location object argument:
+//        if( (!(locationObject instanceof LocationObject)) || (locationObject == null) ){
+//            return false;
+//        }
+//
+//        SQLiteDatabase db = this.getWritableDatabase();
+//        ContentValues contentValues = new ContentValues();
+//
+//        //insert data:
+//        contentValues.put(LOCATION_TABLE_COL_LABEL,locationObject.locationLabel);
+//        contentValues.put(LOCATION_TABLE_COL_LIGHT,(float)locationObject.getLightLevel());
+//        contentValues.put(LOCATION_TABLE_COL_SOUND,(float)locationObject.getSoundLevel());
+//        contentValues.put(LOCATION_TABLE_COL_GMFS,(float)locationObject.getGeoMagneticFieldStrength());
+//        contentValues.put(LOCATION_TABLE_COL_CELL_TID,(float)locationObject.getCellId());
+//        contentValues.put(LOCATION_TABLE_COL_AREA_CODE,(float)locationObject.getAreaCode());
+//        contentValues.put(LOCATION_TABLE_COL_SIGNAL_STRENGTH,(float)locationObject.getCellSignalStrength());
+//
+//        //insert the row:
+//        long result = db.insert(LOCATION_TABLE, null, contentValues);
+//
+//        if(result == -1) return false;
+//        return true;
+//    }
 
     /**
      * Adds an entry to the mylist_data table in the database. this is called after a location has been sampled and is

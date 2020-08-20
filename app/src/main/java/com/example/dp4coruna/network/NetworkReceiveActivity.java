@@ -9,7 +9,8 @@ import com.example.dp4coruna.R;
 import com.example.dp4coruna.location.LocationObject;
 import com.example.dp4coruna.ml.MLModel;
 
-public class NetworkReceive extends AppCompatActivity {
+
+public class NetworkReceiveActivity extends AppCompatActivity {
 
     private TextView outputText;
 
@@ -26,9 +27,9 @@ public class NetworkReceive extends AppCompatActivity {
      * @param view
      */
     public void sampleData(View view){
+        LocationObject lob = new LocationObject(NetworkReceiveActivity.this,getApplicationContext());
         Intent locationLabelIntent = new Intent(this, SubmitLocationLabel.class);
         Bundle bndl = new Bundle();
-        LocationObject lob = new LocationObject(NetworkReceive.this,getApplicationContext());
         lob.updateLocationData();
         String jsonRep = lob.convertLocationToJSON();
         locationLabelIntent.putExtras(bndl);

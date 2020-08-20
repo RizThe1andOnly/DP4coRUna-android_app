@@ -7,6 +7,7 @@ import android.location.Address;
 import android.widget.Toast;
 import com.google.gson.Gson;
 
+import java.io.Serializable;
 import java.util.List;
 
 
@@ -15,7 +16,7 @@ import java.util.List;
  * (see SensorReader and LocationObject classes which this class extends). Each of these location objects can be a
  * room or building based on data.
  */
-public class LocationObject extends SensorReader {
+public class LocationObject extends SensorReader implements Serializable{
     /*
                             -----------------FOR THE PURPOSES OF JSON-------------------
         The functionality of transforming a LocationObject object into a JSON string and turning is back is supported in this

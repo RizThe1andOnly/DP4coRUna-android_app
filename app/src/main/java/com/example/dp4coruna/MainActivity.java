@@ -16,11 +16,18 @@ import androidx.core.content.ContextCompat;
 import android.view.View;
 
 import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.location.SubmitLocationLabel;
 import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
-import com.example.dp4coruna.network.NetworkReceive;
-import com.example.dp4coruna.network.NetworkRelay;
-import com.example.dp4coruna.network.NetworkTransmit;
+import com.example.dp4coruna.network.NetworkReceiveActivity;
+import com.example.dp4coruna.network.NetworkRelayActivity;
+import com.example.dp4coruna.network.NetworkTransmitActivity;
+import com.example.dp4coruna.network.TransmitterService;
 import com.google.android.gms.location.FusedLocationProviderClient;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.security.PublicKey;
+import java.io.Serializable;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -138,21 +145,34 @@ public class MainActivity extends AppCompatActivity {
 
     public void receive(View view){
         Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, NetworkReceive.class);
+        Intent intent = new Intent(this, NetworkReceiveActivity.class);
         intent.putExtras(bundle);
         startActivity(intent);
     }
 
     public void relay(View view){
         Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, NetworkRelay.class);
+        Intent intent = new Intent(this, NetworkRelayActivity.class);
         intent.putExtras(bundle);
         startActivity(intent);
     }
 
     public void transmit(View view){
+        // Start the transmitter service.
+        Intent serviceIntent = new Intent(this, TransmitterService.class);
+        ArrayList<String> deviceAddresses = new ArrayList<String>();
+        // TODO: Hardcode IP addresses to this.
+        List<PublicKey> rsaEncryptKeys = new ArrayList<PublicKey>();
+        // TODO: Hardcode Public Keys to this.
+        Bundle params = new Bundle();
+        params.putStringArrayList("deviceAddresses", deviceAddresses);
+        params.putSerializable("rsaEncryptKeys", (Serializable) rsaEncryptKeys);
+        params.putString("transmitterAddress", "");
+        serviceIntent.putExtra("Bundle", params);
+        startService(serviceIntent);
+        // Start the UI activity that will update based on transmissions.
         Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, NetworkTransmit.class);
+        Intent intent = new Intent(this, NetworkTransmitActivity.class);
         intent.putExtras(bundle);
         startActivity(intent);
     }

@@ -1,17 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                                   xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-                                                   android:layout_height="match_parent">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/network_transmit_welcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="176dp"
+        android:layout_marginTop="106dp"
+        android:layout_marginEnd="176dp"
+        android:layout_marginBottom="606dp"
+        android:text="@string/networkTransmitterWelcome"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/loc_measurement_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="174dp"
+        android:layout_marginTop="413dp"
+        android:layout_marginEnd="178dp"
+        android:layout_marginBottom="299dp"
+        android:text="@string/emptyString"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/locationMeasurementsProgress" />
+
+    <!--<Button
+        android:id="@+id/getDataButton_networkTransmit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="442dp"
+        android:layout_marginEnd="50dp"
+        android:layout_marginBottom="116dp"
+        android:text="GetData"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/transmitData_networkTransmit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/network_transmit_welcome" />
 
     <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/getDataButton_networkTransmit"
-            tools:layout_editor_absoluteY="50dp"
-            tools:layout_editor_absoluteX="78dp" android:text="GetData"/>
-    <Button
-            android:text="Transmit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/transmitData_networkTransmit"
-            tools:layout_editor_absoluteY="47dp"
-            tools:layout_editor_absoluteX="237dp"/>
+        android:id="@+id/transmitData_networkTransmit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="148dp"
+        android:layout_marginTop="442dp"
+        android:layout_marginEnd="34dp"
+        android:layout_marginBottom="116dp"
+        android:text="Transmit"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/getDataButton_networkTransmit"
+        app:layout_constraintTop_toBottomOf="@+id/network_transmit_welcome" />-->
+
+    <ProgressBar
+        android:id="@+id/locationMeasurementsProgress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="180dp"
+        android:layout_marginTop="84dp"
+        android:layout_marginEnd="183dp"
+        android:layout_marginBottom="505dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/network_transmit_welcome" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
