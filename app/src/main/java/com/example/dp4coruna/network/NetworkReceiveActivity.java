@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.location.LocationObject;
 import com.example.dp4coruna.ml.MLModel;
+import com.example.dp4coruna.location.SubmitLocationLabel;
 
 
 public class NetworkReceiveActivity extends AppCompatActivity {

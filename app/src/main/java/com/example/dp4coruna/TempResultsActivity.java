@@ -1,17 +1,21 @@
 package com.example.dp4coruna;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.datamanagement.AppDatabase;
 import com.example.dp4coruna.datamanagement.MLData;
 import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.location.SubmitLocationLabel;
 import com.example.dp4coruna.location.WiFiAccessPoint;
 import com.example.dp4coruna.ml.MLModel;
 import android.database.Cursor;
+import com.example.dp4coruna.network.NetworkReceiveActivity;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.cpu.nativecpu.NDArray;
 
@@ -43,6 +47,11 @@ public class TempResultsActivity extends AppCompatActivity {
         dbt = new AppDatabase(getApplicationContext());
     }
 
+
+
+    /*
+                        -----------------------------NORMAL TESTING CODE-----------------------------
+     */
 
     /**
      * Will create new instances of LocationGrabber and SensorReader and get data they have to offer
@@ -196,4 +205,50 @@ public class TempResultsActivity extends AppCompatActivity {
 
         return inputArr;
     }
+
+
+    /*
+                        -----------------------------NORMAL TESTING CODE END-----------------------------
+     */
+
+
+
+
+
+
+    /*
+                    --------------------------------DEMO CODE 8/21/2020------------------------------------
+     */
+
+
+    /**
+     * Create a LocationObject instance and obtain current data and then store data into the device database
+     * @param view
+     */
+    public void getAndStoreLocationData(View view){
+        LocationObject lob = new LocationObject(TempResultsActivity.this, getApplicationContext());
+        Intent locationLabelIntent = new Intent(this, SubmitLocationLabel.class);
+        Bundle bndl = new Bundle();
+        lob.updateLocationData();
+        String jsonRep = lob.convertLocationToJSON();
+        locationLabelIntent.putExtras(bndl);
+        locationLabelIntent.putExtra("LocationObjectData", jsonRep);
+        startActivity(locationLabelIntent);
+        Toast.makeText(getApplicationContext(),"Location Added",Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Trains the machine learning model with the data currently available in device database.
+     * @param view
+     */
+    public void trainModel(View view){
+        MLModel mlm = new MLModel(getApplicationContext(), MLModel.TRAIN_MODEL_AND_SAVE_IN_DEVICE);
+        Toast.makeText(getApplicationContext(),"Trained Model",Toast.LENGTH_SHORT).show();
+    }
+
+
+    /*
+                 --------------------------------DEMO CODE 8/21/2020 (END)------------------------------------
+     */
+
 }

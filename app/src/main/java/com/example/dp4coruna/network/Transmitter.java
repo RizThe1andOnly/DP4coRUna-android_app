@@ -38,7 +38,7 @@ public class Transmitter implements Runnable {
         @Override
         public void onFinish() {
             // Update the LocationObject's measurements and display to the user. For now, that's commented out since my device can't run the sensor.
-            // networkLocObj.updateLocationData();
+             locObj.updateLocationData();
             // Send the updated location object to the activity to display.
             Intent locationUpdateIntent = new Intent(NetworkTransmitActivity.RECEIVE_MESSAGE_BROADCAST);
             locationUpdateIntent.putExtra("progress", -1);

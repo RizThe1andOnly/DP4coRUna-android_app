@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         // Start the transmitter service.
         Intent serviceIntent = new Intent(this, TransmitterService.class);
         ArrayList<String> deviceAddresses = new ArrayList<String>();
-        // TODO: Hardcode IP addresses to this.
+        // TODO: Hardcode IP addresses to this. 0:tranmitter,
         List<PublicKey> rsaEncryptKeys = new ArrayList<PublicKey>();
         // TODO: Hardcode Public Keys to this.
         Bundle params = new Bundle();
