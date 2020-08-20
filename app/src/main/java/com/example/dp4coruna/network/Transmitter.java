@@ -19,7 +19,7 @@ public class Transmitter implements Runnable {
     private List<String> deviceAddresses;
     private List<PublicKey> rsaEncryptKeys;
     private String transmitterAddress;
-    private Context serviceContext;
+    private Context context;
     private AtomicBoolean isDestroyed;
     private AtomicBoolean isTimerFinished;
     private LocationObject locObj;
@@ -31,31 +31,33 @@ public class Transmitter implements Runnable {
             int progress = (int)(10000 - msLeft) / (100);
             Intent progressUpdateIntent = new Intent(NetworkTransmitActivity.RECEIVE_MESSAGE_BROADCAST);
             progressUpdateIntent.putExtra("progress", progress);
-            LocalBroadcastManager.getInstance(serviceContext).sendBroadcast(progressUpdateIntent);
+            progressUpdateIntent.putExtra("location", "");
+            LocalBroadcastManager.getInstance(context).sendBroadcast(progressUpdateIntent);
         }
 
         @Override
         public void onFinish() {
             // Update the LocationObject's measurements and display to the user. For now, that's commented out since my device can't run the sensor.
             // networkLocObj.updateLocationData();
-//            String locationString = networkLocObj.toString();
-//            String locationJSON = networkLocObj.convertLocationToJSON();
-//            locMeasurementsField.setText(locationString);
-//            Toast.makeText(NetworkTransmitActivity.this, "Location data securely sent to receiver to retrieve label.", Toast.LENGTH_SHORT).show();
+            // Send the updated location object to the activity to display.
+            Intent locationUpdateIntent = new Intent(NetworkTransmitActivity.RECEIVE_MESSAGE_BROADCAST);
+            locationUpdateIntent.putExtra("progress", -1);
+            locationUpdateIntent.putExtra("location", locObj.convertLocationToJSON());
+            LocalBroadcastManager.getInstance(context).sendBroadcast(locationUpdateIntent);
             isTimerFinished.set(true);
             Log.d("Transmitter", "CountdownTimer is done.");
-
 
         }
     };
 
-    public Transmitter(List<String> dvas, String dva, List<PublicKey> rsaEKs, Context serviceContext) {
+    public Transmitter(List<String> dvas, String dva, List<PublicKey> rsaEKs, Context context, LocationObject locationObject) {
         this.deviceAddresses = dvas;
         this.transmitterAddress = dva;
         this.rsaEncryptKeys = rsaEKs;
-        this.serviceContext = serviceContext;
+        this.context = context;
         this.isDestroyed = new AtomicBoolean(false);
         this.isTimerFinished = new AtomicBoolean(true);
+        this.locObj = locationObject;
     }
 
     @Override
@@ -71,7 +73,6 @@ public class Transmitter implements Runnable {
         }
 
     }
-
 
     public void destroy() {
         isDestroyed.set(true);

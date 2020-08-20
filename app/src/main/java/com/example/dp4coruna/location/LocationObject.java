@@ -4,9 +4,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.location.Address;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.widget.Toast;
 import com.google.gson.Gson;
 
+import java.io.Serializable;
 import java.util.List;
 
 
@@ -27,7 +30,7 @@ import java.util.List;
  * Note-2: getLocationFromJSON will return a location object only with data in it, that object will not be able to use
  * updateLocationData. To do that simply create a new LocationObject.
  */
-public class LocationObject extends SensorReader {
+public class LocationObject extends SensorReader implements Serializable {
 
     //chekcer variable to make sure the context and activities have been set:
     private boolean updateable;
@@ -88,6 +91,8 @@ public class LocationObject extends SensorReader {
         this.roomNumber = locobj.getRoomNumber();
         this.streetaddress = locobj.getStreetAddress();
     }
+
+
 
 
     /**
@@ -356,7 +361,6 @@ public class LocationObject extends SensorReader {
         LocationObject holderLocationObject = new LocationObject(data);
         return holderLocationObject;
     }
-
 
 }
 

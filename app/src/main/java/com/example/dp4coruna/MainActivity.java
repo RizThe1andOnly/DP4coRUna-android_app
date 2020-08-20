@@ -24,6 +24,11 @@ import com.example.dp4coruna.network.NetworkTransmitActivity;
 import com.example.dp4coruna.network.TransmitterService;
 import com.google.android.gms.location.FusedLocationProviderClient;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.security.PublicKey;
+import java.io.Serializable;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -45,12 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
         // initializing this here allows location data to be retrieved on each subsequent activity
         lo = new LocationObject(MainActivity.this,getApplicationContext());
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        stopService(new Intent(this, TransmitterService.class));
     }
 
 
@@ -159,9 +158,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void transmit(View view){
-        // First, start the TransmitterService in the background.
-        startService(new Intent(this, TransmitterService.class));
-        // Then, start the UI activity that will update based on transmissions.
+        // Start the transmitter service.
+        Intent serviceIntent = new Intent(this, TransmitterService.class);
+        ArrayList<String> deviceAddresses = new ArrayList<String>();
+        // TODO: Hardcode IP addresses to this.
+        List<PublicKey> rsaEncryptKeys = new ArrayList<PublicKey>();
+        // TODO: Hardcode Public Keys to this.
+        Bundle params = new Bundle();
+        params.putStringArrayList("deviceAddresses", deviceAddresses);
+        params.putSerializable("rsaEncryptKeys", (Serializable) rsaEncryptKeys);
+        params.putString("transmitterAddress", "");
+        serviceIntent.putExtra("Bundle", params);
+        startService(serviceIntent);
+        // Start the UI activity that will update based on transmissions.
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, NetworkTransmitActivity.class);
         intent.putExtras(bundle);

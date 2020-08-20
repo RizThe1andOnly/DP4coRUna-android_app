@@ -23,11 +23,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service
-            android:name=".network.RelayService"
+            android:name=".network.TransmitterService"
             android:enabled="true"
             android:exported="true"></service>
         <service
-            android:name=".network.TransmitterService"
+            android:name=".network.RelayService"
             android:enabled="true"
             android:exported="true" />
         <!--
