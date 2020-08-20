@@ -371,7 +371,7 @@ public class AppDatabase extends SQLiteOpenHelper {
     }
 
 
-    private List<String> getAllLocationLabels(){
+    public ArrayList<String> getAllLocationLabels(){
         /*
             Obtain all of the labels in the database location table
              1- query the database for all location labels
@@ -383,13 +383,65 @@ public class AppDatabase extends SQLiteOpenHelper {
         String labelQueryString = "SELECT "+  LOCATION_TABLE_COL_LABEL + " FROM " + LOCATION_TABLE + ";";
         Cursor labelCursor = db.rawQuery(labelQueryString,null);
 
-        List<String> toBeReturned = new ArrayList<>();
+        ArrayList<String> toBeReturned = new ArrayList<>();
         while(labelCursor.moveToNext()){
             toBeReturned.add(labelCursor.getString(0));
         }
 
         return toBeReturned;
     }
+
+
+    /*
+    This method will pass in a location label and then query the database table to check if this location label is equal to one of the labels in the column of location labels.  If it is, it will
+    return all an array list of all the location features.
+
+    @returns ArrayList<String> with sensor data
+
+     */
+    public Cursor CheckIfLocationLabelExists(String sampleLabel){
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String labelQueryString = "SELECT "+  LOCATION_TABLE_COL_LABEL + " FROM " + LOCATION_TABLE + ";";
+        Cursor labelCursor = db.rawQuery(labelQueryString,null);
+
+        ArrayList<String> toBeReturned = new ArrayList<>();
+        while(labelCursor.moveToNext()) {
+            toBeReturned.add(labelCursor.getString(0));
+        }
+
+        for(int a=0;a<toBeReturned.size();a++){
+
+            if(sampleLabel.equals(toBeReturned.get(a))){           //If the label is in the arrayList, then return that tuples location features
+
+
+                String featuresQuery = "SELECT "
+                        + LOCATION_TABLE_COL_LIGHT + ", "
+                        + LOCATION_TABLE_COL_SOUND + ", "
+                        + LOCATION_TABLE_COL_GMFS + ", "
+                        + LOCATION_TABLE_COL_CELL_TID + ", "
+                        + LOCATION_TABLE_COL_AREA_CODE + ", "
+                        + LOCATION_TABLE_COL_SIGNAL_STRENGTH + " "
+                        + "FROM " + LOCATION_TABLE + ";";
+
+
+                Cursor featuresDataCursor = db.rawQuery(featuresQuery,null);
+
+                return featuresDataCursor;
+
+            }
+
+
+        }
+
+
+
+
+        return null;
+
+
+        }
 
 
     /**
