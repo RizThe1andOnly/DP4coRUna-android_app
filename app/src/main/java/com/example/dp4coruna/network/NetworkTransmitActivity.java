@@ -10,6 +10,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -25,7 +26,11 @@ import com.example.dp4coruna.location.LocationObjectData;
 
 import org.w3c.dom.Text;
 
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,7 +47,7 @@ public class NetworkTransmitActivity extends AppCompatActivity {
 
 
 
-    public static final String RECEIVE_MESSAGE_BROADCAST = "com.example.dp4coruna.network.RECEIVE_MESSAGE";
+    public static final String RECEIVE_MESSAGE_BROADCAST = "com.example.dp4coruna.network.NETWORK_TRANSMIT_RECEIVE_MESSAGE";
 
 
     private static class TransmitHandler extends Handler {
@@ -105,19 +110,22 @@ public class NetworkTransmitActivity extends AppCompatActivity {
             networkLocObj = new LocationObject(NetworkTransmitActivity.this, getApplicationContext());
 
 //        Get the list of deviceAddresses and public keys (hard-coded for now) from the bundle.
-//        Intent intentFromMain = getIntent();
-//        Bundle argsFromMain = intentFromMain.getBundleExtra("Bundle");
-//        deviceAddresses = (ArrayList<String>) argsFromMain.getSerializable("deviceAddresses");
-//        rsaEncryptKeys = (ArrayList<PublicKey>) argsFromMain.getSerializable("rsaEncryptKeys");
-            deviceAddresses = new ArrayList<String>();
-            rsaEncryptKeys = new ArrayList<PublicKey>();
-            deviceAddress = "";
+            Intent intentFromMain = getIntent();
+            Bundle argsFromMain = intentFromMain.getBundleExtra("Bundle");
+            deviceAddresses = argsFromMain.getStringArrayList("deviceAddresses");
+            deviceAddress = argsFromMain.getString("transmitterAddress");
+            List<String> b64PublicKeys = argsFromMain.getStringArrayList("rsaEncryptKeys");
+            // Convert them to PublicKeys
+            recoverPublicKeys(b64PublicKeys);
+//            deviceAddresses = new ArrayList<String>();
+//            rsaEncryptKeys = new ArrayList<PublicKey>();
+//            deviceAddress = "";
 
             // Instantiate the handler, receiver, and broadcastmanager that'll be used to update the UI upon receiving messages from the newly spawned thread.
             tHandler = new TransmitHandler(timer, locMeasurementsField);
             tbReceiver = new TransmitBroadcastReceiver(tHandler);
             localBroadcastManager = LocalBroadcastManager.getInstance(this);
-            localBroadcastManager.registerReceiver(tbReceiver, new IntentFilter(RECEIVE_MESSAGE_BROADCAST));
+            localBroadcastManager.registerReceiver(tbReceiver, new IntentFilter(NetworkTransmitActivity.RECEIVE_MESSAGE_BROADCAST));
             new Thread(new Transmitter(deviceAddresses, deviceAddress, rsaEncryptKeys, this, networkLocObj)).start();
         }
 
@@ -128,6 +136,20 @@ public class NetworkTransmitActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean("isThreadRunning", true);
+    }
+
+    public void recoverPublicKeys(List<String> b64PublicKeys) {
+        for (int i = 0; i < b64PublicKeys.size(); i++) {
+            try {
+                byte[] publicKeyBytes = Base64.decode(b64PublicKeys.get(i), Base64.DEFAULT);
+                X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKeyBytes);
+                KeyFactory kf = KeyFactory.getInstance("RSA");
+                rsaEncryptKeys.add(kf.generatePublic(spec));
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                Log.d("NetworkTransmitActivity", "Exception thrown when trying to recover private key.");
+                e.printStackTrace();
+            }
+        }
     }
 
 //    @Override

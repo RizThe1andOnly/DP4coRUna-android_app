@@ -6,6 +6,8 @@ import android.util.Log;
 import java.security.PrivateKey;
 import java.net.*;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RelayServer implements Runnable {
@@ -16,32 +18,49 @@ public class RelayServer implements Runnable {
     private PrivateKey myPrivateKey;
     private Context serviceContext;
     private AtomicBoolean isDestroyed;
+    private ServerSocket relayServerSocket;
+    private List<Thread> relayConnectionThreads;
 
-    public RelayServer(PrivateKey myPK, Context sContext, AtomicBoolean isd) {
+    public RelayServer(PrivateKey myPK, Context sContext) {
         this.myPrivateKey = myPK;
         this.serviceContext = sContext;
-        this.isDestroyed = isd;
+        this.isDestroyed = new AtomicBoolean(false);
     }
 
     @Override
     public void run() {
         try {
-            ServerSocket relayServerSocket = new ServerSocket(3899);
+            relayServerSocket = new ServerSocket(3899);
             Socket relayClientSocket = null;
-            while (true) {
+            while (!isDestroyed.get()) {
+                Log.d("RelayServer", "Ready for new connections.");
                 relayClientSocket = relayServerSocket.accept();
                 DataInputStream readBuffer = new DataInputStream(relayClientSocket.getInputStream());
                 DataOutputStream writeBuffer = new DataOutputStream(relayClientSocket.getOutputStream());
                 // Spawn a new thread to handle the connection request.
-                Thread relayHandlerThread = new Thread(new RelayHandler(myPrivateKey, relayClientSocket, readBuffer, writeBuffer));
-                relayHandlerThread.start();
+                Thread relayConnectionThread = new Thread(new RelayConnection(myPrivateKey, relayClientSocket, readBuffer, writeBuffer, serviceContext));
+                relayConnectionThreads.add(relayConnectionThread);
+                relayConnectionThread.start();
 
             }
         } catch(IOException ioe) {
-            Log.d("RelayServer", "IO Exception occurred with the Public Key server socket.");
+            Log.d("RelayServer", "Time to shutdown relay server socket.");
             ioe.printStackTrace();
         }
         return;
+    }
+
+    public void destroy() {
+        try {
+            for (Thread relayConnectionThread : relayConnectionThreads) {
+                relayConnectionThread.join();
+            }
+            relayServerSocket.close();
+            isDestroyed.set(true);
+        } catch(IOException | InterruptedException ie) {
+            Log.d("RelayServer", "Couldn't shutdown relay server socket.");
+            ie.printStackTrace();
+        }
     }
 
 }
