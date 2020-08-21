@@ -1,6 +1,7 @@
 package com.example.dp4coruna.ml;
 
 import android.content.Context;
+import com.example.dp4coruna.datamanagement.AppDatabase;
 import com.example.dp4coruna.location.LocationObject;
 
 /**
@@ -43,7 +44,9 @@ public class QueryLocation {
      * @return JSON representation of locationobject if label exists in the device database or "not found" if not.
      */
     private static String queryFeatures(LocationObject locationObject, Context context){
-        return "";
+        //Todo add label field or label getter to location object and then change this:
+        String toBeReturnedLocationJson = (new AppDatabase(context)).checkIfLocationLabelExists(locationObject.getRoomName());
+        return toBeReturnedLocationJson;
     }
 
 

@@ -48,6 +48,12 @@ public class LocationObject extends SensorReader implements Serializable{
     protected String roomNumber;
 
 
+    /**
+     * Creates empty location object that will be filled with database data.
+     */
+    public LocationObject(){
+        super();
+    }
 
     /**
      * Creates an instance of Location utilizing parent and grandparent SensorReader and LocationGrabber.
@@ -172,6 +178,15 @@ public class LocationObject extends SensorReader implements Serializable{
      */
     public void setRequestType(String requestType){
         this.requestType = requestType;
+    }
+
+
+    /**
+     * Sets the location label to the given input.
+     * @param label
+     */
+    public void setLocationLabel(String label){
+        this.locationLabel = label;
     }
 
     /**
@@ -336,6 +351,14 @@ public class LocationObject extends SensorReader implements Serializable{
      */
     public double getCellSignalStrength(){
         return this.cellSignalStrength;
+    }
+
+    /**
+     * Returns the label of the calling locationobject.
+     * @return String: label of location
+     */
+    public String getLocationLabel(){
+        return this.locationLabel;
     }
 
 
