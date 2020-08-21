@@ -55,6 +55,8 @@ public class RelayConnection implements Runnable {
                 receiverWriteBuffer.writeUTF("Received");
 
             } else {
+                // We need to forward the message. First, encode it in base64.
+                decryptedMessage = Base64.encodeToString(decryptedMessage.getBytes(), Base64.DEFAULT);
                 // We need to forward the message. First, broadcast to the NetworkRelayActivity to output.
                 Intent relayIntent = new Intent(NetworkRelayActivity.RECEIVE_MESSAGE_BROADCAST);
                 relayIntent.putExtra("incomingMessage", receivedMessage);
