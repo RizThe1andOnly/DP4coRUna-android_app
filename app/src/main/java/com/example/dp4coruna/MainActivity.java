@@ -179,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
         Intent serviceIntent = new Intent(this, TransmitterService.class);
         // TODO: Hardcode IP addresses to this.
         ArrayList<String> deviceAddresses = new ArrayList<String>();
-
+        
         // The b64-encoded strings here are hard-coded. After the demo, this will be changed.
         ArrayList<String> rsaEncryptKeys = new ArrayList<String>();
         rsaEncryptKeys.add("MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCtCiVENSQ2bEZ3sC8XZfJ+cvGTPhkT/o3MXBqA1dB5TLuqBjZnG26DaLd22Owyv/rZ0ryZlSe9T/6kuiQuk8GrCO9ZqL2JBcCMcfxus2OY41mghtb+rY6tCxbroAj1HcnTllYktD3I7yEE7Dsx8VhUMMuzxhUqlyU8mtgVBYJtQQIDAQAB");
