@@ -33,6 +33,11 @@ import java.io.Serializable;
 
 public class MainActivity extends AppCompatActivity {
 
+    //DEMO TESTING IP ADDRESSES:
+    private final String TRANSMITTER_IP_ADDRESS = "192.0.0.2"; //s9 transmitter "g960u"
+    private final String RELAY_IP_ADDRESS = "192.168.1.155"; // s7 relay "g930t"
+    private final String RECEIVER_IP_ADDRESS = "192.168.1.159"; //s7e receiver "g935t"
+
     private static final int ACCESS_FINE_LOCATION_REQUEST_CODE = 101;
     private static final int RECORD_AUDIO_REQUEST_CODE = 102;
     private static final int WRITE_TO_EXTERNAL_STORAGE_CODE = 103;
@@ -179,7 +184,12 @@ public class MainActivity extends AppCompatActivity {
         Intent serviceIntent = new Intent(this, TransmitterService.class);
         // TODO: Hardcode IP addresses to this.
         ArrayList<String> deviceAddresses = new ArrayList<String>();
-        
+
+        //hardcoded ips:
+        deviceAddresses.add(TRANSMITTER_IP_ADDRESS); // s9 transmitter "g960u"
+        deviceAddresses.add(RELAY_IP_ADDRESS); // s7 relay "g930t"
+        deviceAddresses.add(RECEIVER_IP_ADDRESS); // s7e receiver "g935t"
+
         // The b64-encoded strings here are hard-coded. After the demo, this will be changed.
         ArrayList<String> rsaEncryptKeys = new ArrayList<String>();
         rsaEncryptKeys.add("MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCtCiVENSQ2bEZ3sC8XZfJ+cvGTPhkT/o3MXBqA1dB5TLuqBjZnG26DaLd22Owyv/rZ0ryZlSe9T/6kuiQuk8GrCO9ZqL2JBcCMcfxus2OY41mghtb+rY6tCxbroAj1HcnTllYktD3I7yEE7Dsx8VhUMMuzxhUqlyU8mtgVBYJtQQIDAQAB");
@@ -190,12 +200,12 @@ public class MainActivity extends AppCompatActivity {
         params.putStringArrayList("deviceAddresses", deviceAddresses);
         params.putStringArrayList("rsaEncryptKeys", rsaEncryptKeys);
         params.putString("transmitterAddress", "");
-        serviceIntent.putExtra("Bundle", params);
-        startService(serviceIntent);
+        //serviceIntent.putExtra("Bundle", params);(!!!)
+        //startService(serviceIntent);
         // Start the UI activity that will update based on transmissions.
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, NetworkTransmitActivity.class);
-        intent.putExtras(bundle);
+        intent.putExtra("Bundle",params);
         startActivity(intent);
     }
 

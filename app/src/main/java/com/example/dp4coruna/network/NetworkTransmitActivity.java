@@ -116,6 +116,7 @@ public class NetworkTransmitActivity extends AppCompatActivity {
             deviceAddresses = argsFromMain.getStringArrayList("deviceAddresses");
             deviceAddress = argsFromMain.getString("transmitterAddress");
             List<String> b64PublicKeys = argsFromMain.getStringArrayList("rsaEncryptKeys");
+            rsaEncryptKeys = new ArrayList<PublicKey>();
             // Convert them to PublicKeys
             recoverPublicKeys(b64PublicKeys);
 //            deviceAddresses = new ArrayList<String>();

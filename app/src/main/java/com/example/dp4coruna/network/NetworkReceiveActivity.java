@@ -30,7 +30,7 @@ public class NetworkReceiveActivity extends AppCompatActivity {
 
         public ReceiverHandler(TextView receivedLocation) {
             super(Looper.getMainLooper());
-            this.receivedLocationView = receivedLocationView;
+            this.receivedLocationView = receivedLocation;
         }
 
         @Override

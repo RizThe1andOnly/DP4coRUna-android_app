@@ -117,15 +117,84 @@ public class Transmitter implements Runnable {
 
     @Override
     public void run() {
+        Log.i("FromTransmitter","Got to begining of run");
         // First, initialize the countdowntimer to run for 10 seconds and then the rest of the code in onFinish does the actual encryption and
         // transmission.
-        while(!isDestroyed.get()) {
-            if (isTimerFinished.get()) {
-                Log.d("Transmitter", "Starting countdowntimer");
-                isTimerFinished.set(false);
-                countDownTimer.start();
-            }
+//        while(!isDestroyed.get()) {
+//            if (isTimerFinished.get()) {
+//                Log.d("Transmitter", "Starting countdowntimer");
+//                isTimerFinished.set(false);
+//                countDownTimer.start();
+//            }
+//        }
+
+
+
+        /*
+                                -----------------RUN onFinish() code here once----------------------
+         */
+
+        // Update the LocationObject's measurements and display to the user. For now, that's commented out since my device can't run the sensor.
+         locObj.updateLocationData();
+        // Get the string to be sent to the receiver device.
+        String locationMessage = locObj.convertLocationToJSON();
+        // Encrypt with 2 layers (as per Onion Routing protocol).
+        List<String> path = new ArrayList<String>();
+        List<PublicKey> pathPublicKeys = new ArrayList<PublicKey>();
+        // Path has device addresses in reverse, not including the transmitter/relayer. First element in list is 0 since
+        // receiver doesn't forward it.
+        path.add("0");
+        for (int i = deviceAddresses.size() - 1; i > 1; i--) {
+            path.add(deviceAddresses.get(i));
         }
+        // PathPublicKeys has all RSA public keys in reverse except for transmitter's.
+        for (int i = rsaEncryptKeys.size() - 1; i > 0; i--) {
+            pathPublicKeys.add(rsaEncryptKeys.get(i));
+        }
+        // This method will encrypt the message with as many layers as specified in the path, using the corresponding keys, and will encode
+        // the final result in base64.
+        String encryptedMessage = transmitterEncrypt(deviceAddresses.size() - 1, locationMessage, path, pathPublicKeys);
+        try {
+            // Open a socket with the relayer device and send the encrypted message.
+            Socket relaySocket = null;
+            Log.i("FromTransmitterOutsideWhile","Got here"); //(!!!)
+            while (relaySocket == null) {
+                try {
+                    relaySocket = new Socket(InetAddress.getByName(deviceAddresses.get(1)), 3899);
+                    Log.i("FromTransmitterInsideTry","GOt here after realysocket"); //(!!!)
+                } catch (IOException ioe) {
+                    Log.i("FromTransmitterInsideCatch","ioexception in relay socket");
+                    ioe.printStackTrace();
+                }
+            }
+            DataInputStream readBuffer = new DataInputStream(relaySocket.getInputStream());
+            DataOutputStream writeBuffer = new DataOutputStream(relaySocket.getOutputStream());
+            // Send the message and wait for response.
+            writeBuffer.writeUTF(encryptedMessage);
+            Log.i("FromTransmitterWait","Waiting For Response"); //(!!!)
+            String received = readBuffer.readUTF();
+            Log.i("FromTransmitterWait","Received Response"); //(!!!)
+
+            if (!received.equals("Received")) {
+                Log.d("Transmitter", "Didn't receive proper confirmation receipt from the relay.");
+                return;
+            }
+            readBuffer.close();
+            writeBuffer.close();
+
+        } catch (IOException ioe) {
+            Log.d("Transmitter", "IO Exception occurred with the relay connection socket.");
+            ioe.printStackTrace();
+        }
+
+        // Send the updated location object to the activity to display.
+        Intent locationUpdateIntent = new Intent(NetworkTransmitActivity.RECEIVE_MESSAGE_BROADCAST);
+        locationUpdateIntent.putExtra("progress", -1);
+        locationUpdateIntent.putExtra("location", locObj.convertLocationToJSON());
+        LocalBroadcastManager.getInstance(context).sendBroadcast(locationUpdateIntent);
+        //isTimerFinished.set(true); //(!!! not necessary for once)
+        Log.d("Transmitter", "CountdownTimer is done.");
+
 
     }
 
