@@ -251,6 +251,17 @@ public class LocationGrabber {
                 "     Altitude(meter): " + String.valueOf(this.altitude_inMeters) + "\n" +
                 "}";
     }
+
+
+
+    /*
+                        -----------Setters for location fields (req for data transferring from database------------
+                                     see: databasemanagement.AppDatabase.checkIfLocationLabelExists()
+
+          ** Currently there is nothing that needs to be set for this class **
+     */
+
+
 }
 
 

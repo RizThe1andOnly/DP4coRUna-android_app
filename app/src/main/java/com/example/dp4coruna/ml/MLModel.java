@@ -9,6 +9,7 @@ import android.widget.Toast;
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.datamanagement.AppDatabase;
 import com.example.dp4coruna.datamanagement.MLData;
+import com.example.dp4coruna.location.LocationObject;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
@@ -17,6 +18,7 @@ import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 
 import org.nd4j.linalg.learning.config.Nesterovs;
@@ -88,6 +90,7 @@ public class MLModel {
 
 
     //                  ------------------ Class Code ---------------------
+
     private Context context;
 
     private final String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MlModel.zip";
@@ -97,7 +100,7 @@ public class MLModel {
     public static final int TRAIN_MODEL_AND_SAVE_IN_DEVICE = 1;
 
     //ml training constants:
-    private final int NUMBER_OF_FEATURES = 7;
+    private final int NUMBER_OF_FEATURES = 6;
 
     // vars:
     public MultiLayerNetwork mln;
@@ -171,6 +174,41 @@ public class MLModel {
         }
     }
 
+    /**
+     * Will run model.output on given data and return the output.
+     * @param locationObject given data; input features that will be put into model to be run
+     * @return String: list of the probabilities of each class being the label which belongs to given features.
+     */
+    public String getOutput(LocationObject locationObject){
+        INDArray input = formatInput(locationObject);
+        INDArray output = this.mln.output(input);
+
+        return output.toStringFull();
+    }
+
+
+    /**
+     * Takes a location object with feature fields filled in and constructs an INDArray of features out of it for
+     * feeding into machine learning model.
+     * @param locationObject structure holding feature data
+     * @return INDArray of features
+     */
+    private INDArray formatInput(LocationObject locationObject){
+        float[] featuresFloatArray = new float[NUMBER_OF_FEATURES];
+
+        //set each feature into the float array based on the index/feature mapping:
+        featuresFloatArray[0] = (float)locationObject.getLightLevel();
+        featuresFloatArray[1] = (float)locationObject.getSoundLevel();
+        featuresFloatArray[2] = (float)locationObject.getGeoMagneticFieldStrength();
+        featuresFloatArray[3] = (float)locationObject.getCellId();
+        featuresFloatArray[4] = (float)locationObject.getAreaCode();
+        featuresFloatArray[5] = (float)locationObject.getCellSignalStrength();
+
+        //create NDArray (implementation of INDArray interface) to return:
+        NDArray toBeReturned = new NDArray(featuresFloatArray);
+
+        return toBeReturned;
+    }
 
     /**
      * Calls DatabaseTest.getMLDataFromDatabase to obtain already formatted data from database in MLData object. Then
@@ -199,7 +237,7 @@ public class MLModel {
      *  --Look at top of class for description on how data needs to be setup--
      *
      */
-    public void createMlModel(){
+    private void createMlModel(){
         //vars to be used in model adjustments:
         long seed = (new Date().getTime());
         double learningRate = 0.1;
@@ -217,7 +255,7 @@ public class MLModel {
                 .updater(new Nesterovs(learningRate,0.9))
                 .list()
                 .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .nIn(NUMBER_OF_FEATURES-1)
+                        .nIn(NUMBER_OF_FEATURES)
                         .activation(Activation.SOFTMAX)
                         .nOut(this.numberOfLocations).build())
                 .build();
@@ -284,9 +322,9 @@ public class MLModel {
         float[][] dataMatrix = generateFloatMatrix(dataString);
 
         //separate dataMatrix into labels and features:
-        float[][] featuresMatrix = new float[dataMatrix.length][NUMBER_OF_FEATURES-1];
+        float[][] featuresMatrix = new float[dataMatrix.length][NUMBER_OF_FEATURES];
         for(int i=0;i< dataMatrix.length;i++){
-            for(int j=0;j<NUMBER_OF_FEATURES-1;j++){
+            for(int j=0;j<NUMBER_OF_FEATURES;j++){
                 featuresMatrix[i][j] = dataMatrix[i][j+1];
             }
         }

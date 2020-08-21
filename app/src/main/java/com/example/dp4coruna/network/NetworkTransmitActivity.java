@@ -108,6 +108,7 @@ public class NetworkTransmitActivity extends AppCompatActivity {
             timer = (ProgressBar)findViewById(R.id.locationMeasurementsProgress);
             locMeasurementsField = (TextView)findViewById(R.id.loc_measurement_text);
             networkLocObj = new LocationObject(NetworkTransmitActivity.this, getApplicationContext());
+            //TODO call networkLocObj.updateLocationData() (!!!!!!!!!!!!!!!!)
 
 //        Get the list of deviceAddresses and public keys (hard-coded for now) from the bundle.
             Intent intentFromMain = getIntent();
@@ -125,7 +126,13 @@ public class NetworkTransmitActivity extends AppCompatActivity {
             tHandler = new TransmitHandler(timer, locMeasurementsField);
             tbReceiver = new TransmitBroadcastReceiver(tHandler);
             localBroadcastManager = LocalBroadcastManager.getInstance(this);
+
             localBroadcastManager.registerReceiver(tbReceiver, new IntentFilter(NetworkTransmitActivity.RECEIVE_MESSAGE_BROADCAST));
+
+
+            //possible fix for too many threads: give below thread a name and check for that name before spawning new
+            //thread
+
             new Thread(new Transmitter(deviceAddresses, deviceAddress, rsaEncryptKeys, this, networkLocObj)).start();
         }
 

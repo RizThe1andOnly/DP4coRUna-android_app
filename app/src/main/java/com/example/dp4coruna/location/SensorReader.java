@@ -375,5 +375,35 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
     }
 
 
+
+    /*
+            ----------------------------Setters for sensors (required for data transference)----------------------
+                                  see: databasemanagement.AppDatabase.checkIfLocationLabelExists()
+     */
+
+    public void setLightLevel(double lightLevel){
+        this.lightLevel = lightLevel;
+    }
+
+    public void setSoundLevel(double soundlevel){
+        this.soundLevel = soundlevel;
+    }
+
+    public void setGeoMagenticValue(double geoMag){
+        this.geoMagenticValue = geoMag;
+    }
+
+    public void setCellTID(double cellTID){
+        this.cellId = cellTID;
+    }
+
+    public void setAreaCode(double areaCode){
+        this.areaCode = areaCode;
+    }
+
+    public void setCellSignalStrength(double cellsignalstrength){
+        this.cellSignalStrength = cellsignalstrength;
+    }
+
 }
 

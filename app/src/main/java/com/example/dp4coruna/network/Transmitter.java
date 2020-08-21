@@ -50,7 +50,7 @@ public class Transmitter implements Runnable {
         @Override
         public void onFinish() {
             // Update the LocationObject's measurements and display to the user. For now, that's commented out since my device can't run the sensor.
-            // networkLocObj.updateLocationData();
+            // locObj.updateLocationData();
             // Get the string to be sent to the receiver device.
             String locationMessage = locObj.convertLocationToJSON();
             // Encrypt with 2 layers (as per Onion Routing protocol).
