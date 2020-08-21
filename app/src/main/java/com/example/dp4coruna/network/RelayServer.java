@@ -25,6 +25,7 @@ public class RelayServer implements Runnable {
         this.myPrivateKey = myPK;
         this.serviceContext = sContext;
         this.isDestroyed = new AtomicBoolean(false);
+        this.relayConnectionThreads = new ArrayList<Thread>();
     }
 
     @Override

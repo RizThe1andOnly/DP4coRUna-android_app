@@ -56,7 +56,7 @@ public class RelayConnection implements Runnable {
 
             } else {
                 // We need to forward the message. First, encode it in base64.
-                decryptedMessage = Base64.encodeToString(decryptedMessage.getBytes(), Base64.DEFAULT);
+                //decryptedMessage = Base64.encodeToString(decryptedMessage.getBytes(), Base64.DEFAULT);
                 // We need to forward the message. First, broadcast to the NetworkRelayActivity to output.
                 Intent relayIntent = new Intent(NetworkRelayActivity.RECEIVE_MESSAGE_BROADCAST);
                 relayIntent.putExtra("incomingMessage", receivedMessage);
@@ -112,24 +112,31 @@ public class RelayConnection implements Runnable {
 
     public static JSONObject decrypt(JSONObject data, PrivateKey privateKey){
         try {
+            Log.i("RelayConnection","pre decrypt key");
+            Log.i("RelayConnectionData",data.toString(1));
             String key = RSA.decrypt(data.getString("key"), privateKey);
+            Log.i("RelayConnection","pre decrypt ip");
             String destIP = RSA.decrypt(data.getString("ip"), privateKey);
+
+            Log.i("RelayConnection","Cleared decrypts for key and ip\n destIP: " + destIP);
 
             //decrypt extracted message using AES key
             String msg = AES.decrypt(data.getString("msg"), key);
+
+            Log.i("RelayConnection","Cleard aes decrypt\n" + "msg: " + msg);
 
             //encode to base64 if necessary
             if(!destIP.equals("0")){
                 byte[] msgByte = msg.getBytes();
                 msg = Base64.encodeToString(msgByte, Base64.DEFAULT);
             }
-
+            Log.i("RelayConnection","msg: " + msg);
             JSONObject decryptedToJSON = new JSONObject();
             decryptedToJSON.put("msg", msg);
             decryptedToJSON.put("ip", destIP);
             return decryptedToJSON;
         } catch (JSONException je) {
-            Log.d("RelayConnection", "JSONException thrown when decrypting encrypted JSON.");
+            Log.i("RelayConnection", "JSONException thrown when decrypting encrypted JSON.");
             je.printStackTrace();
         }
 
