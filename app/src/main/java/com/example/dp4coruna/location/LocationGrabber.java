@@ -19,6 +19,8 @@ import android.location.Address;
 
 import android.widget.Toast;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -85,6 +87,11 @@ public class LocationGrabber {
         this.inheritedContext = inheritedContext;
         this.inheritedActivity = inheritedActivity;
         this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(inheritedActivity);
+    }
+
+    protected LocationGrabber(Context inheritedContext) {
+        this.inheritedContext = inheritedContext;
+        this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(inheritedContext);
     }
 
     /**
@@ -155,7 +162,7 @@ public class LocationGrabber {
             }
         };
 
-        if (ActivityCompat.checkSelfPermission(this.inheritedContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this.inheritedContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this.inheritedContext,"Permission for this operation not granted",Toast.LENGTH_LONG).show();
             return;
         }
@@ -172,7 +179,7 @@ public class LocationGrabber {
     private synchronized void getLocation(){
         final LocationGrabber lgForOnSuccessListener = LocationGrabber.this;
         try {
-            if (ActivityCompat.checkSelfPermission(this.inheritedContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(inheritedContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this.inheritedContext,"Permission for this operation not granted",Toast.LENGTH_LONG).show();
                 return;
             }

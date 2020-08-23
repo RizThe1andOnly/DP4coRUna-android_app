@@ -27,4 +27,7 @@
     <string name="covidpositivebutton">I am COVID-19 positive</string>
     <string name="networkTransmitterWelcome">Welcome to the Transmitter!</string>
     <string name="emptyString"></string>
+    <string name="welcomeTitle">DP4coRUna</string>
+    <string name="welcomeMessage">Welcome!</string>
+    <string name="progressMessage">Loading...</string>
 </resources>

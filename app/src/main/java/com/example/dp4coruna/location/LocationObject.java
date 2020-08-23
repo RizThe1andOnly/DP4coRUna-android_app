@@ -67,6 +67,11 @@ public class LocationObject extends SensorReader implements Serializable{
         //(!!!)this.updateLocationData(); //while creating this object its fields will be set with data available at time
     }
 
+    public LocationObject(Context inheritedContext) {
+        super(inheritedContext);
+        this.updateable = true;
+    }
+
     /**
      * Private constructor solely for the purpose of transforming a LocationObject JSON to a LocationObject object.
      * This location object cannot call updateLocationData.
