@@ -1,8 +1,9 @@
-package com.example.dp4coruna.ml;
+package com.example.dp4coruna.dataManagement.acess;
 
 import android.content.Context;
-import com.example.dp4coruna.datamanagement.AppDatabase;
-import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.dataManagement.AppDatabase;
+import com.example.dp4coruna.localLearning.location.LocationObject;
+import com.example.dp4coruna.ml.MLModel;
 
 /**
  * Handles location features/labels requests from network to the database.

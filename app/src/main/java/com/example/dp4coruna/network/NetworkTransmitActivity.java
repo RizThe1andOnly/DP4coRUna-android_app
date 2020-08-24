@@ -1,30 +1,23 @@
 package com.example.dp4coruna.network;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.dp4coruna.R;
-import com.example.dp4coruna.location.LocationObject;
-import com.example.dp4coruna.location.LocationObjectData;
-
-import org.w3c.dom.Text;
+import com.example.dp4coruna.localLearning.location.LocationObject;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -33,7 +26,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NetworkTransmitActivity extends AppCompatActivity {
 

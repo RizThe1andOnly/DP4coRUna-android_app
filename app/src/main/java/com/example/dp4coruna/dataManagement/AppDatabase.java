@@ -1,4 +1,4 @@
-package com.example.dp4coruna.datamanagement;
+package com.example.dp4coruna.dataManagement;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -7,9 +7,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.example.dp4coruna.location.LocationObject;
-import com.example.dp4coruna.location.LocationObjectData;
-import com.example.dp4coruna.location.WiFiAccessPoint;
+import com.example.dp4coruna.localLearning.location.LocationObject;
+import com.example.dp4coruna.localLearning.location.dataHolders.LocationObjectData;
+import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
+import com.example.dp4coruna.ml.MLData;
 
 import java.util.ArrayList;
 import java.util.HashMap;

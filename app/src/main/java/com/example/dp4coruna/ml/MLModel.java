@@ -7,9 +7,8 @@ import android.util.Log;
 
 import android.widget.Toast;
 import com.example.dp4coruna.R;
-import com.example.dp4coruna.datamanagement.AppDatabase;
-import com.example.dp4coruna.datamanagement.MLData;
-import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.dataManagement.AppDatabase;
+import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;

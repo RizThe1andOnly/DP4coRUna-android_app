@@ -1,4 +1,4 @@
-package com.example.dp4coruna.location;
+package com.example.dp4coruna.localLearning.location.dataHolders;
 
 import java.util.List;
 

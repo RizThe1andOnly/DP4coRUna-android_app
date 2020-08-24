@@ -1,7 +1,6 @@
 package com.example.dp4coruna.mapmanagement;
 
 import android.content.Intent;
-import android.location.Address;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -9,11 +8,7 @@ import android.widget.EditText;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.dp4coruna.R;
-import com.example.dp4coruna.location.LocationGrabber;
-import com.example.dp4coruna.location.LocationObject;
-import com.example.dp4coruna.location.LocationObjectData;
-
-import java.util.List;
+import com.example.dp4coruna.localLearning.location.dataHolders.LocationObjectData;
 
 
 public class enterDestinationActivity extends AppCompatActivity {
