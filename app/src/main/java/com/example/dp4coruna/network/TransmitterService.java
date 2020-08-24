@@ -36,9 +36,6 @@ public class TransmitterService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startID) {
         Log.i("TransmitterService", "Transmitter Service started successfully.");
-        LocationObject locObj = new LocationObject(this);
-//        locObj.updateLocationData();
-//        Log.i("TransmitterService", "Updated location object: " + locObj.toString());
 
         return START_STICKY;
     }
