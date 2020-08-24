@@ -1,4 +1,4 @@
-package com.example.dp4coruna.location;
+package com.example.dp4coruna.localLearning;
 
 import android.Manifest;
 import android.content.Intent;
@@ -13,7 +13,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.MainActivity;
 import com.example.dp4coruna.R;
-import com.example.dp4coruna.datamanagement.AppDatabase;
+import com.example.dp4coruna.dataManagement.AppDatabase;
+import com.example.dp4coruna.localLearning.location.dataHolders.LocationObjectData;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;

@@ -1,4 +1,4 @@
-package com.example.dp4coruna.location;
+package com.example.dp4coruna.localLearning.location.learner;
 
 import android.Manifest;
 import android.app.Activity;
@@ -12,6 +12,8 @@ import android.os.*;
 import android.telephony.*;
 import android.util.Log;
 import androidx.core.content.ContextCompat;
+import com.example.dp4coruna.localLearning.location.dataHolders.CellData;
+import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 
 import java.io.IOException;
 import java.util.ArrayList;

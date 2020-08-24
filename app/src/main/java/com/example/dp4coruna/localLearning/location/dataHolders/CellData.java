@@ -1,4 +1,4 @@
-package com.example.dp4coruna.location;
+package com.example.dp4coruna.localLearning.location.dataHolders;
 
 /**
  * Stores the necessary cell data: cell signal strength, cell tower id, local/tracking area code

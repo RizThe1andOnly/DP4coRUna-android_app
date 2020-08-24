@@ -1,4 +1,4 @@
-package com.example.dp4coruna.datamanagement;
+package com.example.dp4coruna.ml;
 
 import java.util.List;
 import java.util.Map;

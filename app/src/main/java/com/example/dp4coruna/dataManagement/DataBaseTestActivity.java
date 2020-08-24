@@ -1,4 +1,4 @@
-package com.example.dp4coruna.datamanagement;
+package com.example.dp4coruna.dataManagement;
 
 import android.database.Cursor;
 import android.os.Bundle;

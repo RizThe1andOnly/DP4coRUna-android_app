@@ -1,10 +1,13 @@
-package com.example.dp4coruna.location;
+package com.example.dp4coruna.localLearning.location;
 
 import android.app.Activity;
 import android.content.Context;
 import android.location.Address;
 
-import android.widget.Toast;
+import com.example.dp4coruna.localLearning.location.dataHolders.CellData;
+import com.example.dp4coruna.localLearning.location.dataHolders.LocationObjectData;
+import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
+import com.example.dp4coruna.localLearning.location.learner.SensorReader;
 import com.google.gson.Gson;
 
 import java.io.Serializable;

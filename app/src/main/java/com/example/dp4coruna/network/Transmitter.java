@@ -5,12 +5,11 @@ import android.content.Intent;
 import android.os.CountDownTimer;
 import android.util.Base64;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 
-import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.localLearning.location.LocationObject;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,7 +21,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;

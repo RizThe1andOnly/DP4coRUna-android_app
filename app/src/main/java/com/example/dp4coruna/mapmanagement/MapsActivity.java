@@ -6,8 +6,7 @@ import android.location.Address;
 import android.os.Bundle;
 
 import com.example.dp4coruna.R;
-import com.example.dp4coruna.location.LocationGrabber;
-import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
