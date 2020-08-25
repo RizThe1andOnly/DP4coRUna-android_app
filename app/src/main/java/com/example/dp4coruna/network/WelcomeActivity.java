@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.example.dp4coruna.MainActivity;
 import com.example.dp4coruna.R;
 
 import android.Manifest;
@@ -34,6 +35,8 @@ public class WelcomeActivity extends AppCompatActivity {
         checkForPermissions(this);
         progressMessage.setText("Connecting to network...");
         startService(new Intent(this, TransmitterService.class));
+        // Launch MainActivity.
+        startActivity(new Intent(this, MainActivity.class));
     }
 
     private void checkForPermissions(Context context){

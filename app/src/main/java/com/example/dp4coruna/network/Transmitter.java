@@ -1,8 +1,6 @@
 package com.example.dp4coruna.network;
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.CountDownTimer;
+
 import android.util.Base64;
 import android.util.Log;
 
@@ -17,14 +15,27 @@ import org.json.JSONObject;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Collections;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public class Transmitter implements Runnable {
     private List<String> deviceAddresses;
@@ -33,7 +44,7 @@ public class Transmitter implements Runnable {
     private AtomicBoolean isDestroyed;
     private LocationObject locObj;
 
-    public Transmitter(List<String> dvas, String dva, List<PublicKey> rsaEKs, Context context, LocationObject locationObject) {
+    public Transmitter(List<String> dvas, String dva, List<PublicKey> rsaEKs, LocationObject locationObject) {
         this.deviceAddresses = dvas;
         this.transmitterAddress = dva;
         this.rsaEncryptKeys = rsaEKs;
@@ -44,80 +55,67 @@ public class Transmitter implements Runnable {
     @Override
     public void run() {
         Log.i("FromTransmitter","Got to begining of run");
+        // Get the string to be sent to the receiver device.
+        String locationMessage = locObj.convertLocationToJSON();
+        // Encrypt with 2 layers (as per Onion Routing protocol).
+        List<String> path = new ArrayList<String>();
+        List<PublicKey> pathPublicKeys = new ArrayList<PublicKey>();
+        String firstRelay = "";
+        // Path has device addresses in reverse, not including the transmitter/relayer. First element in list is 0 since
+        // receiver doesn't forward it.
+        synchronized (deviceAddresses) {
+            synchronized(rsaEncryptKeys) {
+                path = generatePath(deviceAddresses);
 
-        while (true) {
-            try {
-                Thread.sleep(10000); // Only attempt transmissions every 10 seconds.
-            } catch (InterruptedException ie) {
-                Log.d("Transmitter", "Interrupted when trying to wait 10 seconds before next transmission");
+                if (path.size() == 0)   return;
+                // First, get the corresponding public keys for each device in the path.
+
+                for (int i = 0; i < path.size(); i++) {
+                    pathPublicKeys.add(rsaEncryptKeys.get(deviceAddresses.indexOf(path.get(i))));
+                }
+                // Then, remove the last element in the path. That will be the first relay and is unnecessary for encryption.
+                // Add a "0" at the start of the path. Now, each element in the path list represents the NEXT element in the path, which
+                // is how we need it for encrypting.
+                firstRelay = path.remove(path.size() - 1);
+                path.add(0, "0");
             }
 
-            // Update the LocationObject's measurements and display to the user. For now, that's commented out since my device can't run the sensor.
-            locObj.updateLocationData();
-            // Get the string to be sent to the receiver device.
-            String locationMessage = locObj.convertLocationToJSON();
-            // Encrypt with 2 layers (as per Onion Routing protocol).
-            List<String> path = new ArrayList<String>();
-            List<PublicKey> pathPublicKeys = new ArrayList<PublicKey>();
-            String firstRelay = "";
-            // Path has device addresses in reverse, not including the transmitter/relayer. First element in list is 0 since
-            // receiver doesn't forward it.
-            synchronized (deviceAddresses) {
-                synchronized(rsaEncryptKeys) {
-                    path = generatePath(deviceAddresses);
+        }
 
-                    if (path.size() == 0)   continue;
-                    // First, get the corresponding public keys for each device in the path.
-
-                    for (int i = 0; i < path.size(); i++) {
-                        pathPublicKeys.add(rsaEncryptKeys.get(deviceAddresses.indexOf(path.get(i))));
-                    }
-                    // Then, remove the last element in the path. That will be the first relay and is unnecessary for encryption.
-                    // Add a "0" at the start of the path. Now, each element in the path list represents the NEXT element in the path, which
-                    // is how we need it for encrypting.
-                    firstRelay = path.remove(path.size() - 1);
-                    path.add(0, "0");
+        // This method will encrypt the message with as many layers as specified in the path, using the corresponding keys, and will encode
+        // the final result in base64.
+        String encryptedMessage = transmitterEncrypt(path.size(), locationMessage, path, pathPublicKeys);
+        try {
+            // Open a socket with the relayer device and send the encrypted message.
+            Socket relaySocket = null;
+            Log.i("FromTransmitterOutsideWhile","Got here"); //(!!!)
+            while (relaySocket == null) {
+                try {
+                    relaySocket = new Socket(InetAddress.getByName(firstRelay), 3899);
+                    Log.i("FromTransmitterInsideTry","GOt here after realysocket"); //(!!!)
+                } catch (IOException ioe) {
+                    Log.i("FromTransmitterInsideCatch","ioexception in relay socket");
+                    ioe.printStackTrace();
                 }
-
             }
+            DataInputStream readBuffer = new DataInputStream(relaySocket.getInputStream());
+            DataOutputStream writeBuffer = new DataOutputStream(relaySocket.getOutputStream());
+            // Send the message and wait for response.
+            writeBuffer.writeUTF(encryptedMessage);
+            Log.i("FromTransmitterWait","Waiting For Response"); //(!!!)
+            String received = readBuffer.readUTF();
+            Log.i("FromTransmitterWait","Received Response"); //(!!!)
 
-            // This method will encrypt the message with as many layers as specified in the path, using the corresponding keys, and will encode
-            // the final result in base64.
-            String encryptedMessage = transmitterEncrypt(path.size(), locationMessage, path, pathPublicKeys);
-            try {
-                // Open a socket with the relayer device and send the encrypted message.
-                Socket relaySocket = null;
-                Log.i("FromTransmitterOutsideWhile","Got here"); //(!!!)
-                while (relaySocket == null) {
-                    try {
-                        relaySocket = new Socket(InetAddress.getByName(firstRelay), 3899);
-                        Log.i("FromTransmitterInsideTry","GOt here after realysocket"); //(!!!)
-                    } catch (IOException ioe) {
-                        Log.i("FromTransmitterInsideCatch","ioexception in relay socket");
-                        ioe.printStackTrace();
-                    }
-                }
-                DataInputStream readBuffer = new DataInputStream(relaySocket.getInputStream());
-                DataOutputStream writeBuffer = new DataOutputStream(relaySocket.getOutputStream());
-                // Send the message and wait for response.
-                writeBuffer.writeUTF(encryptedMessage);
-                Log.i("FromTransmitterWait","Waiting For Response"); //(!!!)
-                String received = readBuffer.readUTF();
-                Log.i("FromTransmitterWait","Received Response"); //(!!!)
-
-                if (!received.equals("Received")) {
-                    Log.d("Transmitter", "Didn't receive proper confirmation receipt from the relay.");
-                    return;
-                }
-                readBuffer.close();
-                writeBuffer.close();
-
-            } catch (IOException ioe) {
-                Log.d("Transmitter", "IO Exception occurred with the relay connection socket.");
-                ioe.printStackTrace();
+            if (!received.equals("Received")) {
+                Log.d("Transmitter", "Didn't receive proper confirmation receipt from the relay.");
+                return;
             }
+            readBuffer.close();
+            writeBuffer.close();
 
-
+        } catch (IOException ioe) {
+            Log.d("Transmitter", "IO Exception occurred with the relay connection socket.");
+            ioe.printStackTrace();
         }
 
     }
