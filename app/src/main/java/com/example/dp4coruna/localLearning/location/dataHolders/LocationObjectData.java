@@ -64,6 +64,9 @@ public class LocationObjectData {
         this.streetaddress = locobj.getStreetAddress();
     }
 
+    public LocationObjectData(){
+    }
+
     public List<Address> getAddresses() {
         return this.addresses;
     }
@@ -152,6 +155,9 @@ public class LocationObjectData {
         return this.roomNumber;
     }
 
+
+
+
     public void setBuildingName(String buildingName){
         this.buildingName = buildingName;
     }
@@ -176,6 +182,61 @@ public class LocationObjectData {
         String json = gson.toJson(this);
         return json;
     }
+
+    /**
+     * Method  called on a LocationObjectData instance to create
+     * a location label - a long string containing all geographic location related fields
+     * delimiter is /
+     * @return String
+     */
+    public String createLocationLabel(){
+
+        String s =
+                 getLongitude() + "/"
+                + getLatitude() + "/"
+                + getAddress() + "/"
+                + getStreetAddress() + "/"
+                + getCity() + "/"
+                + getState() + "/"
+                + getCountry() + "/"
+                + getZipcode() + "/"
+                + getKnownFeatureName() + "/"
+                + getAltitude() + "/"
+                + getBuildingName() + "/"
+                + getRoomName() + "/"
+                + getRoomNumber() + "/";
+
+        return s;
+    }
+
+    /**
+     * Method to extract location label
+     * and fill appropriate fields in a new instance of LocationObjectData
+     * @param locationLabel String
+     * @return LocationObjectData instance
+     */
+    public static LocationObjectData extractLocationLabel(String locationLabel){
+        LocationObjectData lod = new LocationObjectData();
+
+        String[] stringarr = locationLabel.split("/", 13);
+
+        lod.longitude = Double.parseDouble(stringarr[0]);
+        lod.latitude = Double.parseDouble(stringarr[1]);
+        lod.address = stringarr[2];
+        lod.streetaddress = stringarr[3];
+        lod.city = stringarr[4];
+        lod.state = stringarr[5];
+        lod.country = stringarr[6];
+        lod.zipcode = stringarr[7];
+        lod.knownFeatureName = stringarr[8];
+        lod.altitude_inMeters = Double.parseDouble(stringarr[9]);
+        lod.buildingName = stringarr[10];
+        lod.roomName = stringarr[11];
+        lod.roomNumber = stringarr[12];
+
+        return lod;
+    }
+
 
 
 }
