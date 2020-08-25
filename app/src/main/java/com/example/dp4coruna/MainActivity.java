@@ -58,6 +58,11 @@ public class MainActivity extends AppCompatActivity {
         lo = new LocationObject(MainActivity.this,getApplicationContext());
     }
 
+    @Override
+    public void onBackPressed() {
+        // Do nothing if the back button is pressed.
+    }
+
 
     /**
      * Checks for permission at the start of the app.
@@ -146,66 +151,6 @@ public class MainActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this,reportPositiveTestActivity.class);
         intent.putExtras(bundle);
-        startActivity(intent);
-    }
-
-    public void receive(View view){
-        // Start RelayService
-        Intent relayServiceIntent = new Intent(this, RelayService.class);
-        Bundle relayServiceBundle = new Bundle();
-        // Hardcoded an RSA Private key here and added it into the bundle.
-        relayServiceBundle.putString("privateKey", "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAIErGYgoi8NJZsnXCAL7Q+c3V/4IlCLUIAbEOBm2FcNmeyAC6X/FySVijVhs56ub95St6sjqEGLy9EIy/w2kRoOLVymyzgm+CsL8YN6BkJIy1gjn5Ay4BARTXy4xdDphR7Cmr52rSAp6LlQAgga8oPVq83LYnHNyHo259WXNoQ6ZAgMBAAECgYA7zkDcEinkGbBF9BH5j205OR68uCwelCjf+SogfXZGKsUHZVHHn0Qq0x6uun3pryVK6duzeuxrZCJEJGiDYHRk9U/S1GDg5MU71F8ICzi6GtsdXZcLM1ktPUN7fp99xH46iU/bTxi/CtUe3j7DQDHwjkqL7ru9FwSzho6A7zU0AQJBAO1cPLkES0WbzSpp88ObVyUjs+2aPEIpiuReYMU9yBE+BKQ/SD4Ambe3JDYTmnpzDyamtK5SE2p4S/ti9/UncckCQQCLT9STTYNMlDYPSpIa45H0NTLSBoRxfzgdINrnS1UN/wQor991WA8z0XpGO6fdCAebNEqsny5mQliY05BajJ5RAkEA0/uGd65wEzC8IN8TR2TahV7HeLJAks5LLv1i64TrwwpiVtX1jPo4Tq0PeAQ1+Jn9tAU6ZF0E3heltFOFI7sgkQJAfTmPHbHJWmbHiUtAtgblxZykSAIvv03aBOTpoIsos2IOPPyKYxJ659tejA9HvvlezPZeQXj83lK5DPbvhVVtYQJBAL/rruFE+2dqZ8622YIaw92qYUpaT9jaSeqIK4zyuIJdSX+MVYt8+7DrIL8+2tHI7T4QMokoPdi9oz6dLjfthaw=");
-        relayServiceIntent.putExtra("pkBundle", relayServiceBundle);
-        startService(relayServiceIntent);
-        // Start NetworkReceiveActivity
-        Bundle networkReceiveBundle = new Bundle();
-        Intent networkReceiveIntent = new Intent(this, NetworkReceiveActivity.class);
-        networkReceiveIntent.putExtras(networkReceiveBundle);
-        startActivity(networkReceiveIntent);
-    }
-
-    public void relay(View view){
-        // Start RelayService
-        Intent relayServiceIntent = new Intent(this, RelayService.class);
-        Bundle relayServiceBundle = new Bundle();
-        // Hardcoded an RSA Private key here and added it into the bundle. This will change after the demo.
-        relayServiceBundle.putString("privateKey", "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKkQ3E+et+4z3TjjdnaLH2MIfoMQhdfp3qp9k/GAmiUuMalYK9Q5PPKoiECRN+Z/WpdyDm/W60QOqidbMgPFlf+aLtVfqF8Y7wZDt++TWpJdYyRh2mssAlzfhiItnNRX4Z4KJP9kjstFXNIFaMn1rd/L/1TVQwtz8CjXhTP8kicrAgMBAAECgYA5fRc9J75pjE9EQeyNYL9agI/sZ1jr04W4uZzt+QnxbKTMbcPxlUkJRo+WTQsSIOogJ1OLaixz5vyrB1KZf72CLx44sK/imIx0HZM7wSAZ72A/VGUoPWP+ZVk4L4bPqqq5t0Z1p09qA6BkBOXh410dCz7ARCgLEe3LN8aB30zSuQJBAO3MTtQiWqYgJXvvjJCJTrPZLJJSOulsT4C5WMBKBXQsgLqsCZ3wYnI9d4YMGCa62BwX37b73CC3HbcfynA/D3UCQQC2AbvTR5RNUtzCagBUL3YlAUfzsG7/sQQVngDebg3tepev8WKFBiw6N/PRiJ0plgidDjAIgW+EkDt1qO280SgfAkAMCC5k5WgYx7+dyb0fAxOMXgy3SpnYfbZ4GOi4sgYcnrPUvieuah9REHMfwTTnoMSWh062f3/f1+QVA/LGQyqRAkEAjk3ytjIMIRz9oEBS+3+UZ0CGKmGzl9WmtOQyF7eCykAE47re5dU6tVZUG2suPnqhR3L1WWEieUpwQwGOyAfczwJBAIYseEOXMCKQkIqVz9IPDUoChnLy0uA8n6Ibhs8AJIvfN++YE2EE4voLvJdBIFL6l8Sg61mfwmeKgfIXGxiwwMs=");
-        relayServiceIntent.putExtra("pkBundle", relayServiceBundle);
-        startService(relayServiceIntent);
-        // Start NetworkRelayActivity
-        Bundle networkRelayBundle = new Bundle();
-        Intent networkRelayIntent = new Intent(this, NetworkRelayActivity.class);
-        networkRelayIntent.putExtras(networkRelayBundle);
-        startActivity(networkRelayIntent);
-    }
-
-    public void transmit(View view){
-        // Start the transmitter service.
-        Intent serviceIntent = new Intent(this, TransmitterService.class);
-        // TODO: Hardcode IP addresses to this.
-        ArrayList<String> deviceAddresses = new ArrayList<String>();
-
-        //hardcoded ips:
-        deviceAddresses.add(TRANSMITTER_IP_ADDRESS); // s9 transmitter "g960u"
-        deviceAddresses.add(RELAY_IP_ADDRESS); // s7 relay "g930t"
-        deviceAddresses.add(RECEIVER_IP_ADDRESS); // s7e receiver "g935t"
-
-        // The b64-encoded strings here are hard-coded. After the demo, this will be changed.
-        ArrayList<String> rsaEncryptKeys = new ArrayList<String>();
-        rsaEncryptKeys.add("MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCtCiVENSQ2bEZ3sC8XZfJ+cvGTPhkT/o3MXBqA1dB5TLuqBjZnG26DaLd22Owyv/rZ0ryZlSe9T/6kuiQuk8GrCO9ZqL2JBcCMcfxus2OY41mghtb+rY6tCxbroAj1HcnTllYktD3I7yEE7Dsx8VhUMMuzxhUqlyU8mtgVBYJtQQIDAQAB");
-        rsaEncryptKeys.add("MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCpENxPnrfuM90443Z2ix9jCH6DEIXX6d6qfZPxgJolLjGpWCvUOTzyqIhAkTfmf1qXcg5v1utEDqonWzIDxZX/mi7VX6hfGO8GQ7fvk1qSXWMkYdprLAJc34YiLZzUV+GeCiT/ZI7LRVzSBWjJ9a3fy/9U1UMLc/Ao14Uz/JInKwIDAQAB");
-        rsaEncryptKeys.add("MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCBKxmIKIvDSWbJ1wgC+0PnN1f+CJQi1CAGxDgZthXDZnsgAul/xcklYo1YbOerm/eUrerI6hBi8vRCMv8NpEaDi1cpss4JvgrC/GDegZCSMtYI5+QMuAQEU18uMXQ6YUewpq+dq0gKei5UAIIGvKD1avNy2Jxzch6NufVlzaEOmQIDAQAB");
-
-        Bundle params = new Bundle();
-        params.putStringArrayList("deviceAddresses", deviceAddresses);
-        params.putStringArrayList("rsaEncryptKeys", rsaEncryptKeys);
-        params.putString("transmitterAddress", "");
-        //serviceIntent.putExtra("Bundle", params);(!!!)
-        //startService(serviceIntent);
-        // Start the UI activity that will update based on transmissions.
-        Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, NetworkTransmitActivity.class);
-        intent.putExtra("Bundle",params);
         startActivity(intent);
     }
 

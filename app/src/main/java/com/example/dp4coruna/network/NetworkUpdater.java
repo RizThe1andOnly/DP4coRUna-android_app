@@ -17,16 +17,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class UpdateNetwork implements Runnable {
+public class NetworkUpdater implements Runnable {
     List<String> deviceAddresses;
     List<PublicKey> rsaEncryptKeys;
-    Transmitter transmitterRunnable;
 
-
-    public UpdateNetwork(List<String> dvas, List<PublicKey> rsaEKs, Transmitter transmitter) {
+    public NetworkUpdater(List<String> dvas, List<PublicKey> rsaEKs) {
         this.deviceAddresses = dvas;
         this.rsaEncryptKeys = rsaEKs;
-        this.transmitterRunnable = transmitter;
     }
 
     @Override
