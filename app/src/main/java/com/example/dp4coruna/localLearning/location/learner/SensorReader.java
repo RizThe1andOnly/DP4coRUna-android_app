@@ -89,6 +89,7 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
         this.scanLightLevel(this.inheritedContext);
         this.geoMagenticValue = this.scanGeoMagneticField();
         this.soundLevel = this.scanSoundLevel();
+        //this.soundLevel = 0; //(!!! CHANGE THIS BACK IMMEDIATELY)
         this.scanCellInfoAtMoment(this.inheritedContext,null,this.currentCellData);
 
         //just in case will set each individual element of cell data here as well

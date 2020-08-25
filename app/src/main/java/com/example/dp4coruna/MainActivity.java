@@ -56,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
+
     /**
      * Checks for permission at the start of the app.
      * Currently permission being chekced is:

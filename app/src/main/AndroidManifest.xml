@@ -21,14 +21,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".network.WelcomeActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
+        <!--
+            Service used by the app:
+                - TransmitterService : transmit data over network
+                - RelayService: onion routing relay node in the network
+                - LocalLearningService : calls sensors and google location apis to obtain location features
+        -->
         <service
             android:name=".network.TransmitterService"
             android:enabled="true"
@@ -37,6 +36,11 @@
             android:name=".network.RelayService"
             android:enabled="true"
             android:exported="true" />
+        <service
+            android:name=".localLearning.learningService.LocalLearningService"
+            android:exported="false"/>
+
+
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -53,11 +57,11 @@
             android:name=".mapmanagement.MapsActivity"
             android:label="@string/title_activity_maps" />
         <activity android:name=".MainActivity">
-            <!--<intent-filter>
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>-->
+            </intent-filter>
         </activity>
         <activity
             android:name=".localLearning.SubmitLocationLabel"

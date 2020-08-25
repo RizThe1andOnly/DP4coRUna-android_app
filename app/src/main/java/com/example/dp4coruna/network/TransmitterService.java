@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.example.dp4coruna.location.LocationObject;
+import com.example.dp4coruna.localLearning.location.LocationObject;
 
 import java.io.IOException;
 import java.net.InetAddress;

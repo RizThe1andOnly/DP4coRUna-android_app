@@ -1,7 +1,11 @@
 package com.example.dp4coruna;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -9,6 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.dataManagement.AppDatabase;
+import com.example.dp4coruna.localLearning.learningService.LocalLearningService;
 import com.example.dp4coruna.ml.MLData;
 import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.example.dp4coruna.localLearning.SubmitLocationLabel;
@@ -24,14 +29,7 @@ import java.util.List;
 public class TempResultsActivity extends AppCompatActivity {
 
     private TextView dataView;
-
-    private LocationObject lo;
-
-    private AppDatabase dbt;
-
-    private Cursor crs;
-
-    private MLModel mlm;
+    private LocalLearningService lls;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,12 +39,18 @@ public class TempResultsActivity extends AppCompatActivity {
         //this.checkForPermissions(getApplicationContext());
 
         dataView = findViewById(R.id.dataViewBox);
-        lo = new LocationObject(TempResultsActivity.this,getApplicationContext());
 
-        dbt = new AppDatabase(getApplicationContext());
+        // service code test calls:
+        startLLService();
+        bindToLLService();
+
     }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopService(startIntent);
+    }
 
     /*
                         -----------------------------NORMAL TESTING CODE-----------------------------
@@ -56,15 +60,14 @@ public class TempResultsActivity extends AppCompatActivity {
      * Will create new instances of LocationGrabber and SensorReader and get data they have to offer
      * @param view triggerSampleButton
      */
+
     public void onTriggerSamplingButtonPress(View view){
-        lo.updateLocationData();
-        String toBePrinted = lo.convertLocationToJSON();
-        LocationObject reObtainedLocobj = LocationObject.getLocationFromJSON(toBePrinted);
-        dataView.append(reObtainedLocobj.toString());
+        LocationObject lob = getLocationObjectData();
+        dataView.append("Current Light Level : " + lob.getLightLevel() + "\n");
     }
 
     public void trainButtonEvent(View view){
-        mlm = new MLModel(getApplicationContext());
+        MLModel mlm = new MLModel(getApplicationContext());
         mlm.trainAndSaveModel();
         dataView.append("Successfully (maybe?) trained model and saved to device.\n");
     }
@@ -89,7 +92,8 @@ public class TempResultsActivity extends AppCompatActivity {
 
         //toBePrinted = this.getMLDataObj();
 
-        mlm = new MLModel(getApplicationContext(),MLModel.LOAD_MODEL_FROM_DEVICE);
+
+        MLModel mlm = new MLModel(getApplicationContext(),MLModel.LOAD_MODEL_FROM_DEVICE);
         NDArray input = obtainDummyInputData();
         INDArray output = mlm.mln.output(input,false);
 
@@ -98,100 +102,11 @@ public class TempResultsActivity extends AppCompatActivity {
         dataView.append(toBePrinted);
     }
 
-    private void cursorStringMeth1(String toBePrinted){
-        int k = 0;
-        while(crs.moveToNext()){
-            if(k == 0){
-                toBePrinted += crs.getString(0);
-                k++;
-                continue;
-            }
-            toBePrinted += crs.getFloat(0);
-            if(k<7){
-                toBePrinted += " , ";
-            }
-            k++;
-        }
-        Log.i("FromTemp",toBePrinted + "  K = " + String.valueOf(k));
-    }
-
-    private String cursorStringMeth2(String toBePrinted){
-        while(crs.moveToNext()){
-            String line = "";
-            int parentIndex = 0;
-            for(int i=0;i<crs.getColumnCount();i++){
-                if(i == 0){
-                    parentIndex = crs.getInt(0);
-                    continue;
-                }
-
-                if(i==1){
-                    line += "(*" +crs.getColumnName(i) + ":";
-                    line += crs.getString(i) + "*) , ";
-                    continue;
-                }
-
-                line += "(" +crs.getColumnName(i) + ":";
-                line += crs.getFloat(i) + ")";
-
-                if(i<(crs.getColumnCount()-1)){
-                    line += " ,\n";
-                }
-            }
-            //line += getWifiApList(parentIndex);
-            toBePrinted += line;
-        }
-
-        Log.i("FromTemp",toBePrinted);
-        return toBePrinted;
-    }
 
 
-
-    private String getWifiApList2(){
-        List<List<WiFiAccessPoint>> lwap = dbt.getWifiAPListByLocation();
-
-        String toBeReturned = "Wifi ap list by location: {\n";
-        for(int i=0;i<lwap.size();i++){
-            List<WiFiAccessPoint> row = lwap.get(i);
-            toBeReturned += i + " {\n";
-            for(int j=0;j<row.size();j++){
-                WiFiAccessPoint ap = row.get(j);
-                toBeReturned += "(" + ap.getSsid() + " = " + ap.getBssid() + ") : " + ap.getRssi() + "\n";
-            }
-            toBeReturned += "}\n";
-        }
-
-        return toBeReturned;
-    }
-
-    private String getMLDataObj(){
-        String toBeReturned = "";
-
-        MLData mld = dbt.getMLDataFromDatabase();
-
-        float[][] fdata = mld.features;
-        float[][] ldata = mld.encodedLabels;
-
-        toBeReturned += "Features: {\n";
-        for(int i=0;i<fdata.length;i++){
-            float[] row = fdata[i];
-            toBeReturned += "* ";
-            for(int j=0;j<row.length;j++){
-                toBeReturned += row[j] + " , ";
-            }
-            toBeReturned += "*\n";
-        }
-        toBeReturned += "\n\nencodedlabels: {\n";
-
-        for(int i=0;i< ldata.length;i++){
-            toBeReturned += ldata[i][i] + "\n";
-        }
-
-        return toBeReturned;
-    }
 
     private NDArray obtainDummyInputData(){
+        AppDatabase dbt = new AppDatabase(getApplicationContext());
         String queryString = "SELECT light,sound,geo_magnetic_field_strength,cell_tower_id,area_code,cell_signal_strength FROM mylist_data WHERE ID = 1";
         Cursor dataRow = dbt.getReadableDatabase().rawQuery(queryString,null);
         float[] sample = new float[6];
@@ -203,6 +118,86 @@ public class TempResultsActivity extends AppCompatActivity {
         NDArray inputArr = new NDArray(new float[] {0,0,0,0,0,0});
 
         return inputArr;
+    }
+
+
+    /*
+        Testing services for obtaining location:
+            - vars to be used for service testing
+            - methods to test the service
+     */
+
+    private boolean controlService = false;
+    private boolean controlInfoIntake = false;
+    private LocalLearningService llservice;
+    private Intent startIntent;
+    private Thread ct;
+
+    /**
+     * Start the service. with this onCreate and onStartCommand will start. This will
+     * get new thread created which will continuously update locationobject data.
+     */
+    private void startLLService(){
+        startIntent = new Intent(this,LocalLearningService.class);
+        startService(startIntent);
+    }
+
+    /**
+     * Binds this activity to the created locallearningservice; meaning we can use the functions
+     * within LocalLearningService here to extract the data being obtained by the service.
+     */
+    private void bindToLLService(){
+        Intent intent = new Intent(this,LocalLearningService.class);
+        bindService(intent,sconnect, Context.BIND_AUTO_CREATE);
+    }
+
+    /**
+     * Will bind to the locallearningservice and obtain most recent version of locationobject available.
+     * @return MOst updated locationobject
+     */
+    private LocationObject getLocationObjectData(){
+        //bindToLLService();
+        if (controlService){
+            Log.i("fromtempotherthread","point of failure below");
+            LocationObject soughtLocation = llservice.getLocationObject();
+            Toast.makeText(getApplicationContext(),"Location (Maybe) Found",Toast.LENGTH_SHORT).show();
+            return soughtLocation;
+        }
+        else{
+            Toast.makeText(getApplicationContext(),"Not connected Yet",Toast.LENGTH_SHORT).show();
+            return null;
+        }
+    }
+
+
+    private ServiceConnection sconnect = new ServiceConnection(){
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            LocalLearningService.LocalLearningServiceBinder binder = (LocalLearningService.LocalLearningServiceBinder) iBinder;
+            llservice = binder.getBinderService();
+            controlService = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            controlService = false;
+        }
+    };
+
+
+    private void runContinuousThread(){
+        ct = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                TextView dataView = findViewById(R.id.dataViewBox);
+                while(controlInfoIntake){
+                    LocationObject lob = getLocationObjectData();
+                    Log.i("fromtempotherthread","going through loop");
+                }
+            }
+        }, "continuousthread");
+        ct.start();
     }
 
 

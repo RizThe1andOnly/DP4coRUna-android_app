@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Collections;
 
 public class Transmitter implements Runnable {
     private List<String> deviceAddresses;
