@@ -3,6 +3,7 @@ package com.example.dp4coruna.localLearning;
 import android.Manifest;
 import android.content.Intent;
 import android.database.Cursor;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -79,14 +80,6 @@ public class SubmitLocationLabel extends AppCompatActivity {
      */
     public void submitButtonPressed(View view){
 
-        //This is only needed if we allow user to alter their current address
-        /*
-        String StreetAddress = streetAddress.getText().toString();
-        String City = city.getText().toString();
-        String State = state.getText().toString();
-        String Country = country.getText().toString();
-        String Zipcode = zipcode.getText().toString();
-         */
 
         //on Submit, store user input strings in appropriate fields
         String buildingName = buildingname.getText().toString();
@@ -100,7 +93,14 @@ public class SubmitLocationLabel extends AppCompatActivity {
 
         //At this point, this LocationObjectData now has all fields for location and sensor data filled
         //including user input fields for room name etc
-        //will need to call methods from DatabaseHelper to parse and insert into DB from here
+
+
+        //convert location object data fields to location label and back
+        //testing purposes
+        String test = lod.createLocationLabel();
+        Log.d("locationlabel", test);
+        LocationObjectData testlod = LocationObjectData.extractLocationLabel(test);
+        Log.d("locationlabel", Double.toString(testlod.getLongitude()));
 
 
 
