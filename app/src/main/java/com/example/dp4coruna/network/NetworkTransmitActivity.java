@@ -126,7 +126,7 @@ public class NetworkTransmitActivity extends AppCompatActivity {
             //possible fix for too many threads: give below thread a name and check for that name before spawning new
             //thread
 
-            new Thread(new Transmitter(deviceAddresses, deviceAddress, rsaEncryptKeys, this, networkLocObj)).start();
+            //new Thread(new Transmitter(deviceAddresses, deviceAddress, rsaEncryptKeys, this, networkLocObj)).start();
         }
 
     }

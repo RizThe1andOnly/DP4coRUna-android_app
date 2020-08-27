@@ -31,6 +31,9 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
     private final String LOG_CAT_TAG = "SensorReader";
     private final long SOUND_SAMPLING_TIME = 3000; //in milliseconds
 
+    //environmental scanning options:
+    private final static int SCAN_LIGHT_LEVEL = 0;
+    private final static int SCAN_GEOMAG_LEVEL = 1;
 
     //tools to obtain sensor data:
     private SensorManager sm;
@@ -46,6 +49,7 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
     protected double cellId;
     protected double areaCode;
     protected double cellSignalStrength;
+    protected List<Float> geoMagVector;
 
 
     /**
@@ -58,12 +62,14 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
         super(inheritedContext,inheritedActivity);
         this.wifiApList = new ArrayList<>();
         this.currentCellData = new CellData();
+        this.geoMagVector = new ArrayList<>();
     }
 
     protected SensorReader(Context inheritedContext) {
         super(inheritedContext);
         this.wifiApList = new ArrayList<>();
         this.currentCellData = new CellData();
+        this.geoMagVector = new ArrayList<>();
     }
 
     /**
@@ -86,10 +92,9 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
         super.setupLocation();
 
         scanWifiAccessPoints(this.inheritedContext,this.wifiApList);
-        this.scanLightLevel(this.inheritedContext);
-        this.geoMagenticValue = this.scanGeoMagneticField();
+        this.runEnvironmentSensor(this.inheritedContext,SCAN_LIGHT_LEVEL);
+        this.runEnvironmentSensor(this.inheritedContext,SCAN_GEOMAG_LEVEL);
         this.soundLevel = this.scanSoundLevel();
-        //this.soundLevel = 0; //(!!! CHANGE THIS BACK IMMEDIATELY)
         this.scanCellInfoAtMoment(this.inheritedContext,null,this.currentCellData);
 
         //just in case will set each individual element of cell data here as well
@@ -209,20 +214,30 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
     }
 
 
-    //sense light here (Async Task !!!). Also since this uses device sensors and requires sensor even listener interface
+    //sense light and geomag here (Async Task !!!). Also since this uses device sensors and requires sensor even listener interface
     // the interface implement statement is above and the required methods are below.
     /**
-     * Will get light level when called. Creates a new thread and waits for said thread to
+     * Will get light/geo-mag level when called. Creates a new thread and waits for said thread to
      * obtain sensor readings, since sensors report data in async manner. Will call helper "obtainSensorReadings"
      * to complete task.
      *
      * @param context current context of the application to access the sensor services
      */
-    public void scanLightLevel(Context context){
+    public void runEnvironmentSensor(Context context, int scanType){
         this.lightLevel = 0;
         this.sm = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-        obtainSensorReadings(this.sm,Sensor.TYPE_LIGHT);
+
+        switch (scanType){
+            case SCAN_LIGHT_LEVEL:
+                obtainSensorReadings(this.sm,Sensor.TYPE_LIGHT);
+                break;
+
+            case SCAN_GEOMAG_LEVEL:
+                obtainSensorReadings(this.sm,Sensor.TYPE_MAGNETIC_FIELD);
+                break;
+        }
     }
+
 
     /**
      * Accepts the sensor manager and sensor from which to obtain readings, then creates a new handler thread to handle
@@ -254,6 +269,10 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
             this.reportLightSensorVal(sensorEvent);
         }
 
+        if(sensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD){
+            this.reportGeoMagVal(sensorEvent);
+        }
+
         // free resources after readings obtained:
         (this.sm).unregisterListener(SensorReader.this);
         (this.ht).quitSafely();
@@ -277,8 +296,35 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
         this.lightLevel = lightSensorValue;
     }
 
-    //end of light sensing
 
+    //geo-mag sensing will take place here:
+    /**
+     * Report the geomagnetic field values. Will set a list of values with geo-mag vector as well as
+     * overall (euclidian) magnitude.
+     * @param sensorEvent
+     */
+    public void reportGeoMagVal(SensorEvent sensorEvent){
+        /*
+            Indicies:
+                - 0 : x-axis
+                - 1 : y-axis
+                - 2 : z-axis
+                - 3 : magnitude (for new created list)
+         */
+
+        float[] geoMagVector = sensorEvent.values;
+
+        float x = geoMagVector[0];
+        float y = geoMagVector[1];
+        float z = geoMagVector[2];
+        float magnitude = (float)Math.sqrt((Math.pow(x,2)+Math.pow(y,2)+Math.pow(z,2)));
+
+        this.geoMagenticValue = magnitude;
+        this.geoMagVector.add(x);
+        this.geoMagVector.add(y);
+        this.geoMagVector.add(z);
+        this.geoMagVector.add(magnitude);
+    }
 
 
     //sound recording and sound level reporting section (Async Task !!!) :

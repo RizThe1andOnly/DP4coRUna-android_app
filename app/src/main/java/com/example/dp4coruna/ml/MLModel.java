@@ -174,7 +174,9 @@ public class MLModel {
     }
 
     /**
-     * Will run model.output on given data and return the output.
+     * Will run model.output on given data and return the output. A method that abstracts
+     * running of machine learning model then formatting of output data and just returning the data.
+     *
      * @param locationObject given data; input features that will be put into model to be run
      * @return String: list of the probabilities of each class being the label which belongs to given features.
      */
@@ -245,8 +247,7 @@ public class MLModel {
         /* - create model configurations then initialize model with configuration
            - The nOut value = number of classes for regression or number of locations we have, this will be set when
            obtaining data inside of the numberOfLocations class variable.
-           - nIn is the number of features which right now is constant at 6 features. For some other purpose the
-           NUMBER_OF_FEATURES constant is at 7 but this will be addressed later. (!!!)
+           - nIn is the number of features which right now is constant at 6 features.
          */
         MultiLayerConfiguration config = new NeuralNetConfiguration.Builder()
                 .seed(seed)

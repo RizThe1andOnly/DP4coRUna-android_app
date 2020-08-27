@@ -14,6 +14,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.localLearning.learningService.LocalLearningService;
+import com.example.dp4coruna.localLearning.movementTracker.AccelerationSensor;
+import com.example.dp4coruna.localLearning.movementTracker.MovementSensor;
+import com.example.dp4coruna.localLearning.movementTracker.TrackMovement;
 import com.example.dp4coruna.ml.MLData;
 import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.example.dp4coruna.localLearning.SubmitLocationLabel;
@@ -29,7 +32,7 @@ import java.util.List;
 public class TempResultsActivity extends AppCompatActivity {
 
     private TextView dataView;
-    private LocalLearningService lls;
+    private AccelerationSensor acls;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,29 +44,43 @@ public class TempResultsActivity extends AppCompatActivity {
         dataView = findViewById(R.id.dataViewBox);
 
         // service code test calls:
-        startLLService();
-        bindToLLService();
+        //startLLService();
+        //bindToLLService();
+
+        //acls = new AccelerationSensor(dataView,getApplicationContext());
+        this.testMovementSensor();
 
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopService(startIntent);
+        //stopService(startIntent);
     }
 
     /*
                         -----------------------------NORMAL TESTING CODE-----------------------------
      */
 
+
+    private boolean controlAccl = false;
     /**
      * Will create new instances of LocationGrabber and SensorReader and get data they have to offer
      * @param view triggerSampleButton
      */
-
     public void onTriggerSamplingButtonPress(View view){
-        LocationObject lob = getLocationObjectData();
-        dataView.append("Current Light Level : " + lob.getLightLevel() + "\n");
+        //LocationObject lob = getLocationObjectData();
+        //dataView.append("Current Light Level : " + lob.getLightLevel() + "\n");
+
+//        controlAccl = !controlAccl;
+//        if(controlAccl){
+//            acls.startSensor();
+//        }
+//        else{
+//            acls.stopSensor();
+//        }
+
+        this.movementTracking();
     }
 
     public void trainButtonEvent(View view){
@@ -243,6 +260,40 @@ public class TempResultsActivity extends AppCompatActivity {
 
     /*
                  --------------------------------DEMO CODE 8/21/2020 (END)------------------------------------
+     */
+
+
+    /*
+                                        -------------Movement Tracker test code----------------
+     */
+
+    private MovementSensor ms;
+    private boolean moveStart = false;
+
+    private void testMovementSensor(){
+        ms = new MovementSensor(getApplicationContext(),dataView,MovementSensor.CALLED_FROM_ACTIVITY);
+    }
+
+    private void movementTracking(){
+        this.moveStart = !(this.moveStart);
+
+        if(this.moveStart){
+            this.ms.startMovementSensor();
+        }
+        else{
+            this.ms.stopMovementSensor();
+        }
+    }
+
+
+    //start service code:
+    private void startMovementTrackerService(){
+        Intent startMTSIntent = new Intent(this, TrackMovement.class);
+        startService(startMTSIntent);
+    }
+
+    /*
+                                        -------------Movement Tracker test code (END)----------------
      */
 
 }
