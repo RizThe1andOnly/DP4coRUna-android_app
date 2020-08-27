@@ -55,7 +55,7 @@ public class TempResultsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //stopService(startIntent);
+        stopService(this.startMTSIntent);
     }
 
     /*
@@ -80,13 +80,17 @@ public class TempResultsActivity extends AppCompatActivity {
 //            acls.stopSensor();
 //        }
 
-        this.movementTracking();
+        this.startMovementTrackerService();
     }
 
     public void trainButtonEvent(View view){
         MLModel mlm = new MLModel(getApplicationContext());
         mlm.trainAndSaveModel();
         dataView.append("Successfully (maybe?) trained model and saved to device.\n");
+
+//        LocationObject lob = new LocationObject(getApplicationContext());
+//        lob.updateLocationData();
+//        dataView.append(lob.convertLocationToJSON() + "\n");
     }
 
 
@@ -114,6 +118,7 @@ public class TempResultsActivity extends AppCompatActivity {
         NDArray input = obtainDummyInputData();
         INDArray output = mlm.mln.output(input,false);
 
+        toBePrinted += mlm.trainingData.getLabelNamesList() + "\n";
         toBePrinted += output.toStringFull();
 
         dataView.append(toBePrinted);
@@ -124,7 +129,7 @@ public class TempResultsActivity extends AppCompatActivity {
 
     private NDArray obtainDummyInputData(){
         AppDatabase dbt = new AppDatabase(getApplicationContext());
-        String queryString = "SELECT light,sound,geo_magnetic_field_strength,cell_tower_id,area_code,cell_signal_strength FROM mylist_data WHERE ID = 1";
+        String queryString = "SELECT light,sound,geo_magnetic_field_strength,cell_tower_id,area_code,cell_signal_strength FROM mylist_data WHERE ID = 3";
         Cursor dataRow = dbt.getReadableDatabase().rawQuery(queryString,null);
         float[] sample = new float[6];
         dataRow.moveToNext();
@@ -132,7 +137,7 @@ public class TempResultsActivity extends AppCompatActivity {
             sample[i] = dataRow.getFloat(i);
         }
 
-        NDArray inputArr = new NDArray(new float[] {0,0,0,0,0,0});
+        NDArray inputArr = new NDArray(sample);
 
         return inputArr;
     }
@@ -286,10 +291,11 @@ public class TempResultsActivity extends AppCompatActivity {
     }
 
 
+    private Intent startMTSIntent;
     //start service code:
     private void startMovementTrackerService(){
-        Intent startMTSIntent = new Intent(this, TrackMovement.class);
-        startService(startMTSIntent);
+        this.startMTSIntent = new Intent(this, TrackMovement.class);
+        startService(this.startMTSIntent);
     }
 
     /*

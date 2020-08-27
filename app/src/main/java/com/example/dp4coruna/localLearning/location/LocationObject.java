@@ -107,6 +107,7 @@ public class LocationObject extends SensorReader implements Serializable{
         this.roomName = locobj.getRoomName();
         this.roomNumber = locobj.getRoomNumber();
         this.streetaddress = locobj.getStreetAddress();
+        this.geoMagVector = locobj.getGeoMagVector();
     }
 
 
@@ -311,6 +312,15 @@ public class LocationObject extends SensorReader implements Serializable{
      */
     public double getGeoMagneticFieldStrength(){
         return this.geoMagenticValue;
+    }
+
+    /**
+     * Returns the vector containing the geo-magnetic value in each axis as well as the overall magnitude as the last
+     * element.
+     * @return
+     */
+    public List<Float> getGeoMagVector(){
+        return this.geoMagVector;
     }
 
     /**

@@ -380,6 +380,10 @@ public class AppDatabase extends SQLiteOpenHelper {
     }
 
 
+    /**
+     * Obtains all the labels available in the database of the device through SQLite calls.
+     * @return
+     */
     public ArrayList<String> getAllLocationLabels(){
         /*
             Obtain all of the labels in the database location table

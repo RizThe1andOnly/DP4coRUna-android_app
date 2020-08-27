@@ -92,7 +92,8 @@ public class MLModel {
 
     private Context context;
 
-    private final String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MlModel.zip";
+    private final String model_filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MlModel.zip";
+    private final String dataset_filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MlDataset.zip";
 
     //static constants to be used by other classes to access functionalities:
     public static final int LOAD_MODEL_FROM_DEVICE = 0;
@@ -103,7 +104,7 @@ public class MLModel {
 
     // vars:
     public MultiLayerNetwork mln;
-    private DataSet trainingData;
+    public DataSet trainingData;
     private int numberOfLocations; //will act as the number of classes.
 
 
@@ -139,13 +140,16 @@ public class MLModel {
      */
     public void loadModel(){
         try {
-            this.mln = MultiLayerNetwork.load(new File(this.filePath),true);
+            this.mln = MultiLayerNetwork.load(new File(this.model_filePath),true);
+            this.trainingData = new DataSet();
+            (this.trainingData).load(new File(this.dataset_filePath));
+            (this.trainingData).setLabelNames(MLData.getLabelNames(this.context));
         } catch (IOException e) {
             Log.i("FromMlModel","IOException when trying load model; perhaps not found?");
             e.printStackTrace();
 
             //error message:
-            Toast.makeText(this.context , "File does not exist; please make model", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this.context , "File does not exist; please make model/dataset", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -157,16 +161,23 @@ public class MLModel {
         this.getDataAndCompileDataset();
         this.createMlModel();
 
-        //save model to device:
+        //save model and dataset to device:
         try {
             //delete old version of the file:
-            File fileToBeDeleted = new File(this.filePath);
-            if(fileToBeDeleted != null){
-                fileToBeDeleted.delete();
+            File model_fileToBeDeleted = new File(this.model_filePath);
+            File dataset_fileToBeDeleted = new File(this.dataset_filePath);
+
+            if(model_fileToBeDeleted.exists()){
+                model_fileToBeDeleted.delete();
+            }
+            if(dataset_fileToBeDeleted.exists()){
+                dataset_fileToBeDeleted.delete();
             }
 
             //save the new version:
-            this.mln.save(new File(this.filePath));
+            this.mln.save(new File(this.model_filePath));
+            this.trainingData.save(new File(this.dataset_filePath));
+
         } catch (IOException e) {
             Log.i("FromMlModel","IOException when trying to save model");
             e.printStackTrace();
@@ -218,6 +229,7 @@ public class MLModel {
     private void getDataAndCompileDataset(){
         MLData obtainedData = (new AppDatabase(this.context)).getMLDataFromDatabase();
         this.trainingData = new DataSet(new NDArray(obtainedData.features), new NDArray(obtainedData.encodedLabels));
+        (this.trainingData).setLabelNames(obtainedData.labels);
         this.numberOfLocations = obtainedData.numberOfLocations;
     }
 

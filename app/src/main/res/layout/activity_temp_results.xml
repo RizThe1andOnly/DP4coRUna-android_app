@@ -36,5 +36,5 @@
             app:layout_constraintEnd_toStartOf="@+id/showDataBaseData"
             app:layout_constraintStart_toEndOf="@+id/triggerSamplingButton"
             app:layout_constraintHorizontal_bias="0.537" app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginBottom="16dp" android:onClick="trainModel"/>
+            android:layout_marginBottom="16dp" android:onClick="trainButtonEvent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

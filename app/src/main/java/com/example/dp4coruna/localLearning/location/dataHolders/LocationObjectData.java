@@ -31,6 +31,7 @@ public class LocationObjectData {
 
     //sensor data:
     private List<WiFiAccessPoint> wifiApList;
+    private List<Float> geoMagVector;
     private double lightLevel;
     private double geoMagenticValue;
     private double soundLevel;
@@ -62,6 +63,7 @@ public class LocationObjectData {
         this.roomName = locobj.getRoomName();
         this.roomNumber = locobj.getRoomNumber();
         this.streetaddress = locobj.getStreetAddress();
+        this.geoMagVector = locobj.getGeoMagVector();
     }
 
     public LocationObjectData(){
@@ -153,6 +155,10 @@ public class LocationObjectData {
 
     public String getRoomNumber(){
         return this.roomNumber;
+    }
+
+    public List<Float> getGeoMagVector(){
+        return this.geoMagVector;
     }
 
 
