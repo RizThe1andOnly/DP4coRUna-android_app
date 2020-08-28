@@ -1,4 +1,4 @@
-package com.example.dp4coruna.datamanagement;
+package com.example.dp4coruna.dataManagement;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -7,9 +7,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.example.dp4coruna.location.LocationObject;
-import com.example.dp4coruna.location.LocationObjectData;
-import com.example.dp4coruna.location.WiFiAccessPoint;
+import com.example.dp4coruna.localLearning.location.LocationObject;
+import com.example.dp4coruna.localLearning.location.dataHolders.LocationObjectData;
+import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
+import com.example.dp4coruna.ml.MLData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,14 +22,14 @@ import java.util.Map;
  */
 public class AppDatabase extends SQLiteOpenHelper {
 
-    private static final int NUMBER_OF_FEATURES =10;
+    private static final int NUMBER_OF_FEATURES = 6;
     private int numberOfLocattions;
 
     public static final String DATABASE_NAME = "dp4corunadata.db";
     public static final String LOCATION_TABLE = "mylist_data";
     public static final String WAP_TABLE = "wifi_access_point_table";
 
-    /**
+    /*
      * Data columns for the location features. The count begins at 0.
      */
     public static final String LOCATION_TABLE_COL_ID = "ID";
@@ -45,7 +46,7 @@ public class AppDatabase extends SQLiteOpenHelper {
     public static final String LOCATION_TABLE_COL_BUILDING_NAME = "building_name";
 
 
-    /**
+    /*
      * Data columns for teh wifi access point features.
      */
     public static final String WIFIAPTABLE_COL_RSSI = "rssi";
@@ -59,19 +60,24 @@ public class AppDatabase extends SQLiteOpenHelper {
     public static final int WIFIAPTABLE_CURSOR_PARENT_INDEX = 3;
 
 
+    /*
+        Table creation SQL statements:
+     */
+
     private final String createLocTable = "CREATE TABLE " + LOCATION_TABLE + " (ID INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                    + LOCATION_TABLE_COL_LABEL + " TEXT, "
-                                    + LOCATION_TABLE_COL_LIGHT + " FLOAT, "
-                                    + LOCATION_TABLE_COL_SOUND + " FLOAT, "
-                                    + LOCATION_TABLE_COL_GMFS + " FLOAT, "
-                                    + LOCATION_TABLE_COL_CELL_TID + " FLOAT, "
-                                    + LOCATION_TABLE_COL_AREA_CODE + " FLOAT, "
-                                    + LOCATION_TABLE_COL_SIGNAL_STRENGTH + " FLOAT, "
-                                    + LOCATION_TABLE_COL_ADDRESS + " TEXT, "
-                                    + LOCATION_TABLE_COL_BUILDING_NAME + " TEXT, "
-                                    + LOCATION_TABLE_COL_ROOM_NAME + " TEXT, "
-                                    + LOCATION_TABLE_COL_ROOM_NUMBER + " INTEGER"
-                                    +");";
+            + LOCATION_TABLE_COL_LABEL + " TEXT, "
+            + LOCATION_TABLE_COL_LIGHT + " FLOAT, "
+            + LOCATION_TABLE_COL_SOUND + " FLOAT, "
+            + LOCATION_TABLE_COL_GMFS + " FLOAT, "
+            + LOCATION_TABLE_COL_CELL_TID + " FLOAT, "
+            + LOCATION_TABLE_COL_AREA_CODE + " FLOAT, "
+            + LOCATION_TABLE_COL_SIGNAL_STRENGTH + " FLOAT, "
+            + LOCATION_TABLE_COL_ADDRESS + " TEXT, "
+            + LOCATION_TABLE_COL_BUILDING_NAME + " TEXT, "
+            + LOCATION_TABLE_COL_ROOM_NAME + " TEXT, "
+            + LOCATION_TABLE_COL_ROOM_NUMBER + " INTEGER"
+            +");";
+
 
 
     private final String createWiFIAPTable = "CREATE TABLE " + WAP_TABLE + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -82,7 +88,13 @@ public class AppDatabase extends SQLiteOpenHelper {
                                             + "FOREIGN KEY(" + WIFIAPTABLE_COL_PARENTID + ") REFERENCES " + LOCATION_TABLE + "(ID) "
                                             +");";
 
-    public AppDatabase(Context context) { super(context, DATABASE_NAME, null, 3);
+
+    //constant String for if matching label is not found when looking through device database:
+    private static final String LABEL_NOT_FOUND = "Label Not Found";
+
+
+    public AppDatabase(Context context) {
+        super(context, DATABASE_NAME, null, 3);
     }
 
 
@@ -90,12 +102,10 @@ public class AppDatabase extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-            Log.d("TESTING 123","I AM HERE");
-
-            db.execSQL(createLocTable);
-            db.execSQL(createWiFIAPTable);
-            // db.execSQL(CREATE_SENSORTABLE);
-            // db.execSQL(CREATE_APTABLE);
+        db.execSQL(createLocTable);
+        db.execSQL(createWiFIAPTable);
+       // db.execSQL(CREATE_SENSORTABLE);
+       // db.execSQL(CREATE_APTABLE);
 
     }
 
@@ -105,11 +115,6 @@ public class AppDatabase extends SQLiteOpenHelper {
      //   db.execSQL("DROP TABLE IF EXISTS " + sensorTable);
      //   db.execSQL("DROP TABLE IF EXISTS " + APTable);
 
-        db.execSQL("DROP TABLE IF EXISTS "+WAP_TABLE);
-
-
-
-        Log.d("TEST","I AM HERE IN ONUPGRADE");
         onCreate(db);
     }
 
@@ -176,30 +181,30 @@ public class AppDatabase extends SQLiteOpenHelper {
      * @param locationObject LocationObject class which contains data on the location
      * @return boolean true if successful, false if not
      */
-    public boolean addData(LocationObject locationObject){
-        //checks for the location object argument:
-        if( (!(locationObject instanceof LocationObject)) || (locationObject == null) ){
-            return false;
-        }
-
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-
-        //insert data:
-        contentValues.put(LOCATION_TABLE_COL_LABEL,locationObject.locationLabel);
-        contentValues.put(LOCATION_TABLE_COL_LIGHT,(float)locationObject.getLightLevel());
-        contentValues.put(LOCATION_TABLE_COL_SOUND,(float)locationObject.getSoundLevel());
-        contentValues.put(LOCATION_TABLE_COL_GMFS,(float)locationObject.getGeoMagneticFieldStrength());
-        contentValues.put(LOCATION_TABLE_COL_CELL_TID,(float)locationObject.getCellId());
-        contentValues.put(LOCATION_TABLE_COL_AREA_CODE,(float)locationObject.getAreaCode());
-        contentValues.put(LOCATION_TABLE_COL_SIGNAL_STRENGTH,(float)locationObject.getCellSignalStrength());
-
-        //insert the row:
-        long result = db.insert(LOCATION_TABLE, null, contentValues);
-
-        if(result == -1) return false;
-        return true;
-    }
+//    public boolean addData(LocationObject locationObject){
+//        //checks for the location object argument:
+//        if( (!(locationObject instanceof LocationObject)) || (locationObject == null) ){
+//            return false;
+//        }
+//
+//        SQLiteDatabase db = this.getWritableDatabase();
+//        ContentValues contentValues = new ContentValues();
+//
+//        //insert data:
+//        contentValues.put(LOCATION_TABLE_COL_LABEL,locationObject.locationLabel);
+//        contentValues.put(LOCATION_TABLE_COL_LIGHT,(float)locationObject.getLightLevel());
+//        contentValues.put(LOCATION_TABLE_COL_SOUND,(float)locationObject.getSoundLevel());
+//        contentValues.put(LOCATION_TABLE_COL_GMFS,(float)locationObject.getGeoMagneticFieldStrength());
+//        contentValues.put(LOCATION_TABLE_COL_CELL_TID,(float)locationObject.getCellId());
+//        contentValues.put(LOCATION_TABLE_COL_AREA_CODE,(float)locationObject.getAreaCode());
+//        contentValues.put(LOCATION_TABLE_COL_SIGNAL_STRENGTH,(float)locationObject.getCellSignalStrength());
+//
+//        //insert the row:
+//        long result = db.insert(LOCATION_TABLE, null, contentValues);
+//
+//        if(result == -1) return false;
+//        return true;
+//    }
 
     /**
      * Adds an entry to the mylist_data table in the database. this is called after a location has been sampled and is
@@ -217,7 +222,7 @@ public class AppDatabase extends SQLiteOpenHelper {
         ContentValues contentValues = new ContentValues();
 
         //insert data:
-        contentValues.put(LOCATION_TABLE_COL_LABEL, lod.getRoomName()); //for now will use just room name for label
+        contentValues.put(LOCATION_TABLE_COL_LABEL,lod.getRoomName()); //for now will use just room name for label
         contentValues.put(LOCATION_TABLE_COL_LIGHT,(float)lod.getLightLevel());
         contentValues.put(LOCATION_TABLE_COL_SOUND,(float)lod.getSoundLevel());
         contentValues.put(LOCATION_TABLE_COL_GMFS,(float)lod.getGeoMagenticValue());
@@ -369,26 +374,30 @@ public class AppDatabase extends SQLiteOpenHelper {
         float[][] featuresArray = new float[numOfLocations][NUMBER_OF_FEATURES];
 
         //query database for all features:
+
         String featuresQuery = "SELECT "
-                                + LOCATION_TABLE_COL_LIGHT + ", "
-                                + LOCATION_TABLE_COL_SOUND + ", "
-                                + LOCATION_TABLE_COL_GMFS + ", "
-                                + LOCATION_TABLE_COL_CELL_TID + ", "
-                                + LOCATION_TABLE_COL_AREA_CODE + ", "
-                                + LOCATION_TABLE_COL_SIGNAL_STRENGTH + ", "
-                                + LOCATION_TABLE_COL_ADDRESS + ", "
-                                + LOCATION_TABLE_COL_BUILDING_NAME + ", "
-                                + LOCATION_TABLE_COL_ROOM_NAME +", "
-                                + LOCATION_TABLE_COL_ROOM_NUMBER+" "
-                                + "FROM " + LOCATION_TABLE + ";";
+                + LOCATION_TABLE_COL_LIGHT + ", "
+                + LOCATION_TABLE_COL_SOUND + ", "
+                + LOCATION_TABLE_COL_GMFS + ", "
+                + LOCATION_TABLE_COL_CELL_TID + ", "
+                + LOCATION_TABLE_COL_AREA_CODE + ", "
+                + LOCATION_TABLE_COL_SIGNAL_STRENGTH + ", "
+                + LOCATION_TABLE_COL_ADDRESS + ", "
+                + LOCATION_TABLE_COL_BUILDING_NAME + ", "
+                + LOCATION_TABLE_COL_ROOM_NAME +", "
+                + LOCATION_TABLE_COL_ROOM_NUMBER+" "
+                + "FROM " + LOCATION_TABLE + ";";
+
         Cursor featuresDataCursor = db.rawQuery(featuresQuery,null);
 
         //iterate through cursor and place data within float array:
         int i = 0;
         while(featuresDataCursor.moveToNext()){
             for(int j=0;j<NUMBER_OF_FEATURES;j++){
-              //  featuresArray[i][j] = featuresDataCursor.getFloat(j);
-                Log.d("PRINTING IN GETFORMATTEDFEATURES: ",featuresDataCursor.getString(j));
+
+                Log.d("PRINTING GET FORMATTEDFEATURES: ",featuresDataCursor.getString(j));
+
+                featuresArray[i][j] = featuresDataCursor.getFloat(j);
             }
             i++;
         }
@@ -397,6 +406,10 @@ public class AppDatabase extends SQLiteOpenHelper {
     }
 
 
+    /**
+     * Obtains all the labels available in the database of the device through SQLite calls.
+     * @return
+     */
     public ArrayList<String> getAllLocationLabels(){
         /*
             Obtain all of the labels in the database location table
@@ -418,63 +431,45 @@ public class AppDatabase extends SQLiteOpenHelper {
     }
 
 
-    /*
-    This method will pass in a location label and then query the database table to check if this location label is equal to one of the labels in the column of location labels.  If it is, it will
-    return all an array list of all the location features.
-
-    @returns ArrayList<String> with sensor data
-
+    /**
+     * This method will pass in a location label and then query the database table to check if this location label is equal to one of the labels in the column of location labels.  If it is, it will
+     * return all an array list of all the location features.
+     *
+     * @returns String JSON rep of location object created from the features obtained, if no matches then "Not Found"
      */
-    public Cursor CheckIfLocationLabelExists(String sampleLabel){
+    public String checkIfLocationLabelExists(String sampleLabel){
 
         SQLiteDatabase db = this.getWritableDatabase();
 
-        String labelQueryString = "SELECT "+  LOCATION_TABLE_COL_LABEL + " FROM " + LOCATION_TABLE + ";";
-        Cursor labelCursor = db.rawQuery(labelQueryString,null);
+        // query string looks features of sample which has a label that matches the input: sampleLabel.
+        String labelQueryString = "SELECT "
+                                + LOCATION_TABLE_COL_LIGHT + ", "
+                                + LOCATION_TABLE_COL_SOUND + ", "
+                                + LOCATION_TABLE_COL_GMFS + ", "
+                                + LOCATION_TABLE_COL_CELL_TID + ", "
+                                + LOCATION_TABLE_COL_AREA_CODE + ", "
+                                + LOCATION_TABLE_COL_SIGNAL_STRENGTH
+                                + " FROM " + LOCATION_TABLE + " WHERE " + LOCATION_TABLE_COL_LABEL + " = ?";
 
-        ArrayList<String> toBeReturned = new ArrayList<>();
-        while(labelCursor.moveToNext()) {
-            toBeReturned.add(labelCursor.getString(0));
+        //points to the row(s) with matching label if it exists
+        Cursor labelCursor = db.rawQuery(labelQueryString,new String[] {sampleLabel});
+
+        String locationObjectJson = LABEL_NOT_FOUND;
+        if(labelCursor.getCount() > 0 ){
+            labelCursor.moveToNext();
+            LocationObject emptyLocationObject = new LocationObject();
+            emptyLocationObject.setLightLevel(labelCursor.getFloat(0));
+            emptyLocationObject.setSoundLevel(labelCursor.getFloat(1));
+            emptyLocationObject.setGeoMagenticValue(labelCursor.getFloat(2));
+            emptyLocationObject.setCellTID(labelCursor.getFloat(3));
+            emptyLocationObject.setAreaCode(labelCursor.getFloat(4));
+            emptyLocationObject.setCellSignalStrength(labelCursor.getFloat(5));
+            locationObjectJson = emptyLocationObject.convertLocationToJSON();
         }
 
-        for(int a=0;a<toBeReturned.size();a++){
+        return locationObjectJson;
+    }
 
-            if(sampleLabel.equals(toBeReturned.get(a))){           //If the label is in the arrayList, then return that tuples location features
-
-
-                String featuresQuery = "SELECT "
-                        + LOCATION_TABLE_COL_LIGHT + ", "
-                        + LOCATION_TABLE_COL_SOUND + ", "
-                        + LOCATION_TABLE_COL_GMFS + ", "
-                        + LOCATION_TABLE_COL_CELL_TID + ", "
-                        + LOCATION_TABLE_COL_AREA_CODE + ", "
-                        + LOCATION_TABLE_COL_SIGNAL_STRENGTH + " "
-                        + "FROM " + LOCATION_TABLE + ";";
-
-
-                Cursor featuresDataCursor = db.rawQuery(featuresQuery,null);
-
-                return featuresDataCursor;
-
-            }
-
-
-        }
-
-
-
-
-        return null;
-
-
-        }
-
-        /* This method passes in a data entry, a location feature (which will be one of the columns), and a label and
-            it will iterate through the database to find the correct entry at that specific column and row to
-            update the old entry with the new entry
-
-           @void method
-         */
 
 
     public void updateExistingEntry(float newEntry, String columnType, String sampleLabel){
@@ -485,6 +480,8 @@ public class AppDatabase extends SQLiteOpenHelper {
 
         db.execSQL(sql);
     }
+
+
 
     /**
      * Creates binarized labels from given string labels. Essentially will take the number of total labels and create
