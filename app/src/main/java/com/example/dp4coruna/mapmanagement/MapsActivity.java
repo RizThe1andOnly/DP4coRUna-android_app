@@ -63,7 +63,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //Zoom in on the user's current location
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 9.0f));
 
-        markHighRiskZones();
+      //  markHighRiskZones();
         mMap.setOnPolylineClickListener(this);
         mMap.setOnPolygonClickListener(this);
     }
@@ -96,8 +96,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onPolygonClick(Polygon polygon) {
-        Toast.makeText(this, "COVID-19 Risk: " + polygon.getTag().toString(),
-                Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this, "COVID-19 Risk: " + polygon.getTag().toString(),
+  //              Toast.LENGTH_SHORT).show();
 
     }
 }
