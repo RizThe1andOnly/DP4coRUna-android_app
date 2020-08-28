@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class AppDatabase extends SQLiteOpenHelper {
 
-    private static final int NUMBER_OF_FEATURES = 6;
+    private static final int NUMBER_OF_FEATURES = 10;
     private int numberOfLocattions;
 
     public static final String DATABASE_NAME = "dp4corunadata.db";
@@ -471,6 +471,12 @@ public class AppDatabase extends SQLiteOpenHelper {
     }
 
 
+    /* This method passes in a data entry, a location feature (which will be one of the columns), and a label and
+       it will iterate through the database to find the correct entry at that specific column and row to
+       update the old entry with the new entry
+
+       @void method
+    */
 
     public void updateExistingEntry(float newEntry, String columnType, String sampleLabel){
 
