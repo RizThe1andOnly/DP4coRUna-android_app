@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class AppDatabase extends SQLiteOpenHelper {
 
-    private static final int NUMBER_OF_FEATURES = 6;
+    private static final int NUMBER_OF_FEATURES = 10;
     private int numberOfLocattions;
 
     public static final String DATABASE_NAME = "dp4corunadata.db";
@@ -40,6 +40,11 @@ public class AppDatabase extends SQLiteOpenHelper {
     public static final String LOCATION_TABLE_COL_CELL_TID = "cell_tower_id";
     public static final String LOCATION_TABLE_COL_AREA_CODE = "area_code";
     public static final String LOCATION_TABLE_COL_SIGNAL_STRENGTH = "cell_signal_strength";
+    public static final String LOCATION_TABLE_COL_ADDRESS = "location_address";
+    public static final String LOCATION_TABLE_COL_ROOM_NAME = "room_name";
+    public static final String LOCATION_TABLE_COL_ROOM_NUMBER = "room_number";
+    public static final String LOCATION_TABLE_COL_BUILDING_NAME = "building_name";
+
 
     /*
      * Data columns for teh wifi access point features.
@@ -58,15 +63,21 @@ public class AppDatabase extends SQLiteOpenHelper {
     /*
         Table creation SQL statements:
      */
+
     private final String createLocTable = "CREATE TABLE " + LOCATION_TABLE + " (ID INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                    + LOCATION_TABLE_COL_LABEL + " TEXT, "
-                                    + LOCATION_TABLE_COL_LIGHT + " FLOAT, "
-                                    + LOCATION_TABLE_COL_SOUND + " FLOAT, "
-                                    + LOCATION_TABLE_COL_GMFS + " FLOAT, "
-                                    + LOCATION_TABLE_COL_CELL_TID + " FLOAT, "
-                                    + LOCATION_TABLE_COL_AREA_CODE + " FLOAT, "
-                                    + LOCATION_TABLE_COL_SIGNAL_STRENGTH + " FLOAT"
-                                    +");";
+            + LOCATION_TABLE_COL_LABEL + " TEXT, "
+            + LOCATION_TABLE_COL_LIGHT + " FLOAT, "
+            + LOCATION_TABLE_COL_SOUND + " FLOAT, "
+            + LOCATION_TABLE_COL_GMFS + " FLOAT, "
+            + LOCATION_TABLE_COL_CELL_TID + " FLOAT, "
+            + LOCATION_TABLE_COL_AREA_CODE + " FLOAT, "
+            + LOCATION_TABLE_COL_SIGNAL_STRENGTH + " FLOAT, "
+            + LOCATION_TABLE_COL_ADDRESS + " TEXT, "
+            + LOCATION_TABLE_COL_BUILDING_NAME + " TEXT, "
+            + LOCATION_TABLE_COL_ROOM_NAME + " TEXT, "
+            + LOCATION_TABLE_COL_ROOM_NUMBER + " INTEGER"
+            +");";
+
 
 
     private final String createWiFIAPTable = "CREATE TABLE " + WAP_TABLE + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -83,7 +94,7 @@ public class AppDatabase extends SQLiteOpenHelper {
 
 
     public AppDatabase(Context context) {
-        super(context, DATABASE_NAME, null, 1);
+        super(context, DATABASE_NAME, null, 3);
     }
 
 
@@ -218,6 +229,12 @@ public class AppDatabase extends SQLiteOpenHelper {
         contentValues.put(LOCATION_TABLE_COL_CELL_TID,(float)lod.getCellId());
         contentValues.put(LOCATION_TABLE_COL_AREA_CODE,(float)lod.getAreaCode());
         contentValues.put(LOCATION_TABLE_COL_SIGNAL_STRENGTH,(float)lod.getCellSignalStrength());
+        contentValues.put(LOCATION_TABLE_COL_ADDRESS,lod.getAddress());
+        contentValues.put(LOCATION_TABLE_COL_BUILDING_NAME,lod.getBuildingName());
+        contentValues.put(LOCATION_TABLE_COL_ROOM_NAME,lod.getRoomName());
+        contentValues.put(LOCATION_TABLE_COL_ROOM_NUMBER,lod.getRoomNumber());
+
+
 
         //insert the row:
         long result = db.insert(this.LOCATION_TABLE, null, contentValues);
@@ -357,20 +374,29 @@ public class AppDatabase extends SQLiteOpenHelper {
         float[][] featuresArray = new float[numOfLocations][NUMBER_OF_FEATURES];
 
         //query database for all features:
+
         String featuresQuery = "SELECT "
-                                + LOCATION_TABLE_COL_LIGHT + ", "
-                                + LOCATION_TABLE_COL_SOUND + ", "
-                                + LOCATION_TABLE_COL_GMFS + ", "
-                                + LOCATION_TABLE_COL_CELL_TID + ", "
-                                + LOCATION_TABLE_COL_AREA_CODE + ", "
-                                + LOCATION_TABLE_COL_SIGNAL_STRENGTH + " "
-                                + "FROM " + LOCATION_TABLE + ";";
+                + LOCATION_TABLE_COL_LIGHT + ", "
+                + LOCATION_TABLE_COL_SOUND + ", "
+                + LOCATION_TABLE_COL_GMFS + ", "
+                + LOCATION_TABLE_COL_CELL_TID + ", "
+                + LOCATION_TABLE_COL_AREA_CODE + ", "
+                + LOCATION_TABLE_COL_SIGNAL_STRENGTH + ", "
+                + LOCATION_TABLE_COL_ADDRESS + ", "
+                + LOCATION_TABLE_COL_BUILDING_NAME + ", "
+                + LOCATION_TABLE_COL_ROOM_NAME +", "
+                + LOCATION_TABLE_COL_ROOM_NUMBER+" "
+                + "FROM " + LOCATION_TABLE + ";";
+
         Cursor featuresDataCursor = db.rawQuery(featuresQuery,null);
 
         //iterate through cursor and place data within float array:
         int i = 0;
         while(featuresDataCursor.moveToNext()){
             for(int j=0;j<NUMBER_OF_FEATURES;j++){
+
+                Log.d("PRINTING GET FORMATTEDFEATURES: ",featuresDataCursor.getString(j));
+
                 featuresArray[i][j] = featuresDataCursor.getFloat(j);
             }
             i++;
@@ -443,7 +469,24 @@ public class AppDatabase extends SQLiteOpenHelper {
 
         return locationObjectJson;
     }
-    
+
+
+    /* This method passes in a data entry, a location feature (which will be one of the columns), and a label and
+       it will iterate through the database to find the correct entry at that specific column and row to
+       update the old entry with the new entry
+
+       @void method
+    */
+
+    public void updateExistingEntry(float newEntry, String columnType, String sampleLabel){
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String sql = "UPDATE "+LOCATION_TABLE +" SET " + columnType+ " = '"+newEntry+"' WHERE LABEL = '"+sampleLabel + "'";
+
+        db.execSQL(sql);
+    }
+
 
 
     /**
