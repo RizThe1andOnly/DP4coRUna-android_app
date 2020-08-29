@@ -123,11 +123,16 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
 
     // get wifi access point info here:
     /**
-     * Gets list of current wifi access points
+     * Gets list of current wifi access points.
+     *
+     * This is a static method because scanning wifi access points is a utility that is required by
+     * other services aside from LocationObject. The WifiScanningService class will call this method to
+     * obtain list of wifi access points at two points in time to compare.
+     *
      * @param context current device context required to obtain the wifi-access point data
      * @param listToBePopulated list which will hold the access point data; each element is an access point
      */
-    public void scanWifiAccessPoints(Context context, List<WiFiAccessPoint> listToBePopulated){
+    public static void scanWifiAccessPoints(Context context, List<WiFiAccessPoint> listToBePopulated){
         if(context == null) return;
 
         if(listToBePopulated == null){

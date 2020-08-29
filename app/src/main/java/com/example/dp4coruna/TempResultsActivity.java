@@ -14,19 +14,15 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.localLearning.learningService.LocalLearningService;
-import com.example.dp4coruna.localLearning.movementTracker.AccelerationSensor;
-import com.example.dp4coruna.localLearning.movementTracker.MovementSensor;
-import com.example.dp4coruna.localLearning.movementTracker.TrackMovement;
-import com.example.dp4coruna.ml.MLData;
+import com.example.dp4coruna.localLearning.learningService.movementTracker.AccelerationSensor;
+import com.example.dp4coruna.localLearning.learningService.movementTracker.MovementSensor;
+import com.example.dp4coruna.localLearning.learningService.movementTracker.TrackMovement;
 import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.example.dp4coruna.localLearning.SubmitLocationLabel;
-import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.ml.MLModel;
 import android.database.Cursor;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.cpu.nativecpu.NDArray;
-
-import java.util.List;
 
 
 public class TempResultsActivity extends AppCompatActivity {
@@ -173,24 +169,6 @@ public class TempResultsActivity extends AppCompatActivity {
         bindService(intent,sconnect, Context.BIND_AUTO_CREATE);
     }
 
-    /**
-     * Will bind to the locallearningservice and obtain most recent version of locationobject available.
-     * @return MOst updated locationobject
-     */
-    private LocationObject getLocationObjectData(){
-        //bindToLLService();
-        if (controlService){
-            Log.i("fromtempotherthread","point of failure below");
-            LocationObject soughtLocation = llservice.getLocationObject();
-            Toast.makeText(getApplicationContext(),"Location (Maybe) Found",Toast.LENGTH_SHORT).show();
-            return soughtLocation;
-        }
-        else{
-            Toast.makeText(getApplicationContext(),"Not connected Yet",Toast.LENGTH_SHORT).show();
-            return null;
-        }
-    }
-
 
     private ServiceConnection sconnect = new ServiceConnection(){
 
@@ -208,19 +186,6 @@ public class TempResultsActivity extends AppCompatActivity {
     };
 
 
-    private void runContinuousThread(){
-        ct = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                TextView dataView = findViewById(R.id.dataViewBox);
-                while(controlInfoIntake){
-                    LocationObject lob = getLocationObjectData();
-                    Log.i("fromtempotherthread","going through loop");
-                }
-            }
-        }, "continuousthread");
-        ct.start();
-    }
 
 
     /*

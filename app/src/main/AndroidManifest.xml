@@ -40,7 +40,7 @@
             android:name=".localLearning.learningService.LocalLearningService"
             android:exported="false"/>
         <service
-            android:name=".localLearning.movementTracker.TrackMovement"
+            android:name=".localLearning.learningService.movementTracker.TrackMovement"
             android:exported="false"/>
 
 

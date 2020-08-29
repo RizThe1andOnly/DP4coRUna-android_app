@@ -1,6 +1,5 @@
-package com.example.dp4coruna.localLearning.movementTracker;
+package com.example.dp4coruna.localLearning.learningService.movementTracker;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
@@ -9,7 +8,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.widget.ActionMenuView;
+import android.os.Message;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,9 +26,15 @@ public class AccelerationSensor implements SensorEventListener {
     private SensorManager accelerometerSensorManager;
     private Sensor accelerometer;
     private HandlerThread ht;
+    private Handler motionDetectedHandler;
 
-    public AccelerationSensor(TextView outputWindow, Context context){
-        this.outputView = outputWindow;
+    /**
+     * Should only be called from an activity with a text view.
+     * @param outputWindow
+     * @param context
+     * @param motionDetectedHandler
+     */
+    public AccelerationSensor(TextView outputWindow, Context context, Handler motionDetectedHandler){
 
         // construct the sensor manager and obtain the accelerometer from it:
         accelerometerSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -39,7 +44,28 @@ public class AccelerationSensor implements SensorEventListener {
         else{
             Toast.makeText(context,"Accelerometer not Available",Toast.LENGTH_LONG).show();
         }
+        this.motionDetectedHandler = motionDetectedHandler;
+        this.outputView = outputWindow;
     }
+
+    /**
+     * Called from services.
+     * @param context
+     * @param motionDetectedHandler
+     */
+    public AccelerationSensor(Context context, Handler motionDetectedHandler){
+        // construct the sensor manager and obtain the accelerometer from it:
+        accelerometerSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        if(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_SENSOR_ACCELEROMETER)){
+            accelerometer = accelerometerSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        }
+        else{
+            Toast.makeText(context,"Accelerometer not Available",Toast.LENGTH_LONG).show();
+        }
+        this.motionDetectedHandler = motionDetectedHandler;
+    }
+
+
 
     public void startSensor(){
         this.ht = new HandlerThread("AccelerometerSensorThread");
@@ -55,15 +81,19 @@ public class AccelerationSensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        List<Float> output = getAccelerometerData(sensorEvent);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        List<Float> accelData = getAccelerometerData(sensorEvent);
+        boolean motionDetected = false;
 
-        if(output.get(3) > (10*baseMag)){
-            outputView.setText(output.toString());
+        /*
+            Carry out logic to determine whether motion has been detected using acceleration data here:
+                - if motion has been detected set motionDetected to true. !
+         */
+
+
+        //after motion detection takes place send message:
+        if(motionDetected){
+            Message msg = (this.motionDetectedHandler).obtainMessage();
+            (this.motionDetectedHandler).sendMessage(msg);
         }
     }
 
@@ -76,9 +106,6 @@ public class AccelerationSensor implements SensorEventListener {
         Functions to be used with accelerometer thread to read and process accelerometer data
      */
 
-
-    private boolean controlIntake = true;
-    private float baseMag = 0;
 
     /**
      * Extract the accelerometer vector and pass data into other functions for further processing.
@@ -95,11 +122,6 @@ public class AccelerationSensor implements SensorEventListener {
 
         //get the acceleration magnitude:
         float accelMag = getAccelerationMagnitude(readings);
-
-        if(controlIntake){
-            baseMag = accelMag;
-            controlIntake = false;
-        }
 
         /*
             Create a list<float> of all values obtained from sensorevent as well as the calculated magnitude
@@ -124,8 +146,6 @@ public class AccelerationSensor implements SensorEventListener {
      * @return
      */
     private float getAccelerationMagnitude(float[] vals){
-        //double[] vals = {readings[0],readings[1],readings[3]};
-        //return (float)(Math.sqrt((Math.pow(vals[0],2)+Math.pow(vals[1],2)+Math.pow(vals[2],2))));
         return ((float)Math.sqrt((Math.pow(vals[0],2)+Math.pow(vals[1],2)+Math.pow(vals[2],2))));
     }
 }

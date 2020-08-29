@@ -1,10 +1,9 @@
-package com.example.dp4coruna.localLearning.movementTracker;
+package com.example.dp4coruna.localLearning.learningService.movementTracker;
 
 import android.content.Context;
 import android.hardware.*;
 import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +24,9 @@ public class MovementSensor extends TriggerEventListener {
     //sensor vars:
     private SensorManager sensorManager;
     private Sensor motionTracker;
+
+    //motion detection handler variable:
+    private Handler motionDetectedHandler;
 
     //vars to indicate from what (activity/service) this class is called
     public static final int CALLED_FROM_ACTIVITY = 0;
@@ -48,10 +50,11 @@ public class MovementSensor extends TriggerEventListener {
      * Use to test output while working with a service. output will be displayed through Toasts.
      * @param context
      */
-    public MovementSensor(Context context, int source){
+    public MovementSensor(Context context, int source, Handler motionDetectedHandler){
         this.context = context;
         setUpSensors(context);
         this.call_source = source;
+        this.motionDetectedHandler = motionDetectedHandler;
     }
 
     /**
@@ -82,14 +85,17 @@ public class MovementSensor extends TriggerEventListener {
         /*
             put logic for after motion detection here (for now will print a message saying motion detected):
          */
-        this.sensorManager.requestTriggerSensor(MovementSensor.this,this.motionTracker);
 
         if(this.call_source == CALLED_FROM_ACTIVITY){
             outputView.append("Motion Detected");
         }
-        else{
+        else{ // called from a service:
             Toast.makeText(this.context, "Motion Detected", Toast.LENGTH_SHORT).show();
+            Message msg = (this.motionDetectedHandler).obtainMessage();
+            (this.motionDetectedHandler).sendMessage(msg);
         }
+
+        this.sensorManager.requestTriggerSensor(MovementSensor.this,this.motionTracker);
     }
 
 

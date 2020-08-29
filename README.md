@@ -15,8 +15,27 @@ Currently in process of developing skeletons of tools that will be used towards 
     - Utilizing DeepLearning4J machine learning libraries to accomplish this at the moment.
     
 
+##What we have so far:
+(Asterisks  with number on them represent things that need to be addressed further. See what needs to be done section)
 
-## Upcoming Demo:
-Will feature the integration of the above three functionalities.
+- We can sample sensors for the following: light, geomagnetic field strength, wifi access point rrsi values and mac address, cell tower info (*1), sound level of room (*2).
 
-The App will be able to obtain location data, send it over the network to be verified, and run machine learning model to obtain probabilities on which label the features (from learned data) may belong to.
+- Refer to Network documentation separate from this file. (*3)
+
+- Do softmax (multinomial logistic regression). (*4)
+
+## What needs to be done:
+(Asterisk + #) corresponds to above
+
+- Implement means of detecting movement and transition from being in motion to being stationary. Then upon this event, compare rssi value before and after the motion through algo described in CollabLoc paper.
+
+- (*1) returns  a list of cell tower id based on "number of radio devices in android device". Should investigate this further and decide which information the app needs. For now the 1st item in the list is being used.
+
+- (*2) Sound level recordings are not reliable as is, they will require further processing. The sampled sound level is a relative number based on device, so this value will mean different things for different devices and is not consistent. One way to solve this may be to get a value as a percentage of the device's max recording capabilities.
+
+- (*3) Further work to be done with networking are addressed in network doc.
+
+- (*4) Requires a method using the built in functionalities of DeepLearning4J to get a train and test set then run the model. Currently there is no splitting of data. Also a method needs to be implemented that matches label names with the outputs provides and returns that data.
+
+- Also currently the different components are not connected based on a cohesive model. The implementation in progress is using services to detect movement and based on that call wifi access point scanners and carryout logic with them. Then use the network services to transfer data through network and then have receiving devices to run already trained ML model.
+    

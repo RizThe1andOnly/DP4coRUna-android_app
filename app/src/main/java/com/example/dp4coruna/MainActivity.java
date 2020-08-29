@@ -30,10 +30,10 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    //DEMO TESTING IP ADDRESSES:
-    private final String TRANSMITTER_IP_ADDRESS = "192.0.0.2"; //s9 transmitter "g960u"
-    private final String RELAY_IP_ADDRESS = "192.168.1.155"; // s7 relay "g930t"
-    private final String RECEIVER_IP_ADDRESS = "192.168.1.159"; //s7e receiver "g935t"
+    //DEMO TESTING IP ADDRESSES Hardcoded ones:
+    private final String TRANSMITTER_IP_ADDRESS = "";
+    private final String RELAY_IP_ADDRESS = "";
+    private final String RECEIVER_IP_ADDRESS = "";
 
     private static final int ACCESS_FINE_LOCATION_REQUEST_CODE = 101;
     private static final int RECORD_AUDIO_REQUEST_CODE = 102;

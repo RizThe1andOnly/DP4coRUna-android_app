@@ -6,18 +6,19 @@ import android.os.*;
 import android.util.Log;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
+import com.example.dp4coruna.localLearning.learningService.movementTracker.MovementSensor;
+import com.example.dp4coruna.localLearning.learningService.movementTracker.TrackMovement;
 import com.example.dp4coruna.localLearning.location.LocationObject;
+import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
+import com.example.dp4coruna.localLearning.location.learner.SensorReader;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Will perform local learning in the background of the app. Will be
- * a started service as well as a bound service. Once started, will use
- * internal handler to continuously obtain local data and populate a
- * a blockingqueue. The binder then will return contents of queue when
- * another service/activity calls for it.
  *
  * Local learning handled by LocationObject and the contents of
  * com.example.dp4coruna.location.learner
@@ -26,79 +27,18 @@ public class LocalLearningService extends Service {
 
     private final static long SLEEP_DURATION_MILLIS = 1000; // time = 1 second
 
-    public final BlockingQueue<LocationObject> locationQueueContainer = new ArrayBlockingQueue<>(1);
-    private Thread locationUpdaterThread;
     private final IBinder llsBinder = new LocalLearningServiceBinder();
 
+    private HandlerThread ht;
+    private Looper htLooper;
 
-    /**
-     * Has a while loop that constantly updates a location data and put it in a blocking queue. if the blockingqueue
-     * already has stuff in it then it is emptied and then re-filled.
-     *
-     * The thread is put to sleep for 1 second in each iteration so main thread has chance to access queue.
-     */
-    private class LocalLearningRunnable implements Runnable{
-        @Override
-        public void run() {
-            try {
-                while (true) {
-                    if (locationQueueContainer.isEmpty()) {
-                        locationQueueContainer.put(new LocationObject(getApplicationContext()));
-                    } else {
-                        LocationObject temp = locationQueueContainer.take();
-                        temp.updateLocationData();
-                        locationQueueContainer.put(temp);
-                    }
-                    Log.i("FromLearningThread","Going to sleep at: " + (new Date()).getTime()); //(!!!)
-                    Thread.sleep(SLEEP_DURATION_MILLIS);
-                    Log.i("FromLearningThread","Woke up at: " + (new Date()).getTime()); //(!!!)
-                }
-            } catch (InterruptedException e) {
-                Log.i("FromLocalLearningRunnable","Interrupt Exception");
-                e.printStackTrace();
-            }
-        }
-    }
+    // two handlers that will be used with this service:
+    private StartMotionSensingHandler motionInitiator;
+    private HandleMotionDetection motionDetectedHandler;
 
-    private class LocalLearningRunnablev2 implements Runnable{
-        @Override
-        public void run() {
-            while(true){
-                LocationObject lob = new LocationObject(getApplicationContext());
-                lob.updateLocationData();
-                RetrieveLocationObject rlo = new RetrieveLocationObject(Looper.getMainLooper());
-                Message msg = rlo.obtainMessage();
-                msg.obj = lob;
-                rlo.sendMessage(msg);
-                try {
-                    Thread.sleep(SLEEP_DURATION_MILLIS);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    private class RetrieveLocationObject extends Handler{
-        public RetrieveLocationObject(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-
-            try{
-                if (!locationQueueContainer.isEmpty()) {
-                    LocationObject temp = locationQueueContainer.take();
-                }
-                locationQueueContainer.put((LocationObject)msg.obj);
-            }catch (InterruptedException e){
-                e.printStackTrace();
-            }
-        }
-    }
-
+    //two wifi ap lists that will be compared:
+    private List<WiFiAccessPoint> wifiAccessPointList_atStart;
+    private List<WiFiAccessPoint> wifiAccessPointList_atEnd;
 
     public class LocalLearningServiceBinder extends Binder {
         public LocalLearningService getBinderService(){
@@ -117,13 +57,25 @@ public class LocalLearningService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        locationUpdaterThread = new Thread(new LocalLearningRunnable(),"LocationUpdaterThread");
+        this.ht = new HandlerThread("HandleMotionThread");
+        (this.ht).start();
+        this.htLooper = (this.ht).getLooper();
 
+        this.motionDetectedHandler = new HandleMotionDetection(this.htLooper,this.wifiAccessPointList_atStart,this.wifiAccessPointList_atEnd);
+        this.motionInitiator = new StartMotionSensingHandler(this.htLooper,this.motionDetectedHandler);
+
+        //initialize wifi ap lists:
+        this.wifiAccessPointList_atStart = new ArrayList<>();
+        this.wifiAccessPointList_atEnd = new ArrayList<>();
+        this.obtainWifiAccessPointsList((this.wifiAccessPointList_atStart)); // populate list at start
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        locationUpdaterThread.start();
+
+        Message msg = (this.motionInitiator).obtainMessage();
+        (this.motionInitiator).sendMessage(msg);
+
         return START_STICKY;
     }
 
@@ -137,20 +89,71 @@ public class LocalLearningService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        locationUpdaterThread.interrupt();
         Toast.makeText(getApplicationContext(),"Service Stopped (hopefully)",Toast.LENGTH_LONG).show();
     }
 
-    public LocationObject getLocationObject(){
-        LocationObject toBeReturned = null;
-        try {
-            Log.i("FromLLS","Waiting for blocking queue"); //(!!!)
-            toBeReturned = locationQueueContainer.take();
-            Log.i("FromLLS","Able to access blocking queue"); //(!!!)
-        } catch (InterruptedException e) {
-            Log.i("fromotempotherthread","something wrong here");
-            e.printStackTrace();
+    private void obtainWifiAccessPointsList(List<WiFiAccessPoint> wifiAccessPointList){
+        SensorReader.scanWifiAccessPoints(getApplicationContext(),wifiAccessPointList);
+
+        if(wifiAccessPointList.size() > 0){
+            Toast.makeText(getApplicationContext(),"Wifi AP retrieval successful",Toast.LENGTH_SHORT); //(!!!) For testing only, get rid of later.
         }
-        return toBeReturned;
+        else{
+            Toast.makeText(getApplicationContext(),"Wifi AP retrieval failed",Toast.LENGTH_SHORT); //(!!!) For testing only, get rid of later.
+        }
     }
+
+
+    private class StartMotionSensingHandler extends Handler {
+        private Handler motionDetectionHandler;
+
+        public StartMotionSensingHandler(Looper looper, Handler motionDetectionHandler){
+            super(looper);
+            this.motionDetectionHandler = motionDetectionHandler;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+
+            MovementSensor ms = new MovementSensor(getApplicationContext(),MovementSensor.CALLED_FROM_SERVICE,this.motionDetectionHandler);
+            ms.startMovementSensor();
+        }
+    }
+
+    private class HandleMotionDetection extends Handler{
+        private List<WiFiAccessPoint> wifiAccessPointList_atStart;
+        private List<WiFiAccessPoint> wifiAccessPointList_atEnd;
+
+        public HandleMotionDetection(Looper looper, List<WiFiAccessPoint> wap_start, List<WiFiAccessPoint> wap_end){
+            super(looper);
+            this.wifiAccessPointList_atStart = wap_start;
+            this.wifiAccessPointList_atEnd = wap_end;
+        }
+
+        /**
+         * Carries out logic when transition from motion to non-motion is detected. After detection message will be
+         * sent to this handler.
+         * @param msg
+         */
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            obtainWifiAccessPointsList(wifiAccessPointList_atEnd); // populate wifi access point list at end.
+
+            /*
+             *  - Carry out wifi access point list comparison logic here, read CollabLoc paper for detail on that process.
+             *  - After that has been done make calls to other services/functions as necessary.
+             */
+
+            //after other things have been called reset two wifi ap lists:
+            // don't know if clear function very well, should investigate further.
+            this.wifiAccessPointList_atStart.clear();
+            this.wifiAccessPointList_atEnd.clear();
+
+        }
+
+
+    }
+
 }

@@ -1,20 +1,9 @@
-package com.example.dp4coruna.localLearning.movementTracker;
+package com.example.dp4coruna.localLearning.learningService.movementTracker;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.*;
-import android.widget.TextView;
-import android.widget.Toast;
 import androidx.annotation.Nullable;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class TrackMovement extends Service{
 
@@ -79,8 +68,8 @@ public class TrackMovement extends Service{
             super.handleMessage(msg);
 
             //create and launch the motion sensor class:
-            MovementSensor ms = new MovementSensor(getApplicationContext(),MovementSensor.CALLED_FROM_SERVICE);
-            ms.startMovementSensor();
+//            MovementSensor ms = new MovementSensor(getApplicationContext(),MovementSensor.CALLED_FROM_SERVICE);
+//            ms.startMovementSensor();
         }
     }
 
