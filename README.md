@@ -2,6 +2,8 @@
 
 App designed to obtain data on corona infections and advise users on what locations to are safe or not.
 
+** Check Documentation Folder for some documentation on the project so far **
+
 Currently in process of developing skeletons of tools that will be used towards the ultimate goal. Tools being developed at the moment include:
 - Means by which to detcect where a user is currently:
     - Utilization of google apis to detect what building user is in
