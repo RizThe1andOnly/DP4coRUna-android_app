@@ -16,16 +16,8 @@ import androidx.core.content.ContextCompat;
 import android.view.View;
 
 import com.example.dp4coruna.localLearning.location.LocationObject;
-import com.example.dp4coruna.localLearning.SubmitLocationLabel;
 import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
-import com.example.dp4coruna.network.NetworkReceiveActivity;
-import com.example.dp4coruna.network.NetworkRelayActivity;
-import com.example.dp4coruna.network.NetworkTransmitActivity;
-import com.example.dp4coruna.network.RelayService;
-import com.example.dp4coruna.network.TransmitterService;
 import com.google.android.gms.location.FusedLocationProviderClient;
-
-import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity {

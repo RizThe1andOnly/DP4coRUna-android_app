@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,7 +17,6 @@ import com.example.dp4coruna.localLearning.learningService.movementTracker.Accel
 import com.example.dp4coruna.localLearning.learningService.movementTracker.MovementSensor;
 import com.example.dp4coruna.localLearning.learningService.movementTracker.TrackMovement;
 import com.example.dp4coruna.localLearning.location.LocationObject;
-import com.example.dp4coruna.localLearning.SubmitLocationLabel;
 import com.example.dp4coruna.ml.MLModel;
 import android.database.Cursor;
 import org.nd4j.linalg.api.ndarray.INDArray;

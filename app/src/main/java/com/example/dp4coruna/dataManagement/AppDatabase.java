@@ -181,30 +181,40 @@ public class AppDatabase extends SQLiteOpenHelper {
      * @param locationObject LocationObject class which contains data on the location
      * @return boolean true if successful, false if not
      */
-//    public boolean addData(LocationObject locationObject){
-//        //checks for the location object argument:
-//        if( (!(locationObject instanceof LocationObject)) || (locationObject == null) ){
-//            return false;
-//        }
-//
-//        SQLiteDatabase db = this.getWritableDatabase();
-//        ContentValues contentValues = new ContentValues();
-//
-//        //insert data:
-//        contentValues.put(LOCATION_TABLE_COL_LABEL,locationObject.locationLabel);
-//        contentValues.put(LOCATION_TABLE_COL_LIGHT,(float)locationObject.getLightLevel());
-//        contentValues.put(LOCATION_TABLE_COL_SOUND,(float)locationObject.getSoundLevel());
-//        contentValues.put(LOCATION_TABLE_COL_GMFS,(float)locationObject.getGeoMagneticFieldStrength());
-//        contentValues.put(LOCATION_TABLE_COL_CELL_TID,(float)locationObject.getCellId());
-//        contentValues.put(LOCATION_TABLE_COL_AREA_CODE,(float)locationObject.getAreaCode());
-//        contentValues.put(LOCATION_TABLE_COL_SIGNAL_STRENGTH,(float)locationObject.getCellSignalStrength());
-//
-//        //insert the row:
-//        long result = db.insert(LOCATION_TABLE, null, contentValues);
-//
-//        if(result == -1) return false;
-//        return true;
-//    }
+    public boolean addData(LocationObject locationObject){
+        //checks for the location object argument:
+        if( (!(locationObject instanceof LocationObject)) || (locationObject == null) ){
+            return false;
+        }
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        //insert data:
+        contentValues.put(LOCATION_TABLE_COL_LABEL,locationObject.locationLabel);
+        contentValues.put(LOCATION_TABLE_COL_LIGHT,(float)locationObject.getLightLevel());
+        contentValues.put(LOCATION_TABLE_COL_SOUND,(float)locationObject.getSoundLevel());
+        contentValues.put(LOCATION_TABLE_COL_GMFS,(float)locationObject.getGeoMagneticFieldStrength());
+        contentValues.put(LOCATION_TABLE_COL_CELL_TID,(float)locationObject.getCellId());
+        contentValues.put(LOCATION_TABLE_COL_AREA_CODE,(float)locationObject.getAreaCode());
+        contentValues.put(LOCATION_TABLE_COL_SIGNAL_STRENGTH,(float)locationObject.getCellSignalStrength());
+        contentValues.put(LOCATION_TABLE_COL_ADDRESS,locationObject.getAddress());
+        contentValues.put(LOCATION_TABLE_COL_BUILDING_NAME,locationObject.getBuildingName());
+        contentValues.put(LOCATION_TABLE_COL_ROOM_NAME,locationObject.getRoomName());
+        contentValues.put(LOCATION_TABLE_COL_ROOM_NUMBER,locationObject.getRoomNumber());
+
+        //insert the row:
+        long result = db.insert(LOCATION_TABLE, null, contentValues);
+
+        int parentIndex = getLatestWAPDataIndex();
+
+        if(!addWAPData(locationObject.getWifiAccessPointList(),parentIndex)){
+            Log.i("FromDataBaseTest","Failed at wifi ap data entry"); //(!!!)
+        }
+
+        if(result == -1) return false;
+        return true;
+    }
 
     /**
      * Adds an entry to the mylist_data table in the database. this is called after a location has been sampled and is
@@ -239,11 +249,8 @@ public class AppDatabase extends SQLiteOpenHelper {
         //insert the row:
         long result = db.insert(this.LOCATION_TABLE, null, contentValues);
 
-        //get the index of row just entered into data for the wifi access point list and add the wifi access point list to wifiap table:
-        String indexQuery = "SELECT ID FROM " + this.LOCATION_TABLE + ";";
-        Cursor parentCrs = db.rawQuery(indexQuery,null);
-        parentCrs.moveToLast();
-        int parentIndex = parentCrs.getInt(0);
+        int parentIndex = getLatestWAPDataIndex();
+
         if(!addWAPData(lod.getwifiApList(),parentIndex)){
             Log.i("FromDataBaseTest","Failed at wifi ap data entry"); //(!!!)
         }
@@ -253,6 +260,25 @@ public class AppDatabase extends SQLiteOpenHelper {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Gets the greatest ID value in the device database, this will correspond to the entry just entered into the
+     * database.
+     *
+     * Note: if database's id values are out of order it might be necessary to get all id values in a list and then
+     * get the max value.
+     *
+     * @return index of the current entry
+     */
+    private int getLatestWAPDataIndex(){
+        //get the index of row just entered into data for the wifi access point list and add the wifi access point list to wifiap table:
+        SQLiteDatabase db = this.getWritableDatabase();
+        String indexQuery = "SELECT ID FROM " + this.LOCATION_TABLE + ";";
+        Cursor parentCrs = db.rawQuery(indexQuery,null);
+        parentCrs.moveToLast();
+        int parentIndex = parentCrs.getInt(0);
+        return parentIndex;
     }
 
 
@@ -319,6 +345,9 @@ public class AppDatabase extends SQLiteOpenHelper {
     /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      * Below is the section for obtaining data for the machine learning section. The below methods will gather all
      * necessary data and compile them into a MLData object.
+     *
+     * IF ANY CHANGES ARE MADE TO BELOW SECTION THEN CORRESPONDING CHANGES MUST BE MADE IN MLMODEL OR ESLE
+     * EVERYTHING WILL CRASH.
      *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      */
 
@@ -381,12 +410,8 @@ public class AppDatabase extends SQLiteOpenHelper {
                 + LOCATION_TABLE_COL_GMFS + ", "
                 + LOCATION_TABLE_COL_CELL_TID + ", "
                 + LOCATION_TABLE_COL_AREA_CODE + ", "
-                + LOCATION_TABLE_COL_SIGNAL_STRENGTH + ", "
-                + LOCATION_TABLE_COL_ADDRESS + ", "
-                + LOCATION_TABLE_COL_BUILDING_NAME + ", "
-                + LOCATION_TABLE_COL_ROOM_NAME +", "
-                + LOCATION_TABLE_COL_ROOM_NUMBER+" "
-                + "FROM " + LOCATION_TABLE + ";";
+                + LOCATION_TABLE_COL_SIGNAL_STRENGTH
+                + " FROM " + LOCATION_TABLE + ";";
 
         Cursor featuresDataCursor = db.rawQuery(featuresQuery,null);
 
