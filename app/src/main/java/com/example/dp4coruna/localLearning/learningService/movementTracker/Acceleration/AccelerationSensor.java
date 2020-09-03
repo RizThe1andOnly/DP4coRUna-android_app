@@ -1,4 +1,4 @@
-package com.example.dp4coruna.localLearning.learningService.movementTracker;
+package com.example.dp4coruna.localLearning.learningService.movementTracker.Acceleration;
 
 import android.content.Context;
 import android.content.pm.PackageManager;

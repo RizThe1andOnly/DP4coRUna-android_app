@@ -28,6 +28,7 @@ public class AppDatabase extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "dp4corunadata.db";
     public static final String LOCATION_TABLE = "mylist_data";
     public static final String WAP_TABLE = "wifi_access_point_table";
+    private static final String ACCEL_OFFSET_TABLE = "accelerometer_offset_table";
 
     /*
      * Data columns for the location features. The count begins at 0.
@@ -61,6 +62,13 @@ public class AppDatabase extends SQLiteOpenHelper {
 
 
     /*
+        Data columns for the offset table
+     */
+    public static final String ACCEL_OFFSET_TABLE_COL_X_OFFSET = "xOffset";
+    public static final String ACCEL_OFFSET_TABLE_COL_Y_OFFSET = "yOffset";
+    public static final String ACCEL_OFFSET_TABLE_COL_Z_OFFSET = "zOffset";
+
+    /*
         Table creation SQL statements:
      */
 
@@ -89,6 +97,13 @@ public class AppDatabase extends SQLiteOpenHelper {
                                             +");";
 
 
+    private final String createAccelOffsetTable = "CREATE TABLE " + ACCEL_OFFSET_TABLE + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                    + ACCEL_OFFSET_TABLE_COL_X_OFFSET + " FLOAT, "
+                                                    + ACCEL_OFFSET_TABLE_COL_Y_OFFSET + " FLOAT, "
+                                                    + ACCEL_OFFSET_TABLE_COL_Z_OFFSET + " FLOAT "
+                                                    +");";
+
+
     //constant String for if matching label is not found when looking through device database:
     private static final String LABEL_NOT_FOUND = "Label Not Found";
 
@@ -101,76 +116,15 @@ public class AppDatabase extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
         db.execSQL(createLocTable);
         db.execSQL(createWiFIAPTable);
-       // db.execSQL(CREATE_SENSORTABLE);
-       // db.execSQL(CREATE_APTABLE);
-
+        db.execSQL(createAccelOffsetTable);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + LOCATION_TABLE);
-     //   db.execSQL("DROP TABLE IF EXISTS " + sensorTable);
-     //   db.execSQL("DROP TABLE IF EXISTS " + APTable);
-
         onCreate(db);
-    }
-
-    public boolean addData(String item1, String type) {
-
-
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-
-        //If you are inserting location data, add it to locTable
-
-
-            contentValues.put(LOCATION_TABLE_COL_LIGHT, item1);
-            long result = db.insert(LOCATION_TABLE, null, contentValues);
-
-
-            //if date as inserted incorrectly it will return -1
-            if (result == -1) {
-                return false;
-            } else {
-                return true;
-            }
-
-
-/*
-        else if (type.equals("SENSORDATA")) { //If you are adding sensor data then add to the sensor data table
-
-
-            Log.d("IN SENSORDATA: ","I AM HERE ADDING "+item1+ " to SENSOR TABLE");
-            contentValues.put(COL5, item1);
-           long result = db.insert(sensorTable, null, contentValues);
-
-
-            //if date as inserted incorrectly it will return -1
-            if (result == -1) {
-                return false;
-            } else {
-                return true;
-            }
-
-        }
-
-        //If not location data or sensor data, add to the wifi access points table
-
-       contentValues.put(COL3,item1);
-        long result = db.insert(APTable, null, contentValues);
-
-        if(result == -1)
-            return false;
-        else{
-            return true;
-        }
-
-
-
-  */
     }
 
 
@@ -612,4 +566,66 @@ public class AppDatabase extends SQLiteOpenHelper {
 
         return listToBePopulated;
     }
+
+
+    /* ----------------------------------------
+            Section for adding and retrieving accelerometer data from the database. Used with CalibrationTask to
+            save Accelerometer offset to device database. This offset will be retrieved to be used with accelerometer
+            data.
+       ----------------------------------------
+     */
+
+    /**
+     * To be called by CalibrationTast to add new found accelerometer offset data to the database in its own table.
+     * This method will check if data already exists and if it does then update it, if it does not then add it.
+     * @param offsetValsPerAxis List containing the offset data obtained. The indices should be as follows: 0: x-axis,
+     *                          1: y-axis, 2- z-axis
+     */
+    public void addOffsetData(List<Float> offsetValsPerAxis){
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<Float> testForDataExistence = getOffsetData();
+
+        //check if data already exists by using the getOffsetData method below
+        List<Float> currentData = getOffsetData();
+        if(currentData == null){ // meaning data doesn't already exist and needs to be added
+            ContentValues cv = new ContentValues();
+            cv.put(ACCEL_OFFSET_TABLE_COL_X_OFFSET,offsetValsPerAxis.get(0));
+            cv.put(ACCEL_OFFSET_TABLE_COL_Y_OFFSET,offsetValsPerAxis.get(1));
+            cv.put(ACCEL_OFFSET_TABLE_COL_Z_OFFSET,offsetValsPerAxis.get(2));
+
+            db.insert(ACCEL_OFFSET_TABLE,null,cv);
+            return;
+        }
+
+        //will be here if data does already exist and now needs to be updated:
+        ContentValues updateCv = new ContentValues();
+        updateCv.put(ACCEL_OFFSET_TABLE_COL_X_OFFSET,offsetValsPerAxis.get(0));
+        updateCv.put(ACCEL_OFFSET_TABLE_COL_Y_OFFSET,offsetValsPerAxis.get(1));
+        updateCv.put(ACCEL_OFFSET_TABLE_COL_Z_OFFSET,offsetValsPerAxis.get(2));
+        db.update(ACCEL_OFFSET_TABLE,updateCv,"ID = 1",null);
+
+    }
+
+    public List<Float> getOffsetData(){
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String queryString = "SELECT "
+                            + ACCEL_OFFSET_TABLE_COL_X_OFFSET + ", "
+                            + ACCEL_OFFSET_TABLE_COL_Y_OFFSET + ", "
+                            + ACCEL_OFFSET_TABLE_COL_Z_OFFSET + " "
+                            + "FROM " + ACCEL_OFFSET_TABLE + ";";
+
+        Cursor offsetCursor = db.rawQuery(queryString,null);
+
+        if(offsetCursor.getCount() == 0) return null;
+
+        //create offset list and populate with data retrieved from the database:
+        List<Float> offsetData = new ArrayList<>();
+        offsetData.add(offsetCursor.getFloat(0));
+        offsetData.add(offsetCursor.getFloat(1));
+        offsetData.add(offsetCursor.getFloat(2));
+
+        return offsetData;
+    }
+
 }
