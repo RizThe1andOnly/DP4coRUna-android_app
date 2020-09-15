@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.localLearning.learningService.LocalLearningService;
 import com.example.dp4coruna.localLearning.learningService.movementTracker.Acceleration.AccelerationSensor;
+import com.example.dp4coruna.localLearning.learningService.movementTracker.Acceleration.CalibrationTask;
 import com.example.dp4coruna.localLearning.learningService.movementTracker.MovementSensor;
 import com.example.dp4coruna.localLearning.learningService.movementTracker.TrackMovement;
 import com.example.dp4coruna.localLearning.location.LocationObject;
@@ -39,7 +40,24 @@ public class TempResultsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
 
+    //test calibration task:
+    public void tempResultsActivity_testCalibration(View view){
+        CalibrationTask ct = new CalibrationTask(getApplicationContext());
+        ct.calibrate();
+    }
+
+    //get velocity vals:
+    AccelerationSensor as;
+    
+    public void tempResultsActivity_testVelocity(View view){
+        as = new AccelerationSensor(this.dataView,getApplicationContext(),null);
+        as.startSensor();
+    }
+
+    public void tempResultsActivity_stopTestVelocity(View view){
+        as.stopSensor();
     }
 
 

@@ -12,29 +12,29 @@
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.576"/>
     <Button
-            android:text="Sample"
+            android:text="Calibrate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/triggerSamplingButton"
-            android:onClick="onTriggerSamplingButtonPress"
+            android:onClick="tempResultsActivity_testCalibration"
             tools:visibility="visible"
             android:visibility="visible"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="16dp" android:layout_marginStart="28dp"/>
     <Button
-            android:text="Database"
+            android:text="Stop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="32dp"
             app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="16dp"
-            android:id="@+id/showDataBaseData" android:onClick="onShowDataBaseDataButtonPress"/>
+            android:id="@+id/showDataBaseData" android:onClick="tempResultsActivity_stopTestVelocity"/>
     <Button
-            android:text="TrainML"
+            android:text="Velocity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:id="@+id/trainButton"
             app:layout_constraintEnd_toStartOf="@+id/showDataBaseData"
             app:layout_constraintStart_toEndOf="@+id/triggerSamplingButton"
             app:layout_constraintHorizontal_bias="0.537" app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginBottom="16dp" android:onClick="trainButtonEvent"/>
+            android:layout_marginBottom="16dp" android:onClick="tempResultsActivity_testVelocity"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -619,6 +619,9 @@ public class AppDatabase extends SQLiteOpenHelper {
 
         if(offsetCursor.getCount() == 0) return null;
 
+        offsetCursor.moveToNext();
+        Log.i("FromAppDatabase",offsetCursor.getColumnCount() + "");
+
         //create offset list and populate with data retrieved from the database:
         List<Float> offsetData = new ArrayList<>();
         offsetData.add(offsetCursor.getFloat(0));

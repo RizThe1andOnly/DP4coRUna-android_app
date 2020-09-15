@@ -105,7 +105,8 @@ public class DataBaseTestActivity extends AppCompatActivity {
 
 
 
-        boolean insertData = myDatabaseHelper.addData(newEntry,null); //(!!! asked for a type didn't know what to put so put null to suppress error, sorry if i screwed it up. Rizwan)
+        //boolean insertData = myDatabaseHelper.addData(newEntry,null); //(!!! asked for a type didn't know what to put so put null to suppress error, sorry if i screwed it up. Rizwan)
+        boolean insertData = false;
 
         if(!insertData){
 

@@ -18,6 +18,7 @@ import android.view.View;
 import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.example.dp4coruna.localLearning.SubmitLocationLabel;
 
 
 public class MainActivity extends AppCompatActivity {
