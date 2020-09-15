@@ -17,6 +17,7 @@ import com.example.dp4coruna.R;
 import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.example.dp4coruna.ml.MLModel;
 
+import com.example.dp4coruna.localLearning.SubmitLocationLabel;
 
 public class NetworkReceiveActivity extends AppCompatActivity {
 
