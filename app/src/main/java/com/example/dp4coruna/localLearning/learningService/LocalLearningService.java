@@ -22,8 +22,28 @@ import java.util.concurrent.BlockingQueue;
  *
  * Local learning handled by LocationObject and the contents of
  * com.example.dp4coruna.location.learner
+ *
+ * Main service that will be running for the app in a device. Will either have some means of motion detection
+ * or signaling. The motion detection/signaling will initiate wifi access point scan. The results from the scan
+ * will be compared and based on comparisons other local learning procedures will be initiated.
  */
 public class LocalLearningService extends Service {
+
+    /*
+     *  This is a service class that is explained in: https://developer.android.com/guide/components/services.
+     *  This class also uses Threads, HandlerThreads, and Handlers for its purposes (see Android Developer Guide).
+     *
+     *  All of the motion detecting and the sensor related stuff are abstracted away from this class and can be found
+     *  in the movementTracker folder. Note: its all messed up and will take a while to actually figure out, currently just a mess of experiments, sorry. -Rizwan
+     *
+     *  Class sets up two handlers on same newly created thread. One handler starts the motion tracker and keeps that
+     * running while the other handler waits for the motion handler to report motion. Once motion is reported the waiting
+     * handler does other procedures based on local learning. See the "Handler Definition Section" below for the
+     * handlers and their code.
+     *
+     * Also see "Utility Functions" section to see some of local learning process, currently the comparison of the
+     * two wifi access points lists.
+     */
 
     private final static long SLEEP_DURATION_MILLIS = 1000; // time = 1 second
 
@@ -33,8 +53,8 @@ public class LocalLearningService extends Service {
     private Looper htLooper;
 
     // two handlers that will be used with this service:
-    private StartMotionSensingHandler motionInitiator;
-    private HandleMotionDetection motionDetectedHandler;
+    private StartMotionSensingHandler handler_DetectingMotion;
+    private HandleMotionDetection handler_AfterMotionDetected;
 
     //two wifi ap lists that will be compared:
     private List<WiFiAccessPoint> wifiAccessPointList_atStart;
@@ -61,8 +81,9 @@ public class LocalLearningService extends Service {
         (this.ht).start();
         this.htLooper = (this.ht).getLooper();
 
-        this.motionDetectedHandler = new HandleMotionDetection(this.htLooper,this.wifiAccessPointList_atStart,this.wifiAccessPointList_atEnd);
-        this.motionInitiator = new StartMotionSensingHandler(this.htLooper,this.motionDetectedHandler);
+        //the handlers being initialized here are defined below in this file
+        this.handler_AfterMotionDetected = new HandleMotionDetection(this.htLooper,this.wifiAccessPointList_atStart,this.wifiAccessPointList_atEnd);
+        this.handler_DetectingMotion = new StartMotionSensingHandler(this.htLooper,this.handler_AfterMotionDetected);
 
         //initialize wifi ap lists:
         this.wifiAccessPointList_atStart = new ArrayList<>();
@@ -73,8 +94,8 @@ public class LocalLearningService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Message msg = (this.motionInitiator).obtainMessage();
-        (this.motionInitiator).sendMessage(msg);
+        Message msg = (this.handler_DetectingMotion).obtainMessage();
+        (this.handler_DetectingMotion).sendMessage(msg);
 
         return START_STICKY;
     }
@@ -93,6 +114,20 @@ public class LocalLearningService extends Service {
     }
 
 
+    /*
+        Handler definitions Section.
+        Currently all handlers defined here will be bound to same extra thread. Contains the
+        following handlers:
+            - StartMotionSensingHandler: bound to newly created thread to run the motion detecting sensors or
+            other tasks that will determine when wifi-sensing should take place.
+            - HandleMotionDetection: after signal is received will carry out wifi sensing and
+            comparison.
+     */
+
+    /**
+     * Starts the sensors or other tasks that will determine when to take in wifi access point
+     * data.
+     */
     private class StartMotionSensingHandler extends Handler {
         private Handler motionDetectionHandler;
 
@@ -110,6 +145,13 @@ public class LocalLearningService extends Service {
         }
     }
 
+    /**
+     * Will be passed into sensor class or handler and from there will receive message as signal for when
+     * to start local learning procedures. This handler will have a starting list of wifi access points and will
+     * obtain another list when signaled. Then cosineSimilarity() will be called to compare the two lists. Based
+     * on the results different actions will be taken. If cosineSimilarity determines they are similar enough nothing
+     * happens otherwise will start other local learning procedures.
+     */
     private class HandleMotionDetection extends Handler{
         private List<WiFiAccessPoint> wifiAccessPointList_atStart;
         private List<WiFiAccessPoint> wifiAccessPointList_atEnd;
