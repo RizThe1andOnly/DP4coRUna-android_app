@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class AppDatabase extends SQLiteOpenHelper {
 
-    private static final int NUMBER_OF_FEATURES = 10;
+    private static final int NUMBER_OF_FEATURES = 6;
     private int numberOfLocattions;
 
     public static final String DATABASE_NAME = "dp4corunadata.db";
@@ -267,6 +267,31 @@ public class AppDatabase extends SQLiteOpenHelper {
 
 
     /**
+     * Returns formatted string representation of the current contents of the Location Table of the device databse
+     * @return
+     */
+    public String getLocationTableContents(){
+        Cursor contentCursor = getListContents();
+
+        //format data in cursor into easily viewd form:
+        String toBeReturned = "";
+        while(contentCursor.moveToNext()){
+            String entry = "";
+            entry += contentCursor.getString(0) + " : " + contentCursor.getString(1) + "\n";
+            entry += "\t" + "Light: " + contentCursor.getFloat(4) + "\n";
+            entry += "\t" + "Sound: " + contentCursor.getFloat(5) + "\n";
+            entry += "\t" + "GeoMag: " + contentCursor.getFloat(6) + "\n";
+            entry += "\t" + "CTI: " + contentCursor.getInt(7) + "\n";
+            entry += "\t" + "AreaCode: " + contentCursor.getInt(8) + "\n";
+            entry += "\t" + "CellSignalStrength: " + contentCursor.getFloat(9);
+
+            toBeReturned += entry + "\n";
+        }
+
+        return toBeReturned;
+    }
+
+    /**
      * Returns cursor object which contains all the data available in the database.
      *
      *  (!!!)Note from Rizwan - Got rid of the parameter tableType (String tableType) for now since i don't know what its for.
@@ -278,7 +303,9 @@ public class AppDatabase extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         String queryString = "SELECT "
-                            + LOCATION_TABLE_COL_ID + ","
+                            + LOCATION_TABLE_COL_ROOM_NAME + ","
+                            + LOCATION_TABLE_COL_ROOM_NUMBER + ","
+                            + LOCATION_TABLE_COL_BUILDING_NAME + ","
                             + LOCATION_TABLE_COL_LABEL + ","
                             + LOCATION_TABLE_COL_LIGHT + ","
                             + LOCATION_TABLE_COL_SOUND + ","
@@ -374,7 +401,7 @@ public class AppDatabase extends SQLiteOpenHelper {
         while(featuresDataCursor.moveToNext()){
             for(int j=0;j<NUMBER_OF_FEATURES;j++){
 
-                Log.d("PRINTING GET FORMATTEDFEATURES: ",featuresDataCursor.getString(j));
+                //Log.d("PRINTING GET FORMATTEDFEATURES: ",featuresDataCursor.getString(j));
 
                 featuresArray[i][j] = featuresDataCursor.getFloat(j);
             }
@@ -566,6 +593,10 @@ public class AppDatabase extends SQLiteOpenHelper {
 
         return listToBePopulated;
     }
+
+
+
+
 
 
     /* ----------------------------------------

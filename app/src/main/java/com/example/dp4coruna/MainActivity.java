@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import android.content.pm.PackageManager;
+import android.os.Looper;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import androidx.core.content.ContextCompat;
 
 import android.view.View;
 
+import com.example.dp4coruna.localLearning.learningService.LocalLearningService;
 import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -46,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
 
         // initializing this here allows location data to be retrieved on each subsequent activity
         lo = new LocationObject(MainActivity.this,getApplicationContext());
+
+        //start local learning service:
+        startLocalLearningService();
     }
 
     @Override
@@ -54,6 +59,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void startLocalLearningService(){
+        final Intent intnt = new Intent(this, LocalLearningService.class);
+        final Context selfContext = getApplicationContext();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                selfContext.startService(intnt);
+            }
+        },"ServiceThread").start();
+    }
 
 
     /**

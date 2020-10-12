@@ -106,6 +106,7 @@ public class MLModel {
     public MultiLayerNetwork mln;
     public DataSet trainingData;
     private int numberOfLocations; //will act as the number of classes.
+    private List<String> labels;
 
 
     /**
@@ -144,6 +145,7 @@ public class MLModel {
             this.trainingData = new DataSet();
             (this.trainingData).load(new File(this.dataset_filePath));
             (this.trainingData).setLabelNames(MLData.getLabelNames(this.context));
+            (this.labels) = MLData.getLabelNames(this.context);
         } catch (IOException e) {
             Log.i("FromMlModel","IOException when trying load model; perhaps not found?");
             e.printStackTrace();
@@ -192,10 +194,27 @@ public class MLModel {
      * @return String: list of the probabilities of each class being the label which belongs to given features.
      */
     public String getOutput(LocationObject locationObject){
+        String toBeReturned = "[";
+
+        INDArray outputVals = getOutputVals(locationObject);
+        for(int i=0;i< outputVals.length();i++){
+            toBeReturned += (this.labels).get(i) + " : " + outputVals.getDouble(i) + ", ";
+        }
+        toBeReturned += "]";
+
+        return toBeReturned;
+    }
+
+    /**
+     * Helper method called by getOutput(). This will just get the values, the labels for which the values belong with
+     * will be added in getOutput.
+     * @param locationObject
+     * @return
+     */
+    private INDArray getOutputVals(LocationObject locationObject){
         INDArray input = formatInput(locationObject);
         INDArray output = this.mln.output(input);
-
-        return output.toStringFull();
+        return output;
     }
 
 

@@ -40,6 +40,10 @@ public class LocationObjectData {
     private double areaCode;
     private double cellSignalStrength;
 
+    /**
+     * Create LocationObjectData from a location object instance.
+     * @param locobj LocationObject
+     */
     public LocationObjectData(LocationObject locobj){
         this.addresses = locobj.getListOfAddresses();
         this.longitude = locobj.getLongitude();
@@ -66,6 +70,9 @@ public class LocationObjectData {
         this.geoMagVector = locobj.getGeoMagVector();
     }
 
+    /**
+     * Dummy Constructor
+     */
     public LocationObjectData(){
     }
 

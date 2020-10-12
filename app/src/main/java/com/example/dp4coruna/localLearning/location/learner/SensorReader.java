@@ -143,6 +143,27 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         List<ScanResult> tempList = wifiManager.getScanResults();
 
+//        if(tempList == null){
+//            Log.i("From wifi ap","got null list from wifi manager"); //!!!
+//        }
+//        else{
+//            Log.i("From wifi ap",tempList.toString());
+//        }
+
+        //populate provide list with wifi access point data (ssid,rssi)
+        for(ScanResult element:tempList){
+            listToBePopulated.add(new WiFiAccessPoint(element.SSID,element.level,element.BSSID));
+        }
+    }
+
+    public static List<WiFiAccessPoint> scanWifiAccessPoints(Context context){
+        if (context == null) return null;
+        List<WiFiAccessPoint> listToBePopulated = new ArrayList<>();
+
+        //create wifimanager object to get list of wifi access point
+        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        List<ScanResult> tempList = wifiManager.getScanResults();
+
         if(tempList == null){
             Log.i("From wifi ap","got null list from wifi manager"); //!!!
         }
@@ -154,6 +175,8 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
         for(ScanResult element:tempList){
             listToBePopulated.add(new WiFiAccessPoint(element.SSID,element.level,element.BSSID));
         }
+
+        return listToBePopulated;
     }
 
     //end of wifi access point operations

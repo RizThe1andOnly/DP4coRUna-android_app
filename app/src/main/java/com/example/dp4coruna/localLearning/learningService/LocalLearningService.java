@@ -1,6 +1,7 @@
 package com.example.dp4coruna.localLearning.learningService;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.*;
 import android.util.Log;
@@ -10,11 +11,10 @@ import com.example.dp4coruna.localLearning.learningService.movementTracker.Movem
 import com.example.dp4coruna.localLearning.learningService.movementTracker.TrackMovement;
 import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
+import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
 import com.example.dp4coruna.localLearning.location.learner.SensorReader;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -45,7 +45,10 @@ public class LocalLearningService extends Service {
      * two wifi access points lists.
      */
 
+    private Context context;
+
     private final static long SLEEP_DURATION_MILLIS = 1000; // time = 1 second
+    private final long LOCAL_LEARNING_SAMPLING_PERIOD = 10000; // time = 10 seconds
 
     private final IBinder llsBinder = new LocalLearningServiceBinder();
 
@@ -66,29 +69,36 @@ public class LocalLearningService extends Service {
         }
     }
 
-    public LocalLearningService(){
-
-    }
+    public LocalLearningService(){}
 
     /**
-     * Will create new thread and pass in handler to obtain location data
+     * Will create new thread and pass in handler to obtain location data.
+     *
+     * - Will start each of the handler for executing location learning tasks
+     *  - HandleMotionDetection
+     *  - StartMotionSensingHandler
+     *
+     * - initialize wifi access point lists to be used for comparisons.
      */
     @Override
     public void onCreate() {
         super.onCreate();
 
+        this.context = getApplicationContext();
+
         this.ht = new HandlerThread("HandleMotionThread");
         (this.ht).start();
         this.htLooper = (this.ht).getLooper();
-
-        //the handlers being initialized here are defined below in this file
-        this.handler_AfterMotionDetected = new HandleMotionDetection(this.htLooper,this.wifiAccessPointList_atStart,this.wifiAccessPointList_atEnd);
-        this.handler_DetectingMotion = new StartMotionSensingHandler(this.htLooper,this.handler_AfterMotionDetected);
 
         //initialize wifi ap lists:
         this.wifiAccessPointList_atStart = new ArrayList<>();
         this.wifiAccessPointList_atEnd = new ArrayList<>();
         this.obtainWifiAccessPointsList((this.wifiAccessPointList_atStart)); // populate list at start
+
+        //the handlers being initialized here are defined below in this file
+        this.handler_DetectingMotion = new StartMotionSensingHandler(this.htLooper,this.context);
+        this.handler_AfterMotionDetected = new HandleMotionDetection(this.htLooper,this.context);
+
     }
 
     @Override
@@ -129,19 +139,37 @@ public class LocalLearningService extends Service {
      * data.
      */
     private class StartMotionSensingHandler extends Handler {
-        private Handler motionDetectionHandler;
+        /*
+            - Receives a message when the service is started.
+            - Upon reception of the message code in the handleMessage() will take effect.
 
-        public StartMotionSensingHandler(Looper looper, Handler motionDetectionHandler){
+         */
+
+
+        private Context context;
+
+        public StartMotionSensingHandler(Looper looper, Context context){
             super(looper);
-            this.motionDetectionHandler = motionDetectionHandler;
+            this.context = context;
         }
 
+        /**
+         * For now will have a recurring timer to trigger LocalLearning tasks.
+         * @param msg
+         */
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
 
-            MovementSensor ms = new MovementSensor(getApplicationContext(),MovementSensor.CALLED_FROM_SERVICE,this.motionDetectionHandler);
-            ms.startMovementSensor();
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Message msg = handler_AfterMotionDetected.obtainMessage();
+                    handler_AfterMotionDetected.sendMessage(msg);
+                    //obtainWifiAccessPointsList(wifiAccessPointList_atStart);
+                }
+            },1000,LOCAL_LEARNING_SAMPLING_PERIOD);
+
         }
     }
 
@@ -153,13 +181,12 @@ public class LocalLearningService extends Service {
      * happens otherwise will start other local learning procedures.
      */
     private class HandleMotionDetection extends Handler{
-        private List<WiFiAccessPoint> wifiAccessPointList_atStart;
-        private List<WiFiAccessPoint> wifiAccessPointList_atEnd;
 
-        public HandleMotionDetection(Looper looper, List<WiFiAccessPoint> wap_start, List<WiFiAccessPoint> wap_end){
+        private Context context;
+
+        public HandleMotionDetection(Looper looper, Context context){
             super(looper);
-            this.wifiAccessPointList_atStart = wap_start;
-            this.wifiAccessPointList_atEnd = wap_end;
+            this.context = context;
         }
 
         /**
@@ -170,17 +197,19 @@ public class LocalLearningService extends Service {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            obtainWifiAccessPointsList(wifiAccessPointList_atEnd); // populate wifi access point list at end.
+
+            //obtainWifiAccessPointsList(wifiAccessPointList_atEnd); // populate wifi access point list at end.
 
             /*
              *  - Carry out wifi access point list comparison logic here, read CollabLoc paper for detail on that process.
              *  - After that has been done make calls to other services/functions as necessary.
              */
+            double cosSimVal = new CosSimilarity().getCosineSimilarity(wifiAccessPointList_atStart,wifiAccessPointList_atEnd);
+            //now we have cosine similarity value -> need to act on it here:
 
-            //after other things have been called reset two wifi ap lists:
-            // don't know if clear function very well, should investigate further.
-            this.wifiAccessPointList_atStart.clear();
-            this.wifiAccessPointList_atEnd.clear();
+            //Log.i("/**\nFromLLHandlerStartList:\n",wifiAccessPointList_atStart.toString());
+            //Log.i("FromLLHanlderEndList:\n",wifiAccessPointList_atEnd.toString());
+            //Log.i("FromLLcosSimVal:",""+cosSimVal + "\n**/\n");
 
         }
 
@@ -193,130 +222,25 @@ public class LocalLearningService extends Service {
             Functions used for calculations or obtaining data using other classes.
             This includes:
                 - Obtaining List of Wifi-accesspoints that device has scanned from the area using the SensorReader class
-                - Calculating the cosine similarity between two wifi accesspoints lists
 
             These methods will be used by the above methods/handlers.
      */
-
     /**
      * Use SensorReader class's scanWifiAccessPoints() method to obtain a list of wifi-accesspoints in the device's
      * current location.
      * @param wifiAccessPointList
      */
     private void obtainWifiAccessPointsList(List<WiFiAccessPoint> wifiAccessPointList){
+        Log.i("FromLLS",Thread.currentThread().getName());
+
         SensorReader.scanWifiAccessPoints(getApplicationContext(),wifiAccessPointList);
 
         if(wifiAccessPointList.size() > 0){
-            Toast.makeText(getApplicationContext(),"Wifi AP retrieval successful",Toast.LENGTH_SHORT); //(!!!) For testing only, get rid of later.
+            Log.i("FromLLS","Wifi Retrieval successful: \n" + wifiAccessPointList.toString());
         }
         else{
-            Toast.makeText(getApplicationContext(),"Wifi AP retrieval failed",Toast.LENGTH_SHORT); //(!!!) For testing only, get rid of later.
+            Log.i("FromLLS","Wifi retrieval not successful");
         }
-    }
-
-    /**
-     * Calculate cosine similarity between two lists of wifi access points as per the equation given in the
-     * CollabLoc paper.
-     * @param start List at point A or starting point
-     * @param end List at point B or end (current location) point
-     * @return double the cosine similarity
-     */
-    private double cosineSimilarity(List<WiFiAccessPoint> start, List<WiFiAccessPoint> end){
-        //for normalization (if req) see the helper method cosineSimilarity_RssiProcessing:
-        List<Double> start_processedRssiList = cosineSimilarity_RssiProcessing(start);
-        List<Double> end_processedRssiList = cosineSimilarity_RssiProcessing(end);
-
-        // rss = root sum squared; denominator section of the cosine similarity equation
-        double rss_start = cosineSimilarity_RootSumSquaredR(start_processedRssiList);
-        double rss_end = cosineSimilarity_RootSumSquaredR(end_processedRssiList);
-
-        //numerator section of the cosine similarity equation
-        double outerSum = 0;
-        double innerSum = 0;
-        for(int i=0;i<start.size();i++){
-            WiFiAccessPoint a_AP = start.get(i);
-            double a_Rssi = start_processedRssiList.get(i);
-            for(int j=0;j<end.size();j++){
-                WiFiAccessPoint b_AP = end.get(j);
-                double b_Rssi = end_processedRssiList.get(j);
-                int delta = cosineSimilarity_CompareMacAddress(a_AP,b_AP);
-                double abdelta = 0;
-                if(delta == 1) abdelta = a_Rssi * b_Rssi;
-                innerSum += abdelta;
-            }
-            outerSum += innerSum;
-            innerSum = 0;
-        }
-
-        double similarity = outerSum / (rss_start * rss_end);
-
-        return similarity;
-    }
-
-    /**
-     * Helper method to be used by cosineSimilarity() to get length of wifi access point list
-     * length. Length being the square root of the sum of each Rssi value squared of the given list.
-     *
-     * Has the 'W' at the end to indicate it takes WifiAccessPoint List
-     *
-     * @param arr
-     * @return
-     */
-    private double cosineSimilarity_RootSumSquaredW(List<WiFiAccessPoint> arr){
-        double squaredSum = 0;
-        for(WiFiAccessPoint w : arr){
-            squaredSum = squaredSum + Math.pow(w.getRssi(),2);
-        }
-        return Math.sqrt(squaredSum);
-    }
-
-    /**
-     * Helper method to be used by cosineSimilarity() to get length of wifi access point list
-     * length. Length being the square root of the sum of each Rssi value squared of the given list.
-     *
-     * Has the 'R' at the end to indicate it takes list of doubles or rssi values as the argument.
-     *
-     * @param arr
-     * @return
-     */
-    private double cosineSimilarity_RootSumSquaredR(List<Double> arr){
-        double squaredSum = 0;
-        for(double r : arr){
-            squaredSum = squaredSum + Math.pow(r,2);
-        }
-        return Math.sqrt(squaredSum);
-    }
-
-    /**
-     * Helper method used by cosineSimilarity() to determine if two wifi access points have the same MAC address which
-     * would mean they are the same wifi access point.
-     * @param a Access point a
-     * @param b Access point b
-     * @return 1 if Mac address matches, 0 otherwise.
-     */
-    private int cosineSimilarity_CompareMacAddress(WiFiAccessPoint a, WiFiAccessPoint b){
-        if((a.getBssid()).equals(b.getBssid())) return 1;
-        return 0;
-    }
-
-    /**
-     * Helper method called by cosineSimilarity to process Rssi values of a list. Currently maybe
-     * normalize rssi values.
-     * @param arr
-     */
-    private List<Double> cosineSimilarity_RssiProcessing(List<WiFiAccessPoint> arr){
-        /*
-            Normalization would happen by extracting all of the rssi values into
-            separate list then getting normalized values.
-         */
-        List<Double> rssiVals = new ArrayList<>();
-        for(WiFiAccessPoint w : arr){
-            rssiVals.add(w.getRssi());
-        }
-
-        //further process of the rssiVals list here if necessary:
-
-        return rssiVals;
     }
 
 }

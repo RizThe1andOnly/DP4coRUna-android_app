@@ -1,0 +1,20 @@
+LocalLearningService->obtainWifiAccessPointsList:
+    - fatal error toast cannot be called from thread that hasn't
+    called Looper.prepare() in StartMotionSensingHandler inner class.
+        - Fix_1 :  a Looper.prepare() will be called in the
+        constructor for StartMotionSensingHandler.
+            - This should also have looper prepared for HandleMotionDetection
+            because these two handler classes are within the same thread.
+            --> RESULT : This fix did not work, lack of looper prepare in the handler thread
+            was not the problem.
+        - Fix_2 : create a thread in MainActivity (what starts the service) and call Looper.prepare() on it.
+            --> RESULT : Did not work.
+        - Fix_3 : as above for most part but moved the looper.prepare within the LocalLearningService class.
+            --> RESULT : Did not work.
+
+        - Will check for which thread is causing problem by using Logs.
+            - Service is being created in the main thread.
+            - !!! The toast messages are sent from a Timer Thread, which is separate from the handler threads
+
+        - Fix_4 : abandoned toast for testing method
+

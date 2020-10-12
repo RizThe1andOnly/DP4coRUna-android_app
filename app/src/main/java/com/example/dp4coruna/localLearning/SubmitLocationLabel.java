@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.MainActivity;
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.dataManagement.AppDatabase;
+import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.example.dp4coruna.localLearning.location.dataHolders.LocationObjectData;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,15 +51,11 @@ public class SubmitLocationLabel extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.submit_location_label);
-        Bundle bundle = getIntent().getExtras();
-
-        //Get JSON from previous activity and convert into LocationObjectData to retrieve data fields
-        String JSONObjectString = bundle.getString("LocationObjectData");
-        lod = LocationObjectData.convertJSONToLocationObjectData(JSONObjectString);
-
-        Log.d("JSON", JSONObjectString);
 
         myDatabaseHelper = new AppDatabase(this);
+        LocationObject lo = new LocationObject(getApplicationContext());
+        lo.updateLocationData();
+        (this.lod) = new LocationObjectData(lo);
 
         //connects UI components
         latlong = findViewById(R.id.latlong);
@@ -71,6 +68,12 @@ public class SubmitLocationLabel extends AppCompatActivity {
         String show = lod.getAddress();
         addresscurrent.setText(show);
         latlong.setText("Latitude: " + lod.getLatitude() + "\nLongitude: "+ lod.getLongitude());
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
     }
 
@@ -120,10 +123,13 @@ public class SubmitLocationLabel extends AppCompatActivity {
         String easyReadJSONString = gson.toJson(je);
         Log.d("JSON", easyReadJSONString);
 
-        Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtras(bundle);
-        startActivity(intent);
+//        Bundle bundle = new Bundle();
+//        Intent intent = new Intent(this, MainActivity.class);
+//        intent.putExtras(bundle);
+//        startActivity(intent);
+
+        //close this window, and hopefully return to previous one.
+        finish();
     }
 
     public void AddData(String item1, String type) {
