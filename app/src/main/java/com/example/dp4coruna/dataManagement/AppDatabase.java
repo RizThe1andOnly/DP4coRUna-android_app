@@ -124,8 +124,8 @@ public class AppDatabase extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + LOCATION_TABLE);
-        db.execSQL("DROP TABLE IF EXISTS " + WAP_TABLE);
-        db.execSQL("DROP TABLE IF EXISTS " + ACCEL_OFFSET_TABLE);
+        //db.execSQL("DROP TABLE IF EXISTS " + WAP_TABLE);
+        //db.execSQL("DROP TABLE IF EXISTS " + ACCEL_OFFSET_TABLE);
         onCreate(db);
     }
 
