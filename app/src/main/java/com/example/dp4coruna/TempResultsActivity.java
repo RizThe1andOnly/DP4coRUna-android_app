@@ -106,6 +106,7 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
 
     public void cosineSimilarityTest(){
         List<WiFiAccessPoint> start = SensorReader.scanWifiAccessPoints(getApplicationContext());
+        dataView.append(WiFiAccessPoint.getListStringRepresent(start));
         dataView.append(new CosSimilarity(getApplicationContext()).checkCosSim_vs_allLocations(start));
     }
 

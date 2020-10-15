@@ -39,7 +39,8 @@ public class WiFiAccessPoint {
            for(int i=0;i<NUMBER_OF_TABS;i++){
                elemString += "\t";
            }
-           elemString += elem.getSsid() + "\n\t" + elem.getBssid() + "\n\t" + String.valueOf(elem.getRssi()) + "\n---";
+           //elemString += elem.getSsid() + "\n\t" + elem.getBssid() + "\n\t" + String.valueOf(elem.getRssi()) + "\n---";
+           elemString += elem.getBssid() + ":" + elem.getRssi();
            elemString += "\n";
            stringRep += elemString;
        }
