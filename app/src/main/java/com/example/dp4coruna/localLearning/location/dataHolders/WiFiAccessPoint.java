@@ -33,14 +33,14 @@ public class WiFiAccessPoint {
     }
 
     public static String getListStringRepresent(List<WiFiAccessPoint> list){
-       String stringRep = "Wifi AccessPoints: { \n";
+       String stringRep = "Wifi AccessPoints (MACAddress : Rssi) : { \n";
        for(WiFiAccessPoint elem : list){
            String elemString = "";
            for(int i=0;i<NUMBER_OF_TABS;i++){
                elemString += "\t";
            }
            //elemString += elem.getSsid() + "\n\t" + elem.getBssid() + "\n\t" + String.valueOf(elem.getRssi()) + "\n---";
-           elemString += elem.getBssid() + ":" + elem.getRssi();
+           elemString += "("+elem.getBssid() + " : " + elem.getRssi() + ")";
            elemString += "\n";
            stringRep += elemString;
        }

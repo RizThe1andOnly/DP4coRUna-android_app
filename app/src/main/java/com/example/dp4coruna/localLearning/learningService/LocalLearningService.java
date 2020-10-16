@@ -59,9 +59,6 @@ public class LocalLearningService extends Service {
     private StartMotionSensingHandler handler_DetectingMotion;
     private HandleMotionDetection handler_AfterMotionDetected;
 
-    //two wifi ap lists that will be compared:
-    private List<WiFiAccessPoint> wifiAccessPointList_atStart;
-    private List<WiFiAccessPoint> wifiAccessPointList_atEnd;
 
     public class LocalLearningServiceBinder extends Binder {
         public LocalLearningService getBinderService(){
@@ -69,7 +66,11 @@ public class LocalLearningService extends Service {
         }
     }
 
-    public LocalLearningService(){}
+    /**
+     * Constructor will be used with the Demo class TempResults for now.
+     * @param demoHandler Handler that will update the output text view with results from the service.
+     */
+    public LocalLearningService(Handler demoHandler){}
 
     /**
      * Will create new thread and pass in handler to obtain location data.
@@ -90,10 +91,6 @@ public class LocalLearningService extends Service {
         (this.ht).start();
         this.htLooper = (this.ht).getLooper();
 
-        //initialize wifi ap lists:
-        this.wifiAccessPointList_atStart = new ArrayList<>();
-        this.wifiAccessPointList_atEnd = new ArrayList<>();
-        this.obtainWifiAccessPointsList((this.wifiAccessPointList_atStart)); // populate list at start
 
         //the handlers being initialized here are defined below in this file
         this.handler_DetectingMotion = new StartMotionSensingHandler(this.htLooper,this.context);
@@ -104,8 +101,8 @@ public class LocalLearningService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Message msg = (this.handler_DetectingMotion).obtainMessage();
-        (this.handler_DetectingMotion).sendMessage(msg);
+//        Message msg = (this.handler_DetectingMotion).obtainMessage();
+//        (this.handler_DetectingMotion).sendMessage(msg);
 
         return START_STICKY;
     }
@@ -166,7 +163,6 @@ public class LocalLearningService extends Service {
                 public void run() {
                     Message msg = handler_AfterMotionDetected.obtainMessage();
                     handler_AfterMotionDetected.sendMessage(msg);
-                    //obtainWifiAccessPointsList(wifiAccessPointList_atStart);
                 }
             },1000,LOCAL_LEARNING_SAMPLING_PERIOD);
 
@@ -197,19 +193,13 @@ public class LocalLearningService extends Service {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-
-            //obtainWifiAccessPointsList(wifiAccessPointList_atEnd); // populate wifi access point list at end.
-
             /*
-             *  - Carry out wifi access point list comparison logic here, read CollabLoc paper for detail on that process.
+             *  - Carry out wifi access point list comparison logic here (Cosine Similarity),
+             *    read CollabLoc paper for detail on that process.
              *  - After that has been done make calls to other services/functions as necessary.
              */
-            double cosSimVal = new CosSimilarity().getCosineSimilarity(wifiAccessPointList_atStart,wifiAccessPointList_atEnd);
-            //now we have cosine similarity value -> need to act on it here:
 
-            //Log.i("/**\nFromLLHandlerStartList:\n",wifiAccessPointList_atStart.toString());
-            //Log.i("FromLLHanlderEndList:\n",wifiAccessPointList_atEnd.toString());
-            //Log.i("FromLLcosSimVal:",""+cosSimVal + "\n**/\n");
+
 
         }
 

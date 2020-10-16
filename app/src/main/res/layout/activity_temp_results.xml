@@ -2,15 +2,6 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                                                    xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
                                                    android:layout_height="match_parent">
-    <EditText
-            android:layout_width="312dp"
-            android:layout_height="581dp"
-            android:inputType="textMultiLine"
-            android:gravity="start|top"
-            android:ems="10"
-            android:id="@+id/dataViewBox" app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.576"/>
     <Spinner
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:id="@+id/TempResultOptionSpinner"
@@ -25,4 +16,29 @@
             app:layout_constraintEnd_toEndOf="parent" android:onClick="onTRButtonPress"
             android:layout_marginEnd="64dp" app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="32dp"/>
+    <ScrollView
+            android:layout_width="333dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/TempResultOptionSpinner"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toBottomOf="@+id/TempResultsTextView_Timer">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                      android:orientation="vertical">
+            <TextView
+                    android:layout_width="312dp"
+                    android:layout_height="match_parent"
+                    android:gravity="start|top"
+                    android:ems="10"
+                    android:id="@+id/dataViewBox"
+                    android:isScrollContainer="true"
+                    android:scrollbars="vertical" android:selectAllOnFocus="false" android:textIsSelectable="false"
+                    android:cursorVisible="false" android:fadeScrollbars="true"/>
+        </LinearLayout>
+    </ScrollView>
+    <TextView
+            android:text="TextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/TempResultsTextView_Timer"
+            app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
         lo = new LocationObject(MainActivity.this,getApplicationContext());
 
         //start local learning service:
-        startLocalLearningService();
+        //startLocalLearningService();
     }
 
     @Override

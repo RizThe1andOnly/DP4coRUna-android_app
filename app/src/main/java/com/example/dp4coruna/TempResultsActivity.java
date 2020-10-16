@@ -4,8 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.Bundle;
-import android.os.IBinder;
+import android.os.*;
 import android.view.View;
 import android.widget.*;
 import androidx.annotation.Nullable;
@@ -23,6 +22,7 @@ import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
 import com.example.dp4coruna.localLearning.location.learner.SensorReader;
 import com.example.dp4coruna.ml.MLModel;
 import android.database.Cursor;
+import org.bytedeco.opencv.presets.opencv_core;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.cpu.nativecpu.NDArray;
 
@@ -38,9 +38,20 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
             "ShowDatabase",
             "MLTrain",
             "MLOutput",
-            "CosSim"
+            "CosSim",
+            "Demo"
     };
     private String optionToRun;
+
+    // demo vars:
+    private TextView timerView;
+    private Handler demoHandler;
+    private Looper demoHandlerLooper;
+    private Thread demoThread;
+    private HandlerThread demoHt;
+    private final String MAX_TIMER_VAL = "10";
+    private final long COUNTDOWN_TIMER_VAL = 10000;
+    private CountDownTimer demoCDT;
 
 
     @Override
@@ -49,6 +60,9 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
         setContentView(R.layout.activity_temp_results);
         dataView = findViewById(R.id.dataViewBox);
         setSpinnerView();
+        timerView =  findViewById(R.id.TempResultsTextView_Timer);
+        timerView.setText(MAX_TIMER_VAL);
+        this.demoHt = new HandlerThread("DemoThread");
     }
 
     @Override
@@ -88,10 +102,16 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
             case "CosSim" : cosineSimilarityTest(); break;
             case "MLTrain" : trainMLModel(); break;
             case "MLOutput" : MLModelOutput(); break;
+            case "Demo" : demoFunc(); break;
             default: dataView.append("Method For this Instruction Not Yet Implemented.\n"); break;
         }
     }
 
+
+    /*
+        Testing functions that will be triggered upon button press and corresponding selection in the dropdown menu
+        for TempResults page.
+     */
     public void getLocObj(){
         Intent locationSubmissionIntent = new Intent(this, SubmitLocationLabel.class);
         startActivity(locationSubmissionIntent);
@@ -120,5 +140,83 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
         lob.updateLocationData();
         dataView.append(ml.getOutput(lob));
     }
+
+    // demo related button actions:
+    private boolean startDemoVar = true;
+    private void demoFunc(){
+        if(startDemoVar){
+            startDemo();
+            startDemoVar = false;
+        }
+        else{
+            stopDemo();
+        }
+    }
+
+
+    /*
+            --------------------------Demo 2 Specific Code-------------------------------
+     */
+
+    private void startDemo(){
+        (this.demoHt).start();
+        (this.demoHandlerLooper) = (this.demoHt).getLooper();
+        (this.demoHandler) = new OutputHandler((this.demoHandlerLooper),getApplicationContext());
+        (this.demoHandler).sendMessage((this.demoHandler).obtainMessage());
+    }
+
+    private void stopDemo(){
+        (this.demoHandlerLooper).quitSafely();
+        (this.demoCDT).cancel();
+    }
+
+
+    private void runTimer(Context context){
+        (this.demoCDT) = new CountDownTimer(COUNTDOWN_TIMER_VAL,1000){
+            @Override
+            public void onTick(long timeRemaining) {
+                timerView.setText(""+timeRemaining/1000);
+            }
+
+            @Override
+            public void onFinish() {
+                timerView.setText(MAX_TIMER_VAL);
+                List<WiFiAccessPoint> wapList = SensorReader.scanWifiAccessPoints(context);
+                String cosSimResults = new CosSimilarity(context).checkCosSim_vs_allLocations(wapList);
+                dataView.append(WiFiAccessPoint.getListStringRepresent(wapList)+"\n");
+                dataView.append(cosSimResults + "\n");
+                demoHandler.sendMessage(demoHandler.obtainMessage());
+            }
+        }.start();
+    }
+
+    /**
+     * Handler to be used by the services to populate the TempResults textview with provided output.
+     * The output will be sent using the "obj" object of the "msg" object that is part of Handler.
+     * The output will be processed and printed here.
+     */
+    private class OutputHandler extends Handler {
+        private Context context;
+
+        public OutputHandler(Looper looperIn,Context context){
+            super(looperIn);
+            //this.dataview = dataview;
+            this.context = context;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            Handler printHandler = new Handler(Looper.getMainLooper()){
+                @Override
+                public void handleMessage(Message msg) {
+                    super.handleMessage(msg);
+                    runTimer(context);
+                }
+            };
+            printHandler.sendMessage(printHandler.obtainMessage());
+        }
+    }
+
 
 }
