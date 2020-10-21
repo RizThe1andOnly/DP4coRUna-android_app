@@ -39,7 +39,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         GoogleMap.OnMarkerClickListener, GoogleMap.OnMarkerDragListener{
 
     private GoogleMap mMap;
+
+    //Holds coordinates of walkways/hallways
     ArrayList<Marker> walkwaypoints = new ArrayList<Marker>();
+
+    //Holds coordinates of high risk locations
+    //Dummy data for now
     ArrayList<LatLng> highriskcoordinates = new ArrayList<LatLng>();
 
     @Override
@@ -66,13 +71,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        //This segment is only neccessary for getting the users current location on the map
+        /*
         LocationObject lo = new LocationObject(this, this);
         lo.setupLocation();
         List<Address> addresses = lo.getListOfAddresses();
 
-        //double latitude = lo.getLatitude();
-        //double longitude = lo.getLongitude();
+        double latitude = lo.getLatitude();
+        double longitude = lo.getLongitude();
+    */
 
+
+        //EXAMPLE
         //Menlo Park Mall Coordinates
         double latitude = 40.5478735;
         double longitude = -74.335214;
@@ -85,12 +95,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //Zoom in on the user's current location
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 17.10f));
 
+        //These just show an example of what is possible
+
+        showCircularRiskZones();
       //markHighRiskZones();
         //showMallHighRiskZones();
         //addHighRiskCoordinates();
-        showCircularRiskZones();
         //highriskcoordinates.forEach((n) -> drawCircularZone(n, 10));
         //drawCircularZone( new LatLng(40.547242016103894, -74.334968291223305), 10);
+
+        //Set up listeners once map is ready
         mMap.setOnPolylineClickListener(this);
         mMap.setOnPolygonClickListener(this);
         mMap.setOnMapClickListener(this);
@@ -100,8 +114,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     /**
-     * marks high risk zones on the map with polylines
-     * need latitude/longitude coordinates
+     * marks high risk zones on the map with polygons
+     * need latitude/longitude coordinates of 3 or more locations
      * The longitudes and latitudes currently in the method are for example only
      */
     public void markHighRiskZones(){
@@ -121,6 +135,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    /**Example showing how to outline risk zones given four coordinates
+     * Marks up the map
+     *
+     */
     public void showMallHighRiskZones(){
         //    mMap.addMarker(new MarkerOptions().position(new LatLng(40.221794, -74.731460)).title("High Risk COVID-19 Zone"));
         Polygon polygon = mMap.addPolygon(new PolygonOptions()
@@ -167,6 +185,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
 
+    /**Called when the user clicks the map
+     * Adds a marker to the location the user clicked
+     * This can later be altered to save walkway coordinates
+      * @param clickCoordinates
+     */
     @Override
     public void onMapClick(LatLng clickCoordinates) {
         double latitude = clickCoordinates.latitude;
@@ -187,6 +210,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     /**Called when the user clicks a marker
+     * Removes marker from map
      * return value indicates success or failure
      * @param marker
      * @return boolean
@@ -204,13 +228,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return true;
         }
 
-        //remove coordinates from arraylist
-        //walkwaypoints.remove(marker);
-
-        //clears the marker the user clicked
-        //marker.remove();
-
-        //return true;
 
         // Return false to indicate that we have not consumed the event and that we wish
         // for the default behavior to occur (which is for the camera to move such that the
@@ -235,26 +252,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-
+    /**Method which will mark up the map with risk zones
+     * given a single coordinate, and a radius
+     *
+     * @param point
+     * @param radius
+     */
 
     private void drawCircularZone(LatLng point, int radius){
 
-        // Instantiating CircleOptions to draw a circle around the marker
         CircleOptions circleOptions = new CircleOptions();
 
-        // Specifying the center of the circle
+        //Set point and radius
         circleOptions.center(point);
-
-        // Radius of the circle
         circleOptions.radius(radius);
 
-        // Border color of the circle
-        //circleOptions.strokeColor(Color.BLACK);
-
-        // Fill color of the circle
-        //circleOptions.fillColor(0x30ff0000);
-
-        // Border width of the circle
+        //format options
         circleOptions.strokeWidth(1);
         circleOptions.strokeColor(0x1EFF0000);
         circleOptions.fillColor(0x1EFF0000);
@@ -271,17 +284,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         highriskcoordinates.add(new LatLng(40.547816511745154, -74.33590237051249));
     }
 
+
+    /**Marks up the map with circular risk zones
+     * using dummy data
+     */
     private void showCircularRiskZones(){
         drawCircularZone(new LatLng(40.54648026040382, -74.3351248651743), 10);
         drawCircularZone(new LatLng(40.547816511745154, -74.33590237051249), 20);
         drawCircularZone(new LatLng(40.54724940432747, -74.33537866920233), 25);
         drawCircularZone(new LatLng(40.54996694148023, -74.33652564883232), 15);
-       // drawCircularZone(new LatLng(40.547816511745154, -74.33590237051249), 10);
-       // drawCircularZone( new LatLng(40.547242016103894, -74.334968291223305), 10);
-       // drawCircularZone( new LatLng(40.547242016103894, -74.334968291223305), 10);
-
     }
 
+    /**Save Points for now just clears the map of markers
+     * This can be altered later to save walkway/hallway coordinates
+     * @param view
+     */
     public void savePointsClicked(View view){
         Toast.makeText(this, "Saving Points...",
                 Toast.LENGTH_SHORT).show();
