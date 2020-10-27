@@ -134,32 +134,23 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
      */
     public static void scanWifiAccessPoints(Context context, List<WiFiAccessPoint> listToBePopulated){
         if(context == null) return;
-
         if(listToBePopulated == null){
             listToBePopulated = new ArrayList<>();
         }
 
-        //create wifimanager object to get list of wifi access point
-        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        List<ScanResult> tempList = wifiManager.getScanResults();
 
-//        if(tempList == null){
-//            Log.i("From wifi ap","got null list from wifi manager"); //!!!
-//        }
-//        else{
-//            Log.i("From wifi ap",tempList.toString());
-//        }
-
-        //populate provide list with wifi access point data (ssid,rssi)
-        for(ScanResult element:tempList){
-            listToBePopulated.add(new WiFiAccessPoint(element.SSID,element.level,element.BSSID));
-        }
     }
 
     public static List<WiFiAccessPoint> scanWifiAccessPoints(Context context){
         if (context == null) return null;
         List<WiFiAccessPoint> listToBePopulated = new ArrayList<>();
 
+
+
+        return listToBePopulated;
+    }
+
+    private static void processWifiScanResults(List<WiFiAccessPoint> listToBePopulated,Context context){
         //create wifimanager object to get list of wifi access point
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         List<ScanResult> tempList = wifiManager.getScanResults();
@@ -175,8 +166,17 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
         for(ScanResult element:tempList){
             listToBePopulated.add(new WiFiAccessPoint(element.SSID,element.level,element.BSSID));
         }
+    }
 
-        return listToBePopulated;
+    private static void startWifiScan(Context context){
+        final Context localContextInstance = context;
+
+        //Create Handler Thread for wifi scanning purposes:
+        HandlerThread swsHt = new HandlerThread("WifiScanThread");
+        swsHt.start();
+        final Looper swsLooper = swsHt.getLooper();
+
+
     }
 
     //end of wifi access point operations
