@@ -132,8 +132,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnCircleClickListener(this);
         mMap.setOnMarkerClickListener(this);
         mMap.setOnMarkerDragListener(this);
-
-        //sendDirectionsRequest();
     }
 
 
@@ -265,6 +263,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Route route = routes.get(i);
             String risk = route.getRisk();
 
+            Log.i("FromMapActivity",risk + " "+ i);
+
             if(risk.equals("High")) {
                 mMap.addPolyline((new PolylineOptions())
                         .color(Color.RED)
@@ -274,7 +274,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             if(risk.equals("Medium")) {
                 mMap.addPolyline((new PolylineOptions())
-                        .color(Color.YELLOW)
+                        .color(Color.DKGRAY) //for now just to be able to see it better
                         .width(10)
                         .clickable(true)
                         .addAll(route.getPoints())).setTag("Risk: " + risk + "\nTime: " + route.getDuration() + "\nDistance: " + route.getDistance());
@@ -500,6 +500,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //clears entire map, including overlay
         // mMap.clear();
+    }
+
+    /**
+     * Shows all routes from start to destination. Start and destination
+     * should be set before calling this method (pressing the show routes button).
+     * @param view
+     */
+    public void showAllRoutes(View view){
+        sendDirectionsRequest();
     }
 
 

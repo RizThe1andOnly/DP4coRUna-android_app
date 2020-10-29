@@ -18,6 +18,7 @@ import android.view.View;
 
 import com.example.dp4coruna.localLearning.learningService.LocalLearningService;
 import com.example.dp4coruna.localLearning.location.LocationObject;
+import com.example.dp4coruna.mapmanagement.MapsActivity;
 import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.example.dp4coruna.localLearning.SubmitLocationLabel;
@@ -144,15 +145,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void chooseSafeRoute(View view) {
         Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, enterDestinationActivity.class);
+        Intent intent = new Intent(this, MapsActivity.class);
 
-        //fill Location Object with all datafields
-        lo.updateLocationData();
-
-        //convert location object to JSON to pass through bundle to next activity
-        String JSONLOD = lo.convertLocationToJSON();
-        intent.putExtras(bundle);
-        intent.putExtra("LocationObjectData", JSONLOD);
+//        //fill Location Object with all datafields
+//        lo.updateLocationData();
+//
+//        //convert location object to JSON to pass through bundle to next activity
+//        String JSONLOD = lo.convertLocationToJSON();
+//        intent.putExtras(bundle);
+//        intent.putExtra("LocationObjectData", JSONLOD);
         startActivity(intent);
     }
 

@@ -1,5 +1,6 @@
 package com.example.dp4coruna.mapmanagement;
 
+import android.util.Log;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.List;
@@ -55,16 +56,17 @@ public class Route {
     public void setRandomRisk(int number){
         //Random randomGenerator = new Random();
         //int rand = new Random().nextInt(3);
+
+
         if (number==0){
             this.risk="Low";
         }
-        if (number==1){
+        else if (number==1){
             this.risk="High";
         }
         else{
             this.risk="Medium";
         }
-
 
     }
 

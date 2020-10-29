@@ -9,14 +9,24 @@
     tools:context=".mapmanagement.MapsActivity">
 
     <Button
-        android:id="@+id/SavePointsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right|top"
-        android:layout_marginTop="20dp"
-        android:onClick="savePointsClicked"
-        android:padding="10dp"
-        android:paddingRight="10dp"
-        android:text="Save Points" />
+            android:id="@+id/SavePointsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|top"
+            android:layout_marginTop="20dp"
+            android:onClick="savePointsClicked"
+            android:padding="10dp"
+            android:paddingRight="10dp"
+            android:text="Save Points" android:paddingBottom="20dp"/>
+
+    <Button
+            android:id="@+id/DisplayRoutesButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|top"
+            android:layout_marginTop="75dp"
+            android:padding="10dp"
+            android:paddingRight="10dp"
+            android:text="Show Route" android:paddingTop="20dp" android:onClick="showAllRoutes"/>
 
     </fragment>
