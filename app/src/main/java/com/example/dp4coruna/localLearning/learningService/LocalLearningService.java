@@ -67,6 +67,11 @@ public class LocalLearningService extends Service {
     }
 
     /**
+     * Default Constructor
+     */
+    public LocalLearningService(){}
+
+    /**
      * Constructor will be used with the Demo class TempResults for now.
      * @param demoHandler Handler that will update the output text view with results from the service.
      */

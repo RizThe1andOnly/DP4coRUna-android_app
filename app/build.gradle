@@ -12,6 +12,14 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Read the API key from ./secure.properties into R.string.maps_api_key
+        def secureProps = new Properties()
+        if (file("../secure.properties").exists()) {
+            file("../secure.properties")?.withInputStream { secureProps.load(it) }
+        }
+        resValue "string", "maps_api_key", (secureProps.getProperty("MAPS_API_KEY") ?: "")
+
     }
 
     buildTypes {
@@ -70,4 +78,6 @@ dependencies {
     implementation group: 'org.bytedeco', name: 'leptonica', version: '1.79.0-1.5.3', classifier: "android-x86_64"
 
     implementation 'com.opencsv:opencsv:5.2'
+    implementation 'com.android.volley:volley:1.1.1'
+    implementation 'com.google.maps.android:android-maps-utils:0.4+'
 }
