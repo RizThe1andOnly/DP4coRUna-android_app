@@ -1,17 +1,12 @@
 package com.example.dp4coruna.mapmanagement;
 
+import android.graphics.Color;
 import org.json.*;
 import androidx.fragment.app.FragmentActivity;
-
-import android.content.Intent;
-import android.graphics.Color;
-import android.location.Address;
-import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -48,14 +43,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
 
+    String jsonDirectionsString; //holds response from HTTP request
+
     //Holds coordinates of walkways/hallways
+    //Dummy Data
     ArrayList<Marker> walkwaypoints = new ArrayList<Marker>();
 
     //Holds coordinates of high risk locations
     //Dummy data for now
     ArrayList<LatLng> highriskcoordinates = new ArrayList<LatLng>();
 
-    String jsonDirectionsString;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -184,7 +181,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Log.d("JSON", response.substring(0, 10000));
                         jsonDirectionsString = response;
                         try {
-                            parseJSONintoPolylines(response);
+                            List<Route> routes = new ArrayList<Route>();
+
+                            //get values from JSON as ArrayList of Route objects
+                            routes = parseJSONintoRoutes(response);
+
+                            //Add these alternate routes to the Map
+                            addRoutePolylines(routes);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -201,63 +204,98 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-
     /**Given a JSON string in format returned by Google Directions API
-     * parse into different possible routes, and add to map as polylines
-     * This function will need to be broken into two later
-     * @param jsonString
+     * parse into an ArrayList of Route objects
+     * where each route object contains details for an alternative route
+     * @param response
      * @throws JSONException
      */
-    protected void parseJSONintoPolylines(String jsonString) throws JSONException {
-        try {
-
-            JSONObject jsonObject = new JSONObject(jsonString);
-            JSONArray jsonArrayRoute = jsonObject.getJSONArray("routes");
-            int possibleroutes = jsonArrayRoute.length();
-
-            //iterate through all possible routes
-            for (int i = 0; i < possibleroutes; i++) {
-                JSONObject jsonObjectRoute = jsonArrayRoute.getJSONObject(i);
-                JSONArray jsonArrayLegs = jsonObjectRoute.getJSONArray("legs");
-
-                //for each possible route, iterate through legs
-                for (int j = 0; j < jsonArrayLegs.length(); j++) {
-                    JSONObject jsonObjectLegs = jsonArrayLegs.getJSONObject(j);
-                    JSONArray jsonArraySteps = jsonObjectLegs.getJSONArray("steps");
-                    String[] polylineArray = new String[jsonArraySteps.length()];
-
-                    //for each leg, iterate through points
-                    for (int k = 0; k < jsonArraySteps.length(); k++) {
-                        JSONObject jsonObjectSteps = jsonArraySteps.getJSONObject(k);
-                        JSONObject jsonObjectLegPolyline = jsonObjectSteps.getJSONObject("polyline");
-                        String polygon = jsonObjectLegPolyline.getString("points");
-                        polylineArray[k] = polygon;
-                    }
-                    int count2 = polylineArray.length;
-                    for (int l = 0; l < count2; l++) {
-
-                        //Add route 1 to map
-                        if(i==0) {
-                            mMap.addPolyline((new PolylineOptions())
-                                    .color(Color.GREEN)
-                                    .width(10)
-                                    .clickable(true)
-                                    .addAll(PolyUtil.decode(polylineArray[l])));
-                        }
-                        //Add route 2 to map
-                        if(i==1) {
-                            mMap.addPolyline((new PolylineOptions())
-                                    .color(Color.RED)
-                                    .width(10)
-                                    .clickable(true)
-                                    .addAll(PolyUtil.decode(polylineArray[l])));
-                        }
-                    }
-                }
-            }
-        }catch (JSONException e) {
-            e.printStackTrace();
+    public List<Route> parseJSONintoRoutes(String response) throws JSONException {
+        if (response == null) {
+            return null;
         }
+
+        List<Route> routes = new ArrayList<Route>();
+        JSONObject jsonData = new JSONObject(response);
+        JSONArray jsonRoutes = jsonData.getJSONArray("routes");
+
+        //iterate through all possible routes
+        for (int i = 0; i < jsonRoutes.length(); i++) {
+            JSONObject jsonRoute = jsonRoutes.getJSONObject(i);
+            Route route = new Route();
+
+            //get route info from JSON
+            JSONObject overview_polylineJson = jsonRoute.getJSONObject("overview_polyline");
+            JSONArray jsonLegs = jsonRoute.getJSONArray("legs");
+            JSONObject jsonLeg = jsonLegs.getJSONObject(0);
+            JSONObject jsonDistance = jsonLeg.getJSONObject("distance");
+            JSONObject jsonDuration = jsonLeg.getJSONObject("duration");
+            JSONObject jsonEndLocation = jsonLeg.getJSONObject("end_location");
+            JSONObject jsonStartLocation = jsonLeg.getJSONObject("start_location");
+
+            //set attributes for Route object
+            route.setDistance(jsonDistance.getString("text"));
+            route.setDuration(jsonDuration.getString("text"));
+            route.setEndAddress(jsonLeg.getString("end_address"));
+            route.setStartAddress(jsonLeg.getString("start_address"));
+            route.setStartLocation(new LatLng(jsonStartLocation.getDouble("lat"), jsonStartLocation.getDouble("lng")));
+            route.setEndLocation(new LatLng(jsonEndLocation.getDouble("lat"), jsonEndLocation.getDouble("lng")));
+            route.setPoints(PolyUtil.decode(overview_polylineJson.getString("points")));
+
+            //for now, setting risk randomly based on iteration
+            route.setRandomRisk(i);
+
+            //add alternate Route to arraylist
+            routes.add(route);
+        }
+
+        return routes;
+    }
+
+    /**Takes an arraylist of Routes, and adds each one to the map using clickable polylines
+     * For now, risk/color coding is random
+     * note: Polyline tags are set here for the user to obtain route information when clicked later
+     * @param routes
+     */
+    public void addRoutePolylines(List<Route> routes){
+        for(int i = 0; i<routes.size(); i++){
+
+            Route route = routes.get(i);
+            String risk = route.getRisk();
+
+            if(risk.equals("High")) {
+                mMap.addPolyline((new PolylineOptions())
+                        .color(Color.RED)
+                        .width(10)
+                        .clickable(true)
+                        .addAll(route.getPoints())).setTag("Risk: " + risk + "\nTime: " + route.getDuration() + "\nDistance: " + route.getDistance());
+            }
+            if(risk.equals("Medium")) {
+                mMap.addPolyline((new PolylineOptions())
+                        .color(Color.YELLOW)
+                        .width(10)
+                        .clickable(true)
+                        .addAll(route.getPoints())).setTag("Risk: " + risk + "\nTime: " + route.getDuration() + "\nDistance: " + route.getDistance());
+            }
+
+            if(risk.equals("Low")) {
+                mMap.addPolyline((new PolylineOptions())
+                        .color(Color.GREEN)
+                        .width(10)
+                        .clickable(true)
+                        .addAll(route.getPoints())).setTag("Risk: " + risk + "\nTime: " + route.getDuration() + "\nDistance: " + route.getDistance());
+            }
+        }
+    }
+
+    /**This method is called when the user clicks on a Polyline
+     * It displays the Route information obtained from the Polyline Tag as a toast
+     * @param polyline
+     */
+    @Override
+    public void onPolylineClick(Polyline polyline) {
+        Toast.makeText(this, polyline.getTag().toString(),
+                Toast.LENGTH_LONG).show();
     }
 
 
@@ -312,11 +350,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         polygon2.setStrokeColor(0xffF69F9E);
         polygon2.setFillColor(0x1EFF0000);
         polygon2.setTag("High");
-    }
-
-    @Override
-    public void onPolylineClick(Polyline polyline) {
-
     }
 
     @Override
