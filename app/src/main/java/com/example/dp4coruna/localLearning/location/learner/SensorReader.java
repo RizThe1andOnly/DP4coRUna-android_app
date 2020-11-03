@@ -2,7 +2,10 @@ package com.example.dp4coruna.localLearning.location.learner;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.hardware.*;
 import android.media.MediaRecorder;
@@ -137,20 +140,20 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
         if(listToBePopulated == null){
             listToBePopulated = new ArrayList<>();
         }
-
-
+        processWifiScanResults(listToBePopulated,context);
     }
 
     public static List<WiFiAccessPoint> scanWifiAccessPoints(Context context){
         if (context == null) return null;
         List<WiFiAccessPoint> listToBePopulated = new ArrayList<>();
-
-
-
+        processWifiScanResults(listToBePopulated,context);
         return listToBePopulated;
     }
 
     private static void processWifiScanResults(List<WiFiAccessPoint> listToBePopulated,Context context){
+        //initiate a scan for wifi access points:
+        startWifiScan(context);
+
         //create wifimanager object to get list of wifi access point
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         List<ScanResult> tempList = wifiManager.getScanResults();
@@ -175,6 +178,26 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
         HandlerThread swsHt = new HandlerThread("WifiScanThread");
         swsHt.start();
         final Looper swsLooper = swsHt.getLooper();
+
+
+        BroadcastReceiver br = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //boolean scanSuccessful = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED,false);
+                swsLooper.quitSafely();
+            }
+        };
+
+        IntentFilter inf = new IntentFilter();
+        inf.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        context.registerReceiver(br,inf);
+
+        //will wait for scan to take place, succeed or fail.
+        try {
+            swsHt.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
 
     }
