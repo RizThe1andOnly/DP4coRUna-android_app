@@ -1,8 +1,11 @@
 package com.example.dp4coruna.mapmanagement;
 
+import android.content.Intent;
 import android.graphics.Color;
 import org.json.*;
 import androidx.fragment.app.FragmentActivity;
+
+import android.location.Address;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -25,6 +28,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
@@ -53,16 +57,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //Dummy data for now
     ArrayList<LatLng> highriskcoordinates = new ArrayList<LatLng>();
 
+    String destinationStreetAddress;
+    String destinationCity;
+    String destinationState;
+    String destinationZipcode;
+
+    LocationObject lo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        Intent intent = getIntent();
+
+        //get info from previous activity
+        String originStreetAddress = intent.getExtras().getString("originStreetAddress");
+        String originCity = intent.getExtras().getString("originCity");
+        String originState = intent.getExtras().getString("originState");
+        String originZipcode = intent.getExtras().getString("originZipcode");
+
+        destinationStreetAddress = intent.getExtras().getString("destinationStreetAddress");
+        destinationCity = intent.getExtras().getString("destinationCity");
+        destinationState = intent.getExtras().getString("destinationState");
+        destinationZipcode = intent.getExtras().getString("destinationZipcode");
+
+        Log.d("DEBUG", destinationStreetAddress);
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
 
     }
 
@@ -80,16 +104,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        //This segment is only necessary for getting the users current location on the map
-        //We will eventually need this
-        /*
-        LocationObject lo = new LocationObject(this, this);
+        //gets current location
+        lo = new LocationObject(this, this);
         lo.setupLocation();
         List<Address> addresses = lo.getListOfAddresses();
 
         double latitude = lo.getLatitude();
         double longitude = lo.getLongitude();
-    */
+
+        LatLng currentlocation = new LatLng(latitude, longitude);
+
+        mMap.addMarker(new MarkerOptions().position(currentlocation).title("Current Location"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentlocation));
+        //Zoom in on the user's current location
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15.10f));
 
         /*
         //MALL EXAMPLE
@@ -113,7 +141,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //highriskcoordinates.forEach((n) -> drawCircularZone(n, 10));
         //drawCircularZone( new LatLng(40.547242016103894, -74.334968291223305), 10);
          */
-
+/*
         //Rutgers Example
         double latitude = 40.511737;
         double longitude = -74.444011;
@@ -123,7 +151,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLng(rutgers));
         //Zoom in
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 13.10f));
-
+*/
 
         //Set up listeners once map is ready
         mMap.setOnPolylineClickListener(this);
@@ -132,6 +160,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnCircleClickListener(this);
         mMap.setOnMarkerClickListener(this);
         mMap.setOnMarkerDragListener(this);
+
     }
 
 
@@ -149,8 +178,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //note: it resolves at run time, so don't worry if there is an error here
         String api_key = getString(R.string.maps_api_key);
 
-        String origin = "origin=place_id:ChIJe9PW7UPHw4kRsY6sdgb2l-U";
-        String destination = "destination=place_id:ChIJCfpC8GrGw4kRWzKTC3RIe58";
+        String[] destinationArray = destinationStreetAddress.split(" ", 10);
+
+        //iterate through user input location and add to destination request string
+        String destination = "destination=";
+        for(int i=0; i<destinationArray.length-1; i++){
+            destination=destination + destinationArray[i] + "+";
+        }
+        destination = destination + destinationArray[destinationArray.length-1];
+
+
+        String[] originArray = lo.getAddress().split(" ", 10);
+
+        //iterate through location object address and add to origin request string
+        String origin = "origin=";
+        for(int i=0; i<originArray.length-1; i++){
+            origin=origin + originArray[i] + "+";
+        }
+        origin = origin + originArray[originArray.length-1];
+
 
         String url = "https://maps.googleapis.com/maps/api/directions/json?\n" +
                 origin + "&" + destination + "\n" +
@@ -185,6 +231,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                             //get values from JSON as ArrayList of Route objects
                             routes = parseJSONintoRoutes(response);
+
+                            if(routes==null){
+                                return;
+                            }
 
                             //Add these alternate routes to the Map
                             addRoutePolylines(routes);
@@ -258,10 +308,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * @param routes
      */
     public void addRoutePolylines(List<Route> routes){
+
+        if(routes.isEmpty()){
+            return;
+        }
+
+        //clear any residual markings on the map
+        mMap.clear();
+
+        //set origin and destination markers
+        //these are explicity from the directions request
+        LatLng originCoordinates = routes.get(0).getStartLocation();
+        LatLng destinationCoordinates = routes.get(0).getEndLocation();
+        mMap.addMarker(new MarkerOptions().position(destinationCoordinates).title(routes.get(0).getEndAddress()));
+        mMap.addMarker(new MarkerOptions().position(originCoordinates).title(routes.get(0).getStartAddress()));
+
+        //get center point
+        LatLng center = LatLngBounds.builder().include(originCoordinates).include(destinationCoordinates).build().getCenter();
+
+        //zoom in/out camera to include origin, destination markers and the center point between them
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(originCoordinates);
+        builder.include(destinationCoordinates);
+        builder.include(center); //center point
+        LatLngBounds bounds = builder.build();
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+
         for(int i = 0; i<routes.size(); i++){
 
             Route route = routes.get(i);
             String risk = route.getRisk();
+
 
             Log.i("FromMapActivity",risk + " "+ i);
 
@@ -393,7 +470,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Toast.LENGTH_SHORT).show();
 
     }
-
+    /**
+     * Called when the user clicks a marker
+     * Displays markers tag
+     * return value indicates success or failure
+     *
+     * @param marker
+     * @return boolean
+     */
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+    if(marker==null){
+        return false;
+    }
+    if(marker.getTag()==null){
+        return false;
+    }
+        Toast.makeText(this, marker.getTag().toString(),
+                Toast.LENGTH_SHORT).show();
+    return true;
+    }
+    /*
     /**
      * Called when the user clicks a marker
      * Removes marker from map
@@ -402,6 +499,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * @param marker
      * @return boolean
      */
+    /*
     @Override
     public boolean onMarkerClick(Marker marker) {
 
@@ -421,7 +519,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // marker is centered and for the marker's info window to open, if it has one).
         return false;
     }
-
+*/
     //Called at beginning of Marker Drag
     @Override
     public void onMarkerDragStart(Marker marker) {

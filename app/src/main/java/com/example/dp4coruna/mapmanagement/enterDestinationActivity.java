@@ -2,6 +2,7 @@ package com.example.dp4coruna.mapmanagement;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
@@ -68,14 +69,14 @@ public class enterDestinationActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, MapsActivity.class);
         intent.putExtras(bundle);
-        intent.putExtra(originStreetAddress, originStreetAddress);
-        intent.putExtra(originCity, originCity);
-        intent.putExtra(originState, originState);
-        intent.putExtra(originZipcode, originZipcode);
-        intent.putExtra(destinationStreetAddress, destinationStreetAddress);
-        intent.putExtra(destinationCity, destinationCity);
-        intent.putExtra(destinationState, destinationState);
-        intent.putExtra(destinationZipcode, destinationZipcode);
+        intent.putExtra("originStreetAddress", originStreetAddress);
+        intent.putExtra("originCity", originCity);
+        intent.putExtra("originState", originState);
+        intent.putExtra("originZipcode", originZipcode);
+        intent.putExtra("destinationStreetAddress", destinationStreetAddress);
+        intent.putExtra("destinationCity", destinationCity);
+        intent.putExtra("destinationState", destinationState);
+        intent.putExtra("destinationZipcode", destinationZipcode);
 
         startActivity(intent);
     }

@@ -14,6 +14,7 @@ import android.os.Bundle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.util.Log;
 import android.view.View;
 
 import com.example.dp4coruna.localLearning.learningService.LocalLearningService;
@@ -145,15 +146,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void chooseSafeRoute(View view) {
         Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, MapsActivity.class);
+        Intent intent = new Intent(this, enterDestinationActivity.class);
 
-//        //fill Location Object with all datafields
-//        lo.updateLocationData();
-//
-//        //convert location object to JSON to pass through bundle to next activity
-//        String JSONLOD = lo.convertLocationToJSON();
-//        intent.putExtras(bundle);
-//        intent.putExtra("LocationObjectData", JSONLOD);
+        //fill Location Object with all datafields
+        lo.setupLocation();
+
+        //convert location object to JSON to pass through bundle to next activity
+        String JSONLOD = lo.convertLocationToJSON();
+        intent.putExtras(bundle);
+        intent.putExtra("LocationObjectData", JSONLOD);
         startActivity(intent);
     }
 
