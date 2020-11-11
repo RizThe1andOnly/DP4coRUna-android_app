@@ -37,5 +37,15 @@
 
     </fragment>
 
+    <Button
+            android:id="@+id/showRiskZonesButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|top"
+            android:layout_marginTop="125dp"
+            android:onClick="showRiskZones"
+            android:padding="10dp"
+            android:paddingRight="10dp"
+            android:text="Show/Hide Risk Zones" />
 
 </LinearLayout>
