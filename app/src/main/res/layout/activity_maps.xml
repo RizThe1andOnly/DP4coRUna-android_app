@@ -35,9 +35,7 @@
                 android:paddingRight="10dp"
                 android:text="Show Route" android:paddingTop="20dp" android:onClick="showAllRoutes"/>
 
-    </fragment>
-
-    <Button
+        <Button
             android:id="@+id/showRiskZonesButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -47,5 +45,10 @@
             android:padding="10dp"
             android:paddingRight="10dp"
             android:text="Show/Hide Risk Zones" />
+
+
+    </fragment>
+
+
 
 </LinearLayout>
