@@ -153,6 +153,14 @@ public class MLModel {
             //error message:
             Toast.makeText(this.context , "File does not exist; please make model/dataset", Toast.LENGTH_SHORT).show();
         }
+
+        INDArray possibleLabels = (this.trainingData).getLabels();
+        String possibleLabelOutput = possibleLabels.toStringFull();
+        Log.i("FromMLModel",possibleLabelOutput);
+
+//        int[] rowIndx = {0,1,2,3,4,5,6,7,8};
+//        List<String> labelNames = (this.trainingData).getLabelNames(new NDArray(rowIndx));
+//        Log.i("FromMLModel",labelNames.toString());
     }
 
     /**
@@ -213,7 +221,7 @@ public class MLModel {
      */
     private INDArray getOutputVals(LocationObject locationObject){
         INDArray input = formatInput(locationObject);
-        INDArray output = this.mln.output(input);
+        INDArray output = this.mln.output(input,false);
         return output;
     }
 
@@ -250,6 +258,15 @@ public class MLModel {
         this.trainingData = new DataSet(new NDArray(obtainedData.features), new NDArray(obtainedData.encodedLabels));
         (this.trainingData).setLabelNames(obtainedData.labels);
         this.numberOfLocations = obtainedData.numberOfLocations;
+
+
+        INDArray possibleLabels = (this.trainingData).getLabels();
+        String possibleLabelOutput = possibleLabels.toStringFull();
+        Log.i("FromMLModel",possibleLabelOutput);
+
+//        int[] rowIndx = {0,1,2,3,4,5,6,7,8};
+//        List<String> labelNames = (this.trainingData).getLabelNames(new NDArray(rowIndx));
+//        Log.i("FromMLModel",labelNames.toString());
     }
 
 

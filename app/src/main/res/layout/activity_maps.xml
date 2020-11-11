@@ -1,32 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:map="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/map"
-    android:name="com.google.android.gms.maps.SupportMapFragment"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".mapmanagement.MapsActivity">
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:map="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+        android:orientation = "vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+    >
 
-    <Button
-            android:id="@+id/SavePointsButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right|top"
-            android:layout_marginTop="20dp"
-            android:onClick="savePointsClicked"
-            android:padding="10dp"
-            android:paddingRight="10dp"
-            android:text="Save Points" android:paddingBottom="20dp"/>
+    <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".mapmanagement.MapsActivity">
 
-    <Button
-            android:id="@+id/DisplayRoutesButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right|top"
-            android:layout_marginTop="75dp"
-            android:padding="10dp"
-            android:paddingRight="10dp"
-            android:text="Show Route" android:paddingTop="20dp" android:onClick="showAllRoutes"/>
+        <Button
+                android:id="@+id/SavePointsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right|top"
+                android:layout_marginTop="20dp"
+                android:onClick="savePointsClicked"
+                android:padding="10dp"
+                android:paddingRight="10dp"
+                android:text="Save Points" android:paddingBottom="20dp"/>
+
+        <Button
+                android:id="@+id/DisplayRoutesButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right|top"
+                android:layout_marginTop="75dp"
+                android:padding="10dp"
+                android:paddingRight="10dp"
+                android:text="Show Route" android:paddingTop="20dp" android:onClick="showAllRoutes"/>
 
     </fragment>
+
+
+</LinearLayout>

@@ -174,32 +174,42 @@ public class SensorReader extends LocationGrabber implements SensorEventListener
     private static void startWifiScan(Context context){
         final Context localContextInstance = context;
 
-        //Create Handler Thread for wifi scanning purposes:
-        HandlerThread swsHt = new HandlerThread("WifiScanThread");
-        swsHt.start();
-        final Looper swsLooper = swsHt.getLooper();
+        //Create Thread for wifi scanning purposes:
+        Thread scanWifiThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                startScanHelper(localContextInstance);
+            }
+        },"ScanWifiThread");
 
+        scanWifiThread.start();
+
+        //will wait for scan to take place, succeed or fail.
+        try {
+            scanWifiThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private static void startScanHelper(Context context){
+        WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 
         BroadcastReceiver br = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                //boolean scanSuccessful = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED,false);
-                swsLooper.quitSafely();
+                boolean scanSuccessful = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED,false);
+                Log.i("FromSensorReader","Something received + "+scanSuccessful);
+                Thread.currentThread().interrupt();
             }
         };
 
         IntentFilter inf = new IntentFilter();
         inf.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         context.registerReceiver(br,inf);
-
-        //will wait for scan to take place, succeed or fail.
-        try {
-            swsHt.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
+        boolean results = wm.startScan();
     }
 
     //end of wifi access point operations

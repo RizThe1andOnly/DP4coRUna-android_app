@@ -89,7 +89,12 @@ public class LocationGrabber {
         this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(inheritedActivity);
     }
 
-    protected LocationGrabber(Context inheritedContext) {
+    /**
+     * Constructor to be used when gathering data because takes activity and context to use for google api's.
+     * Currently access level is at protected so that only sub-classes can use this constructor.
+     * @param inheritedContext
+     */
+    public LocationGrabber(Context inheritedContext) {
         this.inheritedContext = inheritedContext;
         this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(inheritedContext);
     }
@@ -260,6 +265,17 @@ public class LocationGrabber {
     }
 
 
+    /*
+        * Getters for the LocationGrabber class
+     */
+
+    public double getLatitude(){
+        return this.latitude;
+    }
+
+    public double getLongitude(){
+        return this.longitude;
+    }
 
     /*
                         -----------Setters for location fields (req for data transferring from database------------

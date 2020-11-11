@@ -31,4 +31,7 @@
     <string name="welcomeMessage">Welcome!</string>
     <string name="progressMessage">Loading...</string>
     <string name="TRButton">Run</string>
+    <string name="maptrain_button1">Goto</string>
+    <string name="maptrain_button2">Train</string>
+    <string name="cancelTag">Cancel</string>
 </resources>

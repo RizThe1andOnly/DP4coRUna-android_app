@@ -17,8 +17,10 @@ import androidx.core.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 
+import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.localLearning.learningService.LocalLearningService;
 import com.example.dp4coruna.localLearning.location.LocationObject;
+import com.example.dp4coruna.mapmanagement.MapTrainActivity;
 import com.example.dp4coruna.mapmanagement.MapsActivity;
 import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -38,6 +40,15 @@ public class MainActivity extends AppCompatActivity {
     private static final int ACCESS_WIFISTATE_REQUEST_CODE = 104;
     private static final int READ_EXTERNAL_STORAGE_CODE = 105;
     private static final int CHANGE_WIFI_STATE_CODE = 106;
+    private static final int REQUEXT_CODE_FOR_ALL = 107;
+    private static final String[] PERMISSION_LIST = {
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.CHANGE_WIFI_STATE
+    };
 
     private FusedLocationProviderClient fusedLocationClient;
 
@@ -50,10 +61,12 @@ public class MainActivity extends AppCompatActivity {
         checkForPermissions(getApplicationContext());
 
         // initializing this here allows location data to be retrieved on each subsequent activity
-        lo = new LocationObject(MainActivity.this,getApplicationContext());
+        //lo = new LocationObject(MainActivity.this,getApplicationContext());
 
         //start local learning service:
         //startLocalLearningService();
+
+        (new AppDatabase(getApplicationContext())).getReadableDatabase();
     }
 
     @Override
@@ -84,47 +97,56 @@ public class MainActivity extends AppCompatActivity {
      *      - Access Wifi state
      */
     private void checkForPermissions(Context context){
-        if(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
-                PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(MainActivity.this,
-                                                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                                ACCESS_FINE_LOCATION_REQUEST_CODE);
+
+        for(String perm: PERMISSION_LIST){
+            if(ContextCompat.checkSelfPermission(context,perm) == PackageManager.PERMISSION_DENIED){
+                ActivityCompat.requestPermissions(MainActivity.this,
+                                                    PERMISSION_LIST,
+                                                    REQUEXT_CODE_FOR_ALL);
+            }
         }
 
-        if(ContextCompat.checkSelfPermission(context,Manifest.permission.RECORD_AUDIO)==
-                PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(MainActivity.this,
-                                                new String[]{Manifest.permission.RECORD_AUDIO},
-                                                RECORD_AUDIO_REQUEST_CODE);
-        }
-
-        if(ContextCompat.checkSelfPermission(context,Manifest.permission.WRITE_EXTERNAL_STORAGE)==
-                PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(MainActivity.this,
-                                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                                WRITE_TO_EXTERNAL_STORAGE_CODE);
-        }
-
-        if(ContextCompat.checkSelfPermission(context,Manifest.permission.ACCESS_WIFI_STATE)==
-                PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(MainActivity.this,
-                                                new String[]{Manifest.permission.ACCESS_WIFI_STATE},
-                                                ACCESS_WIFISTATE_REQUEST_CODE);
-        }
-
-        if(ContextCompat.checkSelfPermission(context,Manifest.permission.READ_EXTERNAL_STORAGE)==
-                PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    READ_EXTERNAL_STORAGE_CODE);
-        }
-
-        if(ContextCompat.checkSelfPermission(context,Manifest.permission.CHANGE_WIFI_STATE)==
-                PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.CHANGE_WIFI_STATE},
-                    CHANGE_WIFI_STATE_CODE);
-        }
+//        if(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+//                PackageManager.PERMISSION_DENIED) {
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                                                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+//                                                ACCESS_FINE_LOCATION_REQUEST_CODE);
+//        }
+//
+//        if(ContextCompat.checkSelfPermission(context,Manifest.permission.RECORD_AUDIO)==
+//                PackageManager.PERMISSION_DENIED){
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                                                new String[]{Manifest.permission.RECORD_AUDIO},
+//                                                RECORD_AUDIO_REQUEST_CODE);
+//        }
+//
+//        if(ContextCompat.checkSelfPermission(context,Manifest.permission.WRITE_EXTERNAL_STORAGE)==
+//                PackageManager.PERMISSION_DENIED){
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                                                WRITE_TO_EXTERNAL_STORAGE_CODE);
+//        }
+//
+//        if(ContextCompat.checkSelfPermission(context,Manifest.permission.ACCESS_WIFI_STATE)==
+//                PackageManager.PERMISSION_DENIED){
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                                                new String[]{Manifest.permission.ACCESS_WIFI_STATE},
+//                                                ACCESS_WIFISTATE_REQUEST_CODE);
+//        }
+//
+//        if(ContextCompat.checkSelfPermission(context,Manifest.permission.READ_EXTERNAL_STORAGE)==
+//                PackageManager.PERMISSION_DENIED){
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+//                    READ_EXTERNAL_STORAGE_CODE);
+//        }
+//
+//        if(ContextCompat.checkSelfPermission(context,Manifest.permission.CHANGE_WIFI_STATE)==
+//                PackageManager.PERMISSION_DENIED){
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                    new String[]{Manifest.permission.CHANGE_WIFI_STATE},
+//                    CHANGE_WIFI_STATE_CODE);
+//        }
 
     }
 
@@ -169,6 +191,11 @@ public class MainActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this,reportPositiveTestActivity.class);
         intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    public void startMapTrainActivity(View view){
+        Intent intent = new Intent(this, MapTrainActivity.class);
         startActivity(intent);
     }
 

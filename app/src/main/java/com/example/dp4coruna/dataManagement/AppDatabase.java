@@ -24,11 +24,13 @@ public class AppDatabase extends SQLiteOpenHelper {
 
     private static final int NUMBER_OF_FEATURES = 6;
     private int numberOfLocattions;
+    private final String ADMIN_USER_ID = "admin00";
 
     public static final String DATABASE_NAME = "dp4corunadata.db";
     public static final String LOCATION_TABLE = "mylist_data";
     public static final String WAP_TABLE = "wifi_access_point_table";
     private static final String ACCEL_OFFSET_TABLE = "accelerometer_offset_table";
+    private static final String MAP_LABEL_TABLE = "map_label_table";
 
     /*
      * Data columns for the location features. The count begins at 0.
@@ -69,6 +71,16 @@ public class AppDatabase extends SQLiteOpenHelper {
     public static final String ACCEL_OFFSET_TABLE_COL_Z_OFFSET = "zOffset";
 
     /*
+        Data columns for the map_label_table
+     */
+    public static final String MAP_LABEL_TABLE_COL_USERID = "userid";
+    public static final String MAP_LABEL_TABLE_COL_BUILDING = "building";
+    public static final String MAP_LABEL_TABLE_COL_ROOM = "room";
+    public static final String MAP_LABEL_TABLE_COL_LATITUDE = "latitude";
+    public static final String MAP_LABEL_TABLE_COL_LONGITUDE = "longitude";
+
+
+    /*
         Table creation SQL statements:
      */
 
@@ -104,6 +116,19 @@ public class AppDatabase extends SQLiteOpenHelper {
                                                     +");";
 
 
+    private final String createMapLabelTable = "CREATE TABLE " + MAP_LABEL_TABLE + "("
+                                                + MAP_LABEL_TABLE_COL_USERID + " VARCHAR(255), "
+                                                + MAP_LABEL_TABLE_COL_BUILDING + " VARCHAR(255), "
+                                                + MAP_LABEL_TABLE_COL_ROOM + " VARCHAR(255), "
+                                                + MAP_LABEL_TABLE_COL_LATITUDE + " DOUBLE, "
+                                                + MAP_LABEL_TABLE_COL_LONGITUDE + " DOUBLE, "
+                                                + "PRIMARY KEY("
+                                                    + MAP_LABEL_TABLE_COL_USERID + ", "
+                                                    + MAP_LABEL_TABLE_COL_BUILDING + ", "
+                                                    + MAP_LABEL_TABLE_COL_ROOM + ")"
+                                                +");";
+
+
     //constant String for if matching label is not found when looking through device database:
     private static final String LABEL_NOT_FOUND = "Label Not Found";
 
@@ -119,6 +144,13 @@ public class AppDatabase extends SQLiteOpenHelper {
         db.execSQL(createLocTable);
         db.execSQL(createWiFIAPTable);
         db.execSQL(createAccelOffsetTable);
+        db.execSQL(createMapLabelTable);
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+
     }
 
     @Override
@@ -126,6 +158,7 @@ public class AppDatabase extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + LOCATION_TABLE);
         db.execSQL("DROP TABLE IF EXISTS " + WAP_TABLE);
         db.execSQL("DROP TABLE IF EXISTS " + ACCEL_OFFSET_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + MAP_LABEL_TABLE);
         onCreate(db);
     }
 
@@ -344,14 +377,26 @@ public class AppDatabase extends SQLiteOpenHelper {
      * @return
      */
     public MLData getMLDataFromDatabase(){
-        float[][] featureData = this.getFormattedLocationFeatures();
         List<String> labels = this.getAllLocationLabels();
-
         //create map instance and populate it, while getting labels encoded, using encodeLocationLabels:
-        Map<String,float[]> locLabelMap = new HashMap<>();
-        float[][] encodedLabels = this.encodeLocationLabels(labels,locLabelMap);
+        Map<String,float[]> encodedLabelsMap = new HashMap<>();
+        this.encodeLocationLabels(labels,encodedLabelsMap);
 
-        MLData toBeReturned = new MLData(featureData,encodedLabels,locLabelMap,labels);
+        List<List<Float>> groundTruth_encodedLabels = new ArrayList<>();
+        float[][] featureData = this.getFormattedLocationFeatures(encodedLabelsMap,groundTruth_encodedLabels);
+
+        //convert groundTruth_encodedLabels to float[][], due to deeplearning4j requirements
+        int numRows = groundTruth_encodedLabels.size();
+        int numColumns = groundTruth_encodedLabels.get(0).size();//every row has same number of columns
+        float[][] groundTruth_encoded = new float[numRows][numColumns];
+        //Log.i("FromAppDatabase",groundTruth_encoded.length+"  "+groundTruth_encoded[0].length);
+        for(int i=0;i<numRows;i++){
+            for(int j=0;j<numColumns;j++){
+                groundTruth_encoded[i][j] = groundTruth_encodedLabels.get(i).get(j);
+            }
+        }
+
+        MLData toBeReturned = new MLData(featureData,groundTruth_encoded,encodedLabelsMap,labels);
 
         return toBeReturned;
     }
@@ -362,7 +407,7 @@ public class AppDatabase extends SQLiteOpenHelper {
      * separately.
      * @return float[][] all feature data available in device database
      */
-    public float[][] getFormattedLocationFeatures(){
+    public float[][] getFormattedLocationFeatures(Map<String,float[]> encodedLablesMap, List<List<Float>> groundTruth){
         /*
             The process of obtaining all of the features will proceed as follows:
                 - First obtain the number of location samples available in the database. This is for the creation of the
@@ -388,6 +433,7 @@ public class AppDatabase extends SQLiteOpenHelper {
         //query database for all features:
 
         String featuresQuery = "SELECT "
+                + LOCATION_TABLE_COL_LABEL + ", "
                 + LOCATION_TABLE_COL_LIGHT + ", "
                 + LOCATION_TABLE_COL_SOUND + ", "
                 + LOCATION_TABLE_COL_GMFS + ", "
@@ -401,11 +447,25 @@ public class AppDatabase extends SQLiteOpenHelper {
         //iterate through cursor and place data within float array:
         int i = 0;
         while(featuresDataCursor.moveToNext()){
-            for(int j=0;j<NUMBER_OF_FEATURES;j++){
+           // one "while" iteration for each location so the ground truth requires an additional list.
+            // since each list in ground truth represents a single location (one-hot-encoding).
+            groundTruth.add(new ArrayList<>());
+
+            for(int j=0;j<NUMBER_OF_FEATURES+1;j++){ //plus one to account for the label
 
                 //Log.d("PRINTING GET FORMATTEDFEATURES: ",featuresDataCursor.getString(j));
 
-                featuresArray[i][j] = featuresDataCursor.getFloat(j);
+                //put proper encoded label into groundTruth for set of features; the label has to be encoded:
+                if (j==0){// we are at the label
+                    List currentLocationEncodedLabel_gt = groundTruth.get(i);
+                    float[] currentLocationEncodedLabel_fromMap = encodedLablesMap.get(featuresDataCursor.getString(j));
+                    for(float elem : currentLocationEncodedLabel_fromMap){
+                        currentLocationEncodedLabel_gt.add(elem);
+                    }
+                    continue;
+                }
+
+                featuresArray[i][j-1] = featuresDataCursor.getFloat(j);
             }
             i++;
         }
@@ -427,7 +487,7 @@ public class AppDatabase extends SQLiteOpenHelper {
          */
         SQLiteDatabase db = this.getWritableDatabase();
 
-        String labelQueryString = "SELECT "+  LOCATION_TABLE_COL_LABEL + " FROM " + LOCATION_TABLE + ";";
+        String labelQueryString = "SELECT DISTINCT "+  LOCATION_TABLE_COL_LABEL + " FROM " + LOCATION_TABLE + ";";
         Cursor labelCursor = db.rawQuery(labelQueryString,null);
 
         ArrayList<String> toBeReturned = new ArrayList<>();
@@ -511,11 +571,6 @@ public class AppDatabase extends SQLiteOpenHelper {
         int numberOfCategories = locationLabels.size();
         float encodedLables[][] = new float[numberOfCategories][numberOfCategories];
         for(int i=0;i<numberOfCategories;i++){
-            if(i==0){
-                encodedLables[i][i] = 0;
-                map.put(locationLabels.get(i),encodedLables[i]);
-                continue;
-            }
             encodedLables[i][i] = 1;
             map.put(locationLabels.get(i),encodedLables[i]);
         }
@@ -533,7 +588,7 @@ public class AppDatabase extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         //obtain  number of locations:
-        String numOfLocQueryString = "SELECT MAX(" + LOCATION_TABLE_COL_ID + ") FROM " + LOCATION_TABLE + ";";
+        String numOfLocQueryString = "SELECT COUNT(*) FROM " + LOCATION_TABLE + ";";
         Cursor numOfLocCursor = db.rawQuery(numOfLocQueryString,null);
         numOfLocCursor.moveToNext(); // cursor starts at position -1 so have to move to 0.
         int numOfLocations = numOfLocCursor.getInt(0);
@@ -597,8 +652,49 @@ public class AppDatabase extends SQLiteOpenHelper {
     }
 
 
+    /*
+        map_label_table section. This section will deal with adding and querying of data related to the map
+        position of a particular location. The lat/lng points are obtained from google maps and user input.
+     */
 
+    public boolean addMapLabelData(String buildingName,String roomName, double latitude, double longitude){
+        return addMapLabelHelper(ADMIN_USER_ID,buildingName,roomName,latitude,longitude);
+    }
 
+    public boolean addMapLabelData(String userId, String buildingName, String roomName, double latitude, double longitude){
+        return addMapLabelHelper(userId,buildingName,roomName,latitude,longitude);
+    }
+
+    private boolean addMapLabelHelper(String userId, String buildingName, String roomName, double latitude, double longitude){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+
+        cv.put(MAP_LABEL_TABLE_COL_USERID,userId);
+        cv.put(MAP_LABEL_TABLE_COL_BUILDING,buildingName);
+        cv.put(MAP_LABEL_TABLE_COL_ROOM,roomName);
+        cv.put(MAP_LABEL_TABLE_COL_LATITUDE,latitude);
+        cv.put(MAP_LABEL_TABLE_COL_LONGITUDE,longitude);
+
+        long result = db.insert(MAP_LABEL_TABLE,null,cv);
+
+        if(result == -1){
+            Log.i("FromAppDatabase","Map Label Data Entry Failed");
+            return false;
+        }
+
+        return true;
+    }
+
+    public Cursor queryMapMarkers(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String queryString = "SELECT "
+                            + MAP_LABEL_TABLE_COL_BUILDING + ", "
+                            + MAP_LABEL_TABLE_COL_ROOM + ", "
+                            + MAP_LABEL_TABLE_COL_LATITUDE + ", "
+                            + MAP_LABEL_TABLE_COL_LONGITUDE +" "
+                            + "FROM " + MAP_LABEL_TABLE + ";";
+        return db.rawQuery(queryString,null);
+    }
 
 
     /* ----------------------------------------
