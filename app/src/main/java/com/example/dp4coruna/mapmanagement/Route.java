@@ -1,10 +1,14 @@
 package com.example.dp4coruna.mapmanagement;
 
 import android.util.Log;
+
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**This class holds the Route Info received from Google Directions API
  * After being parsed from the JSON
@@ -67,6 +71,61 @@ public class Route {
         else{
             this.risk="Medium";
         }
+
+    }
+
+    public void setRisk(int number){
+        //if no covid data, set random risk
+        if(MapsActivity.covidClusterCircles.isEmpty() || MapsActivity.hashmap.isEmpty()){
+            //int randomNum = ThreadLocalRandom.current().nextInt(0, 3);
+            setRandomRisk(number);
+            return;
+        }
+        else{
+
+            for(int i=0; i<MapsActivity.covidClusterCircles.size(); i++) {
+
+                Circle circle = MapsActivity.covidClusterCircles.get(i);
+                LatLng center = circle.getCenter();
+                double radius = circle.getRadius();
+                COVIDCluster covidCluster = MapsActivity.hashmap.get(circle);
+                String clusterRiskLevel = covidCluster.getRisklevel();
+                radius = 10;
+
+                for(int j=0; j<points.size(); j++) {
+
+                    LatLng point = points.get(j);
+
+                    double ky = 40000 / 360;
+                    double kx = Math.cos(Math.PI * center.latitude / 180.0) * ky;
+                    double dx = Math.abs(center.longitude - point.longitude) * kx;
+                    double dy = Math.abs(center.latitude - point.latitude) * ky;
+                    boolean isPointinCircle = Math.sqrt(dx * dx + dy * dy) <= radius;
+
+                    if(isPointinCircle){
+                    if (clusterRiskLevel.equals("High")){
+                        this.risk = "High";
+                        return;
+                    }
+                    else if (clusterRiskLevel.equals("Medium")){
+                        this.risk = "Medium";
+                    }
+                    else if (clusterRiskLevel.equals("Low") && this.risk!=null){
+                        if(this.risk.equals("Medium")){
+                            this.risk = "Medium";
+                        }
+                        else{
+                            this.risk = "Low";
+                        }
+                    }
+                    else{
+                        this.risk = "Low";
+                    }
+                    }
+                }
+                }
+            }
+
 
     }
 
