@@ -39,6 +39,7 @@ import com.google.maps.android.PolyUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleMap.OnPolylineClickListener, GoogleMap.OnPolygonClickListener,
@@ -48,6 +49,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
 
     String jsonDirectionsString; //holds response from HTTP request
+    String jsonCOVIDData;
 
     //Holds coordinates of walkways/hallways
     //Dummy Data
@@ -161,6 +163,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMarkerClickListener(this);
         mMap.setOnMarkerDragListener(this);
 
+        //sendCOVIDDataRequest();
     }
 
 
@@ -314,7 +317,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         //clear any residual markings on the map
-        mMap.clear();
+        //mMap.clear();
 
         //set origin and destination markers
         //these are explicity from the directions request
@@ -440,7 +443,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onCircleClick(Circle circle) {
-        Toast.makeText(this, "COVID 19 Risk: High",
+        Toast.makeText(this, circle.getTag().toString(),
                 Toast.LENGTH_SHORT).show();
 
     }
@@ -608,6 +611,271 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void showAllRoutes(View view){
         sendDirectionsRequest();
     }
+
+    /**Sends HTTP request for COVID Data
+     * This data is updated hourly and contains total number of cases per county
+     * Data is collected from WHO, CDC and many others
+     * Data obtained from: https://coronavirus-resources.esri.com/datasets/628578697fb24d8ea4c32fa0c5ae1843_0/data?geometry=161.214%2C-0.075%2C23.226%2C52.222&orderBy=Last_Update&orderByAsc=false&selectedAttribute=Active&where=(Confirmed%20%3E%200)
+     * return value is a JSON
+     * which is temporarily saved as a global variable (JSONcovidData) for later access
+     */
+    public void sendCOVIDDataRequest() {
+
+        //Instantiate a new Request Queue
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        String url = "https://services1.arcgis.com/0MSEUqKaxRlEPj5g/arcgis/rest/services/ncov_cases_US/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=json";
+
+        //Request a response from the URL
+        //Will return a JSON formatted string on success
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d("JSON", response.substring(0, 10000));
+                        jsonDirectionsString = response;
+                       if (response==null){
+                           return;
+                       }
+
+                        try {
+                            List<COVIDCluster> covidClusters = new ArrayList<COVIDCluster>();
+
+                            //get values from JSON as ArrayList of Route objects
+                            covidClusters = parseJSONintoCOVIDClusters(response);
+
+                            if(jsonDirectionsString==null){
+                                return;
+                            }
+
+                            //Add these alternate routes to the Map
+                            //addRoutePolylines(routes);
+                            addCOVIDClusterstoMap(covidClusters);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d("JSON", "Unable to retrieve response");
+            }
+        });
+
+        //add to the request queue
+        queue.add(stringRequest);
+
+    }
+
+    /**Given a JSON string in format returned by https://coronavirus-resources.esri.com/datasets/
+     * parse into an ArrayList of COVIDCluster objects
+     * See: https://coronavirus-resources.esri.com/datasets/628578697fb24d8ea4c32fa0c5ae1843_0/geoservice?geometry=-85.480%2C38.827%2C-71.604%2C41.759&selectedAttribute=Active&where=(Confirmed%20%3E%200)
+     * @param response
+     * @throws JSONException
+     */
+    public List<COVIDCluster> parseJSONintoCOVIDClusters(String response) throws JSONException {
+        if (response == null) {
+            return null;
+        }
+
+        List<COVIDCluster> covidClusters = new ArrayList<COVIDCluster>();
+        JSONObject jsonData = new JSONObject(response);
+        JSONArray jsonFeatures = jsonData.getJSONArray("features");
+
+        //iterate through feature array
+        for (int i = 0; i < jsonFeatures.length(); i++) {
+            JSONObject jsonFeature = jsonFeatures.getJSONObject(i);
+            COVIDCluster covidCluster = new COVIDCluster();
+
+            //get feature info from JSON
+            JSONObject jsonAttribute = jsonFeature.getJSONObject("attributes");
+
+            //set attributes for CovidCluster Object
+            //covidCluster.county = (jsonAttribute.getString("Province_State"));
+            covidCluster.setState(jsonAttribute.getString("Province_State"));
+            covidCluster.setCountry(jsonAttribute.getString("Country_Region"));
+            covidCluster.setLocation(jsonAttribute.getString("Combined_Key"));
+
+            //avoids null pointer when latitude/longitude values in database are "null"
+            String latitude = jsonAttribute.getString("Lat");
+            String longitude = jsonAttribute.getString("Long_");
+            if(latitude!="null" && longitude!="null") {
+                LatLng coordinates = (new LatLng(jsonAttribute.getDouble("Lat"), jsonAttribute.getDouble("Long_")));
+                    covidCluster.setCoordinates(coordinates);
+            }
+            covidCluster.setConfirmed(jsonAttribute.getInt("Confirmed"));
+            covidCluster.setRecovered(jsonAttribute.getInt("Recovered"));
+            covidCluster.setDeaths(jsonAttribute.getInt("Deaths"));
+            covidCluster.setActive(jsonAttribute.getInt("Active"));
+            covidCluster.setRiskLevel();
+            Log.d("JSON", covidCluster.getLocation());
+
+
+            //add alternate covidCluster to arraylist
+            covidClusters.add(covidCluster);
+        }
+
+        return covidClusters;
+    }
+
+    /*
+     */
+    public void addCOVIDClusterstoMap(List<COVIDCluster> COVIDClusters){
+
+        if(COVIDClusters.isEmpty()){
+            return;
+        }
+
+        //Iterate through list of covid clusters
+        for(int i = 0; i<COVIDClusters.size(); i++){
+
+            COVIDCluster COVIDcluster = COVIDClusters.get(i);
+
+           if(COVIDcluster.getCoordinates()!=null) {
+
+
+               CircleOptions circleOptions = new CircleOptions();
+               circleOptions.center(COVIDcluster.getCoordinates());
+               circleOptions.radius(4000);
+
+               //hish risk, red
+               if(COVIDcluster.getRisklevel()=="High") {
+                   circleOptions.strokeWidth(1);
+                   circleOptions.strokeColor(0x46FF0000);
+                   circleOptions.fillColor(0x46FF0000);
+               }
+               //medium risk, yellow
+               else if(COVIDcluster.getRisklevel()=="Medium") {
+                   circleOptions.strokeWidth(1);
+                   circleOptions.strokeColor(0x467F8000);
+                   circleOptions.fillColor(0x467F8000);
+               }
+               else{ //low risk, blue
+                   circleOptions.strokeWidth(1);
+                   circleOptions.strokeColor(0x460000FF);
+                   circleOptions.fillColor(0x460000FF);
+               }
+
+
+
+               circleOptions.clickable(true);
+
+               // Add circle to the map, with Tag
+               mMap.addCircle(circleOptions).setTag(COVIDcluster.getLocation() +
+                       "\n\nCOVID-19:" +
+                       "\nActive Cases: " + COVIDcluster.getActive() +
+                       "\nDeaths: " + COVIDcluster.getDeaths() +
+                       "\nTotal Cases: " + COVIDcluster.getConfirmed());
+           }
+        }
+    }
+
+
+    /**Called when "Show Risk Zones" Button is clicked
+     * Calls sendCOVIDDataRequest() to obtain COVID data and mark up map
+     * @param view
+     */
+    public void generatePointsClicked(View view) {
+        sendCOVIDDataRequest();
+        //        Toast.makeText(this, "Saving Points...",
+        //              Toast.LENGTH_SHORT).show();
+
+        /*
+        //LatLng points to outline area where we will place points
+        double latitudeUpperLeft = 40.53714868695067;
+        double longitudeUpperLeft = -74.4669172167778;
+        LatLng upperLeft = new LatLng(latitudeUpperLeft, longitudeUpperLeft);
+
+        double latitudeUpperRight = 40.5360007406821426;
+        double longitudeUpperRight = -74.42061759531498;
+        LatLng upperRight = new LatLng(latitudeUpperRight, longitudeUpperRight);
+
+        double latitudeLowerRight = 40.47359397014704;
+        double longitudeLowerRight = -74.42278549075127;
+        LatLng lowerRight = new LatLng(latitudeLowerRight, longitudeLowerRight);
+
+        double latitudeLowerLeft = 40.475973509889535;
+        double longitudeLowerLeft = -74.46631204336882;
+        LatLng lowerLeft = new LatLng(latitudeLowerLeft, longitudeLowerLeft);
+
+        //create nonclickable, transparent polygon on map outlining area of interest
+        Polygon polygon = mMap.addPolygon(new PolygonOptions()
+                //.strokeColor((0xaa222345))
+                .strokeColor((0xffF69F9E))
+                .clickable(false)
+                .add(upperLeft, upperRight, lowerRight, lowerLeft));
+
+        //Long_point >  Long_LowerLeft + Lat_point * ( Long_UpperLeft - Long_LowerLeft)/ ( Lat_UpperLeft - Lat_LowerLeft)
+
+
+        double randomlatitude = ThreadLocalRandom.current().nextDouble(40.473, 40.54);
+        double randomlongitude = ThreadLocalRandom.current().nextDouble(-74.4669, -74.420);
+
+        LatLng randomlatlong = new LatLng(randomlatitude, randomlongitude);
+        //mMap.addMarker(new MarkerOptions().position(randomlatlong));
+
+        CircleOptions circleOptions = new CircleOptions();
+
+        //Set point and radius
+        circleOptions.center(randomlatlong);
+        circleOptions.radius(70);
+
+        //format options
+        circleOptions.strokeWidth(1);
+        circleOptions.strokeColor(0x46FF0000);
+        circleOptions.fillColor(0x46FF0000);
+
+        circleOptions.clickable(true);
+
+        // Adding the circle to the GoogleMap
+        mMap.addCircle(circleOptions);
+
+
+
+        //clears entire map, including overlay
+        // mMap.clear();
+
+         */
+    }
+
+    public void generateRandomLeftHeavy(){
+
+        //generate
+        for(int i=0; i<10; i++){
+            double randomlatitude = ThreadLocalRandom.current().nextDouble(40.47057, 40.53168);
+            double randomlongitude = ThreadLocalRandom.current().nextDouble(-74.46058, -74.4239);
+
+            LatLng randomlatlong = new LatLng(randomlatitude, randomlongitude);
+            //mMap.addMarker(new MarkerOptions().position(randomlatlong));
+
+            CircleOptions circleOptions = new CircleOptions();
+
+            //Set point and radius
+            circleOptions.center(randomlatlong);
+            circleOptions.radius(70);
+
+            //format options
+            circleOptions.strokeWidth(1);
+            circleOptions.strokeColor(0x46FF0000);
+            circleOptions.fillColor(0x46FF0000);
+
+            circleOptions.clickable(true);
+
+            // Adding the circle to the GoogleMap
+            mMap.addCircle(circleOptions);
+        }
+    }
+
+    public void generateRandomMidHeavy(){
+
+    }
+
+    public void generateRandomRightHeavy(){
+
+    }
+
 
 
 

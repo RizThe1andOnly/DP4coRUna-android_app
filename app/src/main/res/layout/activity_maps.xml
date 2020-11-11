@@ -29,4 +29,16 @@
             android:paddingRight="10dp"
             android:text="Show Route" android:paddingTop="20dp" android:onClick="showAllRoutes"/>
 
+    <Button
+        android:id="@+id/generatePointsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|top"
+        android:layout_marginTop="125dp"
+        android:onClick="generatePointsClicked"
+        android:padding="10dp"
+        android:paddingRight="10dp"
+        android:text="Show Risk Zones" />
+
+
     </fragment>
