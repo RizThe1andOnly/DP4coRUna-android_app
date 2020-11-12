@@ -1,7 +1,23 @@
 package com.example.dp4coruna.mapmanagement;
 
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.widget.*;
+import androidx.fragment.app.DialogFragment;
+import com.example.dp4coruna.dataManagement.AppDatabase;
+import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
+import com.example.dp4coruna.localLearning.location.dataHolders.CosSimLabel;
+import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
+import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
+import com.example.dp4coruna.localLearning.location.learner.LocationGrabber;
+import com.example.dp4coruna.localLearning.location.learner.SensorReader;
+import com.example.dp4coruna.utilities.AddressDialog;
+import com.example.dp4coruna.utilities.DialogCallBack;
 import org.json.*;
 import androidx.fragment.app.FragmentActivity;
 
@@ -9,7 +25,6 @@ import android.location.Address;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -37,15 +52,14 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.PolyUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleMap.OnPolylineClickListener, GoogleMap.OnPolygonClickListener,
         GoogleMap.OnMapClickListener, GoogleMap.OnCircleClickListener,
-        GoogleMap.OnMarkerClickListener, GoogleMap.OnMarkerDragListener {
+        GoogleMap.OnMarkerClickListener, GoogleMap.OnMarkerDragListener, AdapterView.OnItemSelectedListener,
+        DialogCallBack {
 
     private GoogleMap mMap;
 
@@ -69,6 +83,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     int numClicks;
 
+    /*
+        From Riz:
+        Variables for certain location detection functionalities and view objects
+     */
+    private Spinner optionSpinner;
+    private String[] optionNames = {
+            "Save Points",
+            "Display Routes",
+            "Show Risk Zones",
+            "GPS",
+            "Detect",
+            "Train",
+            "Sample"
+    };
+    private String optionToRun;
+    // * Class constants:
+    private final int SUBMIT_MAP_LABEL = 0;
+    private final int SUBMIT_LOCATION_FEATURES = 1;
+    // * Class Variables
+    private Context activityContext;
+    private boolean trainingMode = false;
+    //latitude and longitude of selected point (for training purposes)
+    private double classVar_latitude;
+    private double classVar_longitude;
+    // Handler for marker placement
+    private Handler markerPlacement;
+    //map marker container:
+    private Map<AreaLabel,Marker> markerContainer;
+    private Marker current_marker = null;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,7 +133,46 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        this.activityContext = getApplicationContext();
+        setSpinnerView();
+
         numClicks=0;
+    }
+
+    /**
+     * Event triggered when user presses the run button.
+     * What happens depends on the option selected in the spinner/dropdown item.
+     *
+     * When new functionality added, update the optionNames array with the new functionality name,
+     * then update the select case below with the same name and the actual method associated with that
+     * function.
+     *  - Can transfer over button event methods (and all the methods associated with it) and call the
+     *  button method from here instead of creating a new button on the screen. Just pass the view
+     *  var into the method called from the switch block.
+     * @param view
+     */
+    public void runEvent(View view){
+        /*
+            Current available options:
+                    "Save Points",
+                    "Display Routes",
+                    "Show Risk Zones",
+                    "GPS",
+                    "Detect",
+                    "Train",
+                    "Sample"
+         */
+
+        switch ((this.optionToRun)){
+            case "Save Point" : savePointsClicked(view); break;
+            case "Display Routes" : showAllRoutes(view); break;
+            case "Show Risk Zones" : showRiskZones(view); break;
+            case "GPS" : moveToCurrent_train(view); break;
+            case "Detect" : detectLocation(view); break;
+            case "Train" : setTrainingMode(view); break;
+            case "Sample" : sampleButtonEvent(view); break;
+            default: Toast.makeText(getApplicationContext(),"No Function for " + (this.optionToRun),Toast.LENGTH_LONG).show();break;
+        }
     }
 
 
@@ -129,6 +213,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMarkerDragListener(this);
 
         //sendCOVIDDataRequest();
+
+        //Riz section:
+        //startMarkerProcedure();
     }
 
 
@@ -706,6 +793,273 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //clears entire map, including overlay
         // mMap.clear();
+    }
+
+
+
+    /*
+        Riz's Section
+        This section has to do with locating where the user is.
+            Keywords: GPS,Detect,Train,Sample
+
+        This section also sets up the dropdown(up) menu that holds all of the
+        options.
+            Keywords: spinner,options,dropdown
+     */
+
+    private void setSpinnerView(){
+        (this.optionSpinner) = findViewById(R.id.mapactivity_spinner);
+        List<String> optionStringList = new ArrayList<>();
+        optionStringList.addAll(Arrays.asList(this.optionNames));
+
+        ArrayAdapter<String> aradptr = new ArrayAdapter<>(this,
+                                                            android.R.layout.simple_spinner_item,
+                                                            optionStringList);
+        aradptr.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        (this.optionSpinner).setAdapter(aradptr);
+        (this.optionSpinner).setOnItemSelectedListener(this);
+    }
+
+    /*
+        Two methods below correspond to the spinner. These are the actions taken when something is
+        selected or if nothing is selected.
+            - Adapterview.OnItemSelectedListener interface
+     */
+
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int itemIndex, long l) {
+        (this.optionToRun) = (String) adapterView.getItemAtPosition(itemIndex);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
+        (this.optionToRun) = (String) adapterView.getItemAtPosition(0);
+    }
+
+
+    /*
+        Marker Methods
+        - Methods that deal with showing and holding map markers
+     */
+
+    private void startMarkerProcedure(){
+        setMarkerContainer();
+        startMarkerPlacementHanlder();
+    }
+
+    private void setMarkerContainer(){
+        (this.markerContainer) = new HashMap<>();
+    }
+
+    private void startMarkerPlacementHanlder(){
+        //setup the new handler
+        (this.markerPlacement) = new PlaceMarkerHandler(Looper.getMainLooper());
+        (this.markerPlacement).sendMessage((this.markerPlacement.obtainMessage()));
+    }
+
+    public void putMarkersOnMap(){
+        Cursor markers = (new AppDatabase(activityContext)).queryMapMarkers();
+        while(markers.moveToNext()){
+            String current_building = markers.getString(0);
+            String current_room = markers.getString(1);
+            double current_latitude = markers.getDouble(2);
+            double current_longitude = markers.getDouble(3);
+
+            String marker_title = current_building + " " + current_room;
+            AreaLabel current_al = new AreaLabel(markers.getString(0),markers.getString(1),current_latitude,current_longitude);
+
+            if(!markerContainer.containsKey(current_al)){
+                LatLng marker_post = new LatLng(markers.getDouble(2),markers.getDouble(3));
+                Marker temp = mMap.addMarker(new MarkerOptions()
+                        .position(marker_post)
+                        .title(marker_title));
+                temp.setTag(0);
+                markerContainer.put(current_al,temp);
+            }
+        }
+    }
+
+    /**
+     * Puts new map label into the database. This data will later be used with obtained data and
+     * cosine similarity to detect user location.
+     * @param building
+     * @param room
+     */
+    private void mapLabelSubmission(String building, String room){
+        AppDatabase ad = new AppDatabase(getApplicationContext());
+        if(ad.addMapLabelData(building,room,this.classVar_latitude,this.classVar_longitude)){
+            Toast.makeText(getApplicationContext(),"Submit Successful",Toast.LENGTH_LONG).show();
+        }
+        else{
+            Toast.makeText(getApplicationContext(),"Submit Fail",Toast.LENGTH_LONG).show();
+        }
+        (this.markerPlacement).sendMessage((this.markerPlacement.obtainMessage()));
+    }
+
+    /**
+     * Get multiple samples of location features for a particular label (building,room).
+     * Will get 10 samples per call.
+     */
+    private void sampleData(String building, String room){
+        TextView showCount = findViewById(R.id.maptrain_lat);
+
+        Handler updateCountHandler = new UpdateCountHandler(Looper.getMainLooper(),showCount);
+
+        Thread sampleLocData = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                LocationObject lo = new LocationObject(getApplicationContext());
+                AppDatabase ad = new AppDatabase(getApplicationContext());
+
+                for(int i=0;i<10;i++){
+                    lo.updateLocationData();
+                    lo.setBuildingName(building);
+                    lo.setRoomName(room);
+                    ad.addData(lo);
+
+                    int displayCount = i + 1;
+                    Message msg = updateCountHandler.obtainMessage();
+                    msg.arg1 = displayCount;
+                    //updateCountHandler.sendMessage(msg);
+                }
+
+                Thread.currentThread().interrupt();
+            }
+        },"SampleLocDataThread");
+
+        sampleLocData.start();
+    }
+
+    /**
+     * Used with Button:GOTO
+     *
+     * Moves the camera to user current location in term of latitude and longitude obtained from google.
+     * @param view
+     */
+    public void moveToCurrent_train(View view){
+
+        //get usable latitude and longitude values to move camera initially
+        LocationGrabber lg = new LocationGrabber(getApplicationContext());
+        lg.setupLocation();
+        LatLng currentlatlng = new LatLng(lg.getLatitude(),lg.getLongitude());
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentlatlng));
+        //Zoom in on the user's current location
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentlatlng, 21.00f));
+
+    }
+
+    /*
+        TRAIN button function(s)
+     */
+    public void setTrainingMode(View view){
+        if(!this.trainingMode){
+            this.trainingMode = true;
+        }
+        else{
+            this.trainingMode = false;
+        }
+        Toast.makeText(getApplicationContext(),"Train Set To: " + this.trainingMode,Toast.LENGTH_LONG).show();
+    }
+
+    /*
+        Sample button function
+     */
+    public void sampleButtonEvent(View view){
+        //call dialogbox for building name and room name:
+        DialogFragment df = new AddressDialog(SUBMIT_LOCATION_FEATURES);
+        df.show(getSupportFragmentManager(),"SamplingLabels");
+    }
+
+    /**
+     * Detect Button function
+     * @param view
+     */
+    public void detectLocation(View view){
+        //if previous marker is green then re-set it to red:
+        if((this.current_marker) != null){
+            (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+        }
+
+        List<WiFiAccessPoint> start = SensorReader.scanWifiAccessPoints(getApplicationContext());
+        CosSimLabel csl = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
+        AreaLabel currentAreaLabel = csl.arealabel;
+
+        (this.current_marker) = (this.markerContainer).get(currentAreaLabel);
+        (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+
+        LatLng currentlatlng = new LatLng((this.current_marker).getPosition().latitude,(this.current_marker).getPosition().longitude);
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentlatlng));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentlatlng, 21.00f));
+    }
+
+    /*
+        For dialog activities:
+     */
+
+    @Override
+    public void onRightButtonPress(DialogFragment dialogFragment, int submit_type) {
+        AddressDialog dbox = (AddressDialog) dialogFragment;
+        String building = ((TextView) dbox.getDialog().findViewById(R.id.dialogtwotextboxes_topBox)).getText().toString();
+        String room = ((TextView) dbox.getDialog().findViewById(R.id.dialogtwotextboxes_bottomBox)).getText().toString();
+
+
+        if(submit_type == SUBMIT_MAP_LABEL){
+            mapLabelSubmission(building,room);
+        }
+
+        if(submit_type == SUBMIT_LOCATION_FEATURES){
+            sampleData(building,room);
+        }
+    }
+
+    @Override
+    public void onLeftButtonPress(DialogFragment dialogFragment) {
+        Toast.makeText(getApplicationContext(),"Submission Cancelled",Toast.LENGTH_LONG).show();
+    }
+
+
+    /*
+        * Handler Classes
+            - Handlers that are used for various tasks.
+                - Task 1: Place markers on the map
+                - Task 2: light up marker the user is in
+     */
+
+    private class PlaceMarkerHandler extends Handler {
+
+        public PlaceMarkerHandler(Looper looperToBeUsed){
+            super(looperToBeUsed);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+
+            putMarkersOnMap();
+        }
+
+    }
+
+    /**
+     * Handler that will receive count from a different thread and update the
+     * appropriate textview accordingly.
+     */
+    private class UpdateCountHandler extends Handler {
+        private TextView tv;
+
+        public UpdateCountHandler(Looper looperToBeUsed, TextView tv){
+            super(looperToBeUsed);
+            this.tv = tv;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            int count = msg.arg1;
+            (this.tv).setText("\t\t"+count);
+        }
     }
 
 

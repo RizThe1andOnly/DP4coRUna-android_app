@@ -291,7 +291,7 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
                     int displayCount = i + 1;
                     Message msg = updateCountHandler.obtainMessage();
                     msg.arg1 = displayCount;
-                    updateCountHandler.sendMessage(msg);
+                    //updateCountHandler.sendMessage(msg);
                 }
 
                 Thread.currentThread().interrupt();
