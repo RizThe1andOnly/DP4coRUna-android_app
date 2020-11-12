@@ -38,6 +38,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.PolyUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -52,7 +53,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     String jsonCOVIDData;
 
     //holds all circle objects which mark covid risk locations, used for clearing map
-    ArrayList<Circle> covidClusterCircles = new ArrayList<Circle>();
+    public static ArrayList<Circle> covidClusterCircles = new ArrayList<Circle>();
+    public static HashMap<Circle, COVIDCluster> hashmap = new HashMap<>();
 
     //Holds coordinates of walkways/hallways
     //Dummy Data
@@ -258,7 +260,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             route.setPoints(PolyUtil.decode(overview_polylineJson.getString("points")));
 
             //for now, setting risk randomly based on iteration
-            route.setRandomRisk(i);
+            //route.setRandomRisk(i);
+            route.setRisk(i);
+
 
             //add alternate Route to arraylist
             routes.add(route);
@@ -317,7 +321,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             if(risk.equals("Medium")) {
                 mMap.addPolyline((new PolylineOptions())
-                        .color(Color.DKGRAY) //for now just to be able to see it better
+                        .color(0xFF7F8000) //Dark Yellow
                         .width(10)
                         .clickable(true)
                         .addAll(route.getPoints())).setTag("Risk: " + risk + "\nTime: " + route.getDuration() + "\nDistance: " + route.getDistance());
@@ -325,7 +329,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             if(risk.equals("Low")) {
                 mMap.addPolyline((new PolylineOptions())
-                        .color(Color.GREEN)
+                        .color(0xFF0000FF) //Dark Blue
                         .width(10)
                         .clickable(true)
                         .addAll(route.getPoints())).setTag("Risk: " + risk + "\nTime: " + route.getDuration() + "\nDistance: " + route.getDistance());
@@ -575,7 +579,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                CircleOptions circleOptions = new CircleOptions();
                circleOptions.center(COVIDcluster.getCoordinates());
-               circleOptions.radius(4000);
+               circleOptions.radius(10000);
 
                //hish risk, red
                if(COVIDcluster.getRisklevel()=="High") {
@@ -599,7 +603,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                circleOptions.clickable(true);
 
-
                //Add circle to the map, with tag
                Circle circle = mMap.addCircle(circleOptions);
                circle.setTag((COVIDcluster.getLocation() +
@@ -610,6 +613,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                //add circle to arraylist, so we can remove from map later
                covidClusterCircles.add(circle);
+
+               hashmap.put(circle, COVIDcluster);
 
            }
         }

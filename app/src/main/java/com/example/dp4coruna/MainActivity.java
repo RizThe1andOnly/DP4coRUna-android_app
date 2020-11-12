@@ -170,6 +170,8 @@ public class MainActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
         Intent intent = new Intent(this, enterDestinationActivity.class);
 
+        lo = new LocationObject(MainActivity.this,getApplicationContext());
+
         //fill Location Object with all datafields
         lo.setupLocation();
 
