@@ -34,4 +34,7 @@
     <string name="maptrain_button1">Goto</string>
     <string name="maptrain_button2">Train</string>
     <string name="cancelTag">Cancel</string>
+    <string name="detect">Detect</string>
+    <string name="placeholder">N/A</string>
+    <string name="sampleButton">Sample</string>
 </resources>

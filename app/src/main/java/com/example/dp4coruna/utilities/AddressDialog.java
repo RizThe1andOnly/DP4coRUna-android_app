@@ -15,6 +15,11 @@ import com.example.dp4coruna.R;
 public class AddressDialog extends DialogFragment {
 
     DialogCallBack callbackListener;
+    private int submission_type;
+
+    public AddressDialog(int submission_type){
+        this.submission_type = submission_type;
+    }
 
     @NonNull
     @Override
@@ -25,7 +30,7 @@ public class AddressDialog extends DialogFragment {
                 .setPositiveButton(R.string.submit, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        callbackListener.onRightButtonPress(AddressDialog.this);
+                        callbackListener.onRightButtonPress(AddressDialog.this,submission_type);
                     }
                 })
                 .setNegativeButton(R.string.cancelTag, new DialogInterface.OnClickListener() {

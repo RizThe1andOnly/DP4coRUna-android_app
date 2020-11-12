@@ -2,9 +2,12 @@ package com.example.dp4coruna.localLearning.location.learner;
 
 import android.content.Context;
 import com.example.dp4coruna.dataManagement.AppDatabase;
+import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
+import com.example.dp4coruna.localLearning.location.dataHolders.CosSimLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -78,6 +81,22 @@ public class CosSimilarity {
         }
 
         return toBeReturned;
+    }
+
+    public CosSimLabel checkCosSin_vs_allLocations_v2(List<WiFiAccessPoint> start){
+        AppDatabase ad = new AppDatabase(this.context);
+        List<AreaLabel> als = ad.getAllAreaLabels();
+        List<List<WiFiAccessPoint>> wapLists = ad.getWifiAPListByLocation();
+
+        List<Double> vals = cosSimValues_forEachLocation(start,wapLists);
+
+        //prep output
+        List<CosSimLabel> labeledOutputVals = new ArrayList<>();
+        for(int i=0;i< vals.size();i++){
+            labeledOutputVals.add(new CosSimLabel(als.get(i),vals.get(i)));
+        }
+
+        return Collections.max(labeledOutputVals);
     }
 
     /**

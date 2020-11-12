@@ -17,6 +17,7 @@ import com.example.dp4coruna.localLearning.learningService.movementTracker.Accel
 import com.example.dp4coruna.localLearning.learningService.movementTracker.MovementSensor;
 import com.example.dp4coruna.localLearning.learningService.movementTracker.TrackMovement;
 import com.example.dp4coruna.localLearning.location.LocationObject;
+import com.example.dp4coruna.localLearning.location.dataHolders.CosSimLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
 import com.example.dp4coruna.localLearning.location.learner.SensorReader;
@@ -126,8 +127,11 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
 
     public void cosineSimilarityTest(){
         List<WiFiAccessPoint> start = SensorReader.scanWifiAccessPoints(getApplicationContext());
-        dataView.append(WiFiAccessPoint.getListStringRepresent(start));
-        dataView.append(new CosSimilarity(getApplicationContext()).checkCosSim_vs_allLocations(start));
+        //dataView.append(WiFiAccessPoint.getListStringRepresent(start));
+        //dataView.append(new CosSimilarity(getApplicationContext()).checkCosSim_vs_allLocations(start));
+
+        CosSimLabel csl = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
+        dataView.append(csl.arealabel.building + "\t" +csl.arealabel.area + "\t" + csl.cosSimVal);
     }
 
     private void trainMLModel(){

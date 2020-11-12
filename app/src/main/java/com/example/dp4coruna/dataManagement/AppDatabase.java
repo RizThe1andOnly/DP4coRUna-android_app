@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.example.dp4coruna.localLearning.location.LocationObject;
+import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.LocationObjectData;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.ml.MLData;
@@ -312,7 +313,7 @@ public class AppDatabase extends SQLiteOpenHelper {
         String toBeReturned = "";
         while(contentCursor.moveToNext()){
             String entry = "";
-            entry += contentCursor.getString(0) + " : " + contentCursor.getString(1) + "\n";
+            entry += contentCursor.getString(2) + " : " + contentCursor.getString(0) + "\n";
             entry += "\t" + "Light: " + contentCursor.getFloat(4) + "\n";
             entry += "\t" + "Sound: " + contentCursor.getFloat(5) + "\n";
             entry += "\t" + "GeoMag: " + contentCursor.getFloat(6) + "\n";
@@ -493,6 +494,29 @@ public class AppDatabase extends SQLiteOpenHelper {
         ArrayList<String> toBeReturned = new ArrayList<>();
         while(labelCursor.moveToNext()){
             toBeReturned.add(labelCursor.getString(0));
+        }
+
+        return toBeReturned;
+    }
+
+    public List<AreaLabel> getAllAreaLabels(){
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String labelQuery = "SELECT "
+                            + LOCATION_TABLE_COL_BUILDING_NAME + ", "
+                            + LOCATION_TABLE_COL_ROOM_NAME + " "
+                            + "FROM " + LOCATION_TABLE + ";";
+
+        Cursor crs = db.rawQuery(labelQuery,null);
+        List<AreaLabel> toBeReturned = new ArrayList<>();
+
+        /*
+            Cursor index:
+                - 0 : Building Name
+                - 1 : Room Name
+         */
+        while(crs.moveToNext()){
+            toBeReturned.add(new AreaLabel(crs.getString(0), crs.getString(1)));
         }
 
         return toBeReturned;
