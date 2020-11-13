@@ -261,16 +261,44 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return url;
     }
 
+    public String createStringURLfromLatLong(LatLng origin, LatLng destination){
+
+        //This is the secure way to retrieve our API key
+        //note: it resolves at run time, so don't worry if there is an error here
+        String api_key = getString(R.string.maps_api_key);
+
+        String userOrigin = "origin=" + origin.latitude + "," + origin.longitude;
+        String userDestination = "destination=" + destination.latitude + "," + destination.longitude;
+
+        String url = "https://maps.googleapis.com/maps/api/directions/json?\n" +
+                userOrigin + "&" + userDestination + "\n" +
+                "&key=" + api_key + "&alternatives=true";
+
+        return url;
+    }
+
     /**Sends HTTP request for directions
      * direction request return value is a JSON
      * which is temporarily saved as a global variable for later access (jsonDirectionsString)
      */
-    public void sendDirectionsRequest() {
+    public void sendDirectionsRequest(LatLng origin, LatLng destination) {
 
         //Instantiate a new Request Queue
         RequestQueue queue = Volley.newRequestQueue(this);
 
-        String url = createStringURL();
+        //this method is used if info is retrieved from previous activity
+        //String url = createStringURL();
+
+        String url = "";
+
+        //this method is used if using LatLng coordinates
+        if(origin !=null && destination!=null) {
+            url = createStringURLfromLatLong(origin, destination);
+        }
+        else {
+            //testing, hardcoded LatLng if no input
+            url = createStringURLfromLatLong(new LatLng(40.388078, -74.590124), new LatLng(40.934328, -74.718241));
+        }
 
         //Request a response from the URL
         //Will return a JSON formatted string on success
@@ -534,7 +562,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * @param view
      */
     public void showAllRoutes(View view){
-        sendDirectionsRequest();
+        LocationGrabber lg = new LocationGrabber(getApplicationContext());
+        lg.setupLocation();
+        LatLng currentlatlng = new LatLng(lg.getLatitude(),lg.getLongitude());
+
+        //need destination from somewhere here
+        sendDirectionsRequest(currentlatlng, null);
     }
 
     /**Sends HTTP request for COVID Data
