@@ -117,7 +117,14 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
 
     @Override
     public void onMapClick(LatLng latLng) {
-        if(!this.trainingMode) return;
+        if(!this.trainingMode){
+            String lat = ""+latLng.latitude;
+            String longi = ""+latLng.longitude;
+            (this.text_lat).setText(lat);
+            (this.text_lng).setText(longi);
+            Log.i("Coordinates",lat+","+longi);
+            return;
+        }
 
         //if currently in training mode:
 
@@ -151,6 +158,7 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
             - Utility Function
             - Button Action functions
             - Helper For Button Actions
+            - Ground Overlay method
      */
 
 
@@ -299,6 +307,24 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
         },"SampleLocDataThread");
 
         sampleLocData.start();
+    }
+
+
+    public void groundOverlayEvent(View view){
+        LatLng coreloc = new LatLng(40.52155103834118,-74.46171607822181);
+        map.moveCamera(CameraUpdateFactory.newLatLng(coreloc));
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(coreloc, 18.00f));
+        groundOverlay();
+    }
+
+    private void groundOverlay(){
+        LatLng coreloc = new LatLng(40.52160736327198,-74.46183912456036);
+        GroundOverlayOptions goo = new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.core_1st_floor_small_realigned_2))
+                .anchor(0,0)
+                .position(coreloc,75f);
+
+        map.addGroundOverlay(goo);
     }
 
 

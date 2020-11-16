@@ -87,6 +87,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         From Riz:
         Variables for certain location detection functionalities and view objects
      */
+
+    private boolean lockmap = true;
+
     private Spinner optionSpinner;
     private String[] optionNames = {
             "Save Points",
@@ -95,12 +98,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             "GPS",
             "Detect",
             "Train",
-            "Sample"
+            "Sample",
+            "UnlockMap",
+            "LockMap",
+            "GetRoute"
     };
     private String optionToRun;
     // * Class constants:
     private final int SUBMIT_MAP_LABEL = 0;
     private final int SUBMIT_LOCATION_FEATURES = 1;
+    private final int SUBMIT_DESTINATION = 2;
     // * Class Variables
     private Context activityContext;
     private boolean trainingMode = false;
@@ -119,15 +126,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        Intent intent = getIntent();
+//        Intent intent = getIntent();
+//
+//        //get destination info from previous activity
+//        destinationStreetAddress = intent.getExtras().getString("destinationStreetAddress");
+//        destinationCity = intent.getExtras().getString("destinationCity");
+//        destinationState = intent.getExtras().getString("destinationState");
+//        destinationZipcode = intent.getExtras().getString("destinationZipcode");
 
-        //get destination info from previous activity
-        destinationStreetAddress = intent.getExtras().getString("destinationStreetAddress");
-        destinationCity = intent.getExtras().getString("destinationCity");
-        destinationState = intent.getExtras().getString("destinationState");
-        destinationZipcode = intent.getExtras().getString("destinationZipcode");
-
-        Log.d("DEBUG", destinationStreetAddress);
+        //Log.d("DEBUG", destinationStreetAddress);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -171,8 +178,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             case "Detect" : detectLocation(view); break;
             case "Train" : setTrainingMode(view); break;
             case "Sample" : sampleButtonEvent(view); break;
+            case "UnlockMap" : this.lockmap = false; break;
+            case "LockMap" : this.lockmap = true; break;
+            case "GetRoute" : getDirections(); break;
             default: Toast.makeText(getApplicationContext(),"No Function for " + (this.optionToRun),Toast.LENGTH_LONG).show();break;
         }
+    }
+
+
+    /**
+     * Get directions using the current user location as the start and a selected
+     * location from the list of marked locations as destination.
+     */
+    public void getDirections(){
+        LatLng startpoint = (this.current_marker).getPosition();
+
+        //get destination from user entry:
+        DialogFragment df = new AddressDialog(SUBMIT_DESTINATION);
+        df.show(getSupportFragmentManager(),"DestinationDialogFrag");
+    }
+
+    private void getDirection_postSubmission(String building, String room){
+        AreaLabel al = new AreaLabel(building,room);
+        Marker destinationMarker = (this.markerContainer).get(al);
+
+        destinationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationMarker.getPosition(), 10.10f));
+
+        sendDirectionsRequest((this.current_marker).getPosition(),destinationMarker.getPosition());
     }
 
 
@@ -215,7 +248,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //sendCOVIDDataRequest();
 
         //Riz section:
-        //startMarkerProcedure();
+        startMarkerProcedure();
     }
 
 
@@ -490,20 +523,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onMapClick(LatLng clickCoordinates) {
-        double latitude = clickCoordinates.latitude;
-        double longitude = clickCoordinates.longitude;
+        if(!(this.lockmap)){
+            double latitude = clickCoordinates.latitude;
+            double longitude = clickCoordinates.longitude;
 
-        //set marker attributes
-        MarkerOptions pointmarker = new MarkerOptions();
-        pointmarker.position(clickCoordinates);
-        pointmarker.icon(BitmapDescriptorFactory.defaultMarker(270));
+            //set marker attributes
+            MarkerOptions pointmarker = new MarkerOptions();
+            pointmarker.position(clickCoordinates);
+            pointmarker.icon(BitmapDescriptorFactory.defaultMarker(270));
 
-        //add marker to map
-        Marker marker = mMap.addMarker(pointmarker);
-        walkwaypoints.add(marker);
+            //add marker to map
+            Marker marker = mMap.addMarker(pointmarker);
+            walkwaypoints.add(marker);
 
-        Toast.makeText(this, "Latitude: " + latitude + "\nLongitide:" + longitude,
-                Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Latitude: " + latitude + "\nLongitide:" + longitude,
+                    Toast.LENGTH_SHORT).show();
+        }
+
+        if(this.trainingMode){
+            //if currently in training mode:
+
+            //first set the lat/lng class vars to the point selected
+            this.classVar_latitude = clickCoordinates.latitude;
+            this.classVar_longitude = clickCoordinates.longitude;
+
+            //call dialogbox for building name and room name:
+            DialogFragment df = new AddressDialog(SUBMIT_MAP_LABEL);
+            df.show(getSupportFragmentManager(),"AddressDialogFrag");
+        }
 
     }
     /**
@@ -1044,6 +1091,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         if(submit_type == SUBMIT_LOCATION_FEATURES){
             sampleData(building,room);
+        }
+
+        if(submit_type == SUBMIT_DESTINATION){
+            getDirection_postSubmission(building,room);
         }
     }
 

@@ -167,18 +167,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void chooseSafeRoute(View view) {
-        Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, enterDestinationActivity.class);
+//        Bundle bundle = new Bundle();
+//        Intent intent = new Intent(this, enterDestinationActivity.class);
+//
+//        lo = new LocationObject(MainActivity.this,getApplicationContext());
+//
+//        //fill Location Object with all datafields
+//        lo.setupLocation();
+//
+//        //convert location object to JSON to pass through bundle to next activity
+//        String JSONLOD = lo.convertLocationToJSON();
+//        intent.putExtras(bundle);
+//        intent.putExtra("LocationObjectData", JSONLOD);
+//        startActivity(intent);
 
-        lo = new LocationObject(MainActivity.this,getApplicationContext());
-
-        //fill Location Object with all datafields
-        lo.setupLocation();
-
-        //convert location object to JSON to pass through bundle to next activity
-        String JSONLOD = lo.convertLocationToJSON();
-        intent.putExtras(bundle);
-        intent.putExtra("LocationObjectData", JSONLOD);
+        Intent intent = new Intent(this,MapsActivity.class);
         startActivity(intent);
     }
 
