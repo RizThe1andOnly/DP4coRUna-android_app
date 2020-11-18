@@ -81,4 +81,6 @@ dependencies {
     implementation 'com.opencsv:opencsv:5.2'
     implementation 'com.android.volley:volley:1.1.1'
     implementation 'com.google.maps.android:android-maps-utils:0.4+'
+    implementation group: 'mysql', name: 'mysql-connector-java', version: '5.1.6'
+
 }

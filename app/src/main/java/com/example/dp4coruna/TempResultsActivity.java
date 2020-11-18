@@ -10,6 +10,7 @@ import android.widget.*;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.dp4coruna.dataManagement.AppDatabase;
+import com.example.dp4coruna.dataManagement.remoteDatabase.DbConnection;
 import com.example.dp4coruna.localLearning.SubmitLocationLabel;
 import com.example.dp4coruna.localLearning.learningService.LocalLearningService;
 import com.example.dp4coruna.localLearning.learningService.movementTracker.Acceleration.AccelerationSensor;
@@ -148,13 +149,16 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
     // demo related button actions:
     private boolean startDemoVar = true;
     private void demoFunc(){
-        if(startDemoVar){
-            startDemo();
-            startDemoVar = false;
-        }
-        else{
-            stopDemo();
-        }
+//        if(startDemoVar){
+//            startDemo();
+//            startDemoVar = false;
+//        }
+//        else{
+//            stopDemo();
+//        }
+
+        DbConnection dbc = new DbConnection(null,getApplicationContext());
+        dbc.createTableExample();
     }
 
 
