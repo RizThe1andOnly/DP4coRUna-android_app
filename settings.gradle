@@ -1,2 +1,3 @@
+include ':mysqlconnection'
 rootProject.name='DP4coRUna'
 include ':app'

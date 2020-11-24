@@ -23,6 +23,9 @@ import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.example.dp4coruna.mapmanagement.MapTrainActivity;
 import com.example.dp4coruna.mapmanagement.MapsActivity;
 import com.example.dp4coruna.mapmanagement.enterDestinationActivity;
+import com.example.dp4coruna.network.NetworkReceiveActivity;
+import com.example.dp4coruna.network.NetworkRelayActivity;
+import com.example.dp4coruna.network.NetworkTransmitActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.example.dp4coruna.localLearning.SubmitLocationLabel;
 
@@ -201,6 +204,21 @@ public class MainActivity extends AppCompatActivity {
 
     public void startMapTrainActivity(View view){
         Intent intent = new Intent(this, MapTrainActivity.class);
+        startActivity(intent);
+    }
+
+    public void openReceiverActivity(View view){
+        Intent intent = new Intent(this, NetworkReceiveActivity.class);
+        startActivity(intent);
+    }
+
+    public void openTransmitterActivity(View view){
+        Intent intent = new Intent(this, NetworkTransmitActivity.class);
+        startActivity(intent);
+    }
+
+    public void openRelayActivity(View view){
+        Intent intent = new Intent(this, NetworkRelayActivity.class);
         startActivity(intent);
     }
 

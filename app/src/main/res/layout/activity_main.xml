@@ -80,7 +80,7 @@
                         style="@style/Widget.AppCompat.Button.Colored"
                         android:layout_width="250dp"
                         android:layout_height="wrap_content"
-                        android:onClick="receive"
+                        android:onClick="openReceiverActivity"
                         android:text="Receive"/>
 
                 <Button
@@ -88,7 +88,7 @@
                         style="@style/Widget.AppCompat.Button.Colored"
                         android:layout_width="250dp"
                         android:layout_height="wrap_content"
-                        android:onClick="relay"
+                        android:onClick="openRelayActivity"
                         android:text="Relay"/>
 
                 <Button
@@ -96,7 +96,7 @@
                         style="@style/Widget.AppCompat.Button.Colored"
                         android:layout_width="250dp"
                         android:layout_height="wrap_content"
-                        android:onClick="transmit"
+                        android:onClick="openTransmitterActivity"
                         android:text="Transmit"/>
 
                 <Button

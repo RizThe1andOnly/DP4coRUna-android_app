@@ -32,10 +32,10 @@ public class DbConnection {
 
         //generate the connection to the database and return it
         try{
-            mysqlConnection = DriverManager.getConnection("jdbc:mysql://cs336-g12-db.cah5sjf8kxme.us-east-2.rds.amazonaws.com:3306/TrainApp",
-                    "g12",
-                    "cs336Password");
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            mysqlConnection = DriverManager.getConnection("jdbc:mysql://cs336-g12-db.cah5sjf8kxme.us-east-2.rds.amazonaws.com:3306/","g12","cs336Password");
         } catch (Exception e){
+            //e.printStackTrace();
             Log.i("DbConnection",e.toString());
         }
 
