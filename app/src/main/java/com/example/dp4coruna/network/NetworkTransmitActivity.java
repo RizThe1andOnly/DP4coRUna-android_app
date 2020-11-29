@@ -25,6 +25,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class NetworkTransmitActivity extends AppCompatActivity {
@@ -32,11 +33,20 @@ public class NetworkTransmitActivity extends AppCompatActivity {
     private ProgressBar timer;
     private TextView locMeasurementsField;
     private LocationObject networkLocObj;
-    private List<String> deviceAddresses;
+    private List<String> deviceAddresses = new ArrayList<>();
     private List<PublicKey> rsaEncryptKeys;
     private String deviceAddress;
 
-
+    /*
+        s7
+        j
+        s9
+     */
+    private String[] ips = {
+      "192.168.1.159",
+      "192.168.1.199",
+      "192.168.1.156"
+    };
 
 
     public static final String RECEIVE_MESSAGE_BROADCAST = "com.example.dp4coruna.network.NETWORK_TRANSMIT_RECEIVE_MESSAGE";
@@ -101,16 +111,23 @@ public class NetworkTransmitActivity extends AppCompatActivity {
             locMeasurementsField = (TextView)findViewById(R.id.loc_measurement_text);
             networkLocObj = new LocationObject(NetworkTransmitActivity.this, getApplicationContext());
             //TODO call networkLocObj.updateLocationData() (!!!!!!!!!!!!!!!!)
+            //networkLocObj.updateLocationData();
 
 //        Get the list of deviceAddresses and public keys (hard-coded for now) from the bundle.
+            //_____________important-------------------
             Intent intentFromMain = getIntent();
             Bundle argsFromMain = intentFromMain.getBundleExtra("Bundle");
-            deviceAddresses = argsFromMain.getStringArrayList("deviceAddresses");
-            deviceAddress = argsFromMain.getString("transmitterAddress");
-            List<String> b64PublicKeys = argsFromMain.getStringArrayList("rsaEncryptKeys");
+            //deviceAddresses = argsFromMain.getStringArrayList("deviceAddresses");
+            //deviceAddress = argsFromMain.getString("transmitterAddress");
+
+            deviceAddresses.addAll(Arrays.asList(ips));
+            deviceAddress = ips[0];
+
+            //List<String> b64PublicKeys = argsFromMain.getStringArrayList("rsaEncryptKeys");
             rsaEncryptKeys = new ArrayList<PublicKey>();
             // Convert them to PublicKeys
-            recoverPublicKeys(b64PublicKeys);
+            //recoverPublicKeys(b64PublicKeys);
+            //____________important------------------------
 //            deviceAddresses = new ArrayList<String>();
 //            rsaEncryptKeys = new ArrayList<PublicKey>();
 //            deviceAddress = "";
@@ -126,7 +143,7 @@ public class NetworkTransmitActivity extends AppCompatActivity {
             //possible fix for too many threads: give below thread a name and check for that name before spawning new
             //thread
 
-            //new Thread(new Transmitter(deviceAddresses, deviceAddress, rsaEncryptKeys, this, networkLocObj)).start();
+            new Thread(new Transmitter(deviceAddresses, deviceAddress, rsaEncryptKeys, networkLocObj)).start();
         }
 
     }

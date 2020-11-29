@@ -56,7 +56,8 @@ public class Transmitter implements Runnable {
     public void run() {
         Log.i("FromTransmitter","Got to begining of run");
         // Get the string to be sent to the receiver device.
-        String locationMessage = locObj.convertLocationToJSON();
+        //String locationMessage = locObj.convertLocationToJSON();
+        String locationMessage = "hello from transmitter";
         // Encrypt with 2 layers (as per Onion Routing protocol).
         List<String> path = new ArrayList<String>();
         List<PublicKey> pathPublicKeys = new ArrayList<PublicKey>();
@@ -65,13 +66,14 @@ public class Transmitter implements Runnable {
         // receiver doesn't forward it.
         synchronized (deviceAddresses) {
             synchronized(rsaEncryptKeys) {
+                Log.i("Transmitter",deviceAddresses.get(0));
                 path = generatePath(deviceAddresses);
 
                 if (path.size() == 0)   return;
                 // First, get the corresponding public keys for each device in the path.
 
                 for (int i = 0; i < path.size(); i++) {
-                    pathPublicKeys.add(rsaEncryptKeys.get(deviceAddresses.indexOf(path.get(i))));
+                    //pathPublicKeys.add(rsaEncryptKeys.get(deviceAddresses.indexOf(path.get(i))));
                 }
                 // Then, remove the last element in the path. That will be the first relay and is unnecessary for encryption.
                 // Add a "0" at the start of the path. Now, each element in the path list represents the NEXT element in the path, which
@@ -145,14 +147,17 @@ public class Transmitter implements Runnable {
             String aes_key = randomizeKey();
             String message = AES.encrypt(msg, aes_key); //msg will only be the location data on the first iteration
 
-            String ip = RSA.encrypt(ipList.get(i), publicKeys.get(i));
-            String key = RSA.encrypt(aes_key, publicKeys.get(i));
+            //String ip = RSA.encrypt(ipList.get(i), publicKeys.get(i));
+            //String key = RSA.encrypt(aes_key, publicKeys.get(i));
 
             JSONObject msgJSON = new JSONObject();
             try {
-                msgJSON.put("msg", message);
-                msgJSON.put("key", key);
-                msgJSON.put("ip", ip);
+                //msgJSON.put("msg", message);
+                msgJSON.put("msg",msg);
+                //msgJSON.put("key", key);
+                msgJSON.put("key","");
+                //msgJSON.put("ip", ip);
+                msgJSON.put("ip",ipList.get(i));
             } catch(JSONException je) {
                 Log.d("Transmitter", "JSONException thrown when creating encrypted JSON.");
                 je.printStackTrace();

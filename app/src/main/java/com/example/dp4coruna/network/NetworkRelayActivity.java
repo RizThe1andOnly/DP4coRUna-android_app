@@ -80,5 +80,7 @@ public class NetworkRelayActivity extends AppCompatActivity {
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
         localBroadcastManager.registerReceiver(relayBroadcastReceiver, new IntentFilter(NetworkRelayActivity.RECEIVE_MESSAGE_BROADCAST));
 
+        new Thread(new RelayServer(null,getApplicationContext()),"RelayThread").start();
+
     }
 }

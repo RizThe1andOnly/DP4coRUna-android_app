@@ -40,9 +40,11 @@ public class RelayConnection implements Runnable {
         try {
             String receivedMessage = receiverReadBuffer.readUTF();
             // First - convert the base64-encoded string into a JSON string, and then into a JSON Object.
+            Log.i("RC",receivedMessage);
             JSONObject receivedJSON = receivedToJSON(receivedMessage);
             // Now, use the RSA private key to decrypt the key/ip fields, and that to decrypt the msg field.
-            JSONObject decryptedJSON = decrypt(receivedJSON, myPrivateKey);
+            //JSONObject decryptedJSON = decrypt(receivedJSON, myPrivateKey);
+            JSONObject decryptedJSON = receivedJSON;
             String decryptedMessage = decryptedJSON.getString("msg");
             String nextIP = decryptedJSON.getString("ip");
 
@@ -68,11 +70,14 @@ public class RelayConnection implements Runnable {
                     try {
                         relayForwarderSocket = new Socket(InetAddress.getByName(nextIP), 3899);
                         break;
-                    } catch(IOException ioe) {}
+                    } catch(IOException ioe) {
+                        ioe.printStackTrace();
+                    }
                 }
                 DataInputStream forwarderReadBuffer = new DataInputStream(relayForwarderSocket.getInputStream());
                 DataOutputStream forwarderWriteBuffer = new DataOutputStream(relayForwarderSocket.getOutputStream());
                 // Send the message as-is through the socket.
+                Log.i("Relay",decryptedMessage);
                 forwarderWriteBuffer.writeUTF(decryptedMessage);
                 // Wait for confirmation that it eventually got to the destination.
                 String received = forwarderReadBuffer.readUTF();
@@ -99,7 +104,8 @@ public class RelayConnection implements Runnable {
 
     public static JSONObject receivedToJSON(String receivedData){
         byte[] dataBytes = receivedData.getBytes();
-        String decodedData = new String(Base64.decode(dataBytes, Base64.DEFAULT));
+        //String decodedData = new String(Base64.decode(dataBytes, Base64.DEFAULT));
+        String decodedData = receivedData;
         JSONObject dataToJSON = new JSONObject();
         try {
             dataToJSON = new JSONObject(decodedData);
