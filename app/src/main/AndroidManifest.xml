@@ -140,6 +140,14 @@
             </intent-filter>
             -->
         </activity>
+        <activity
+            android:name=".dataManagement.databaseDemoActivity"
+            android:label="DP4coRUna"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.dp4coruna.dataManagement.databaseDemoActivity" />
+        </activity>
     </application>
 
 </manifest>

@@ -12,6 +12,7 @@ import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.LocationObjectData;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.ml.MLData;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +33,28 @@ public class AppDatabase extends SQLiteOpenHelper {
     public static final String WAP_TABLE = "wifi_access_point_table";
     private static final String ACCEL_OFFSET_TABLE = "accelerometer_offset_table";
     private static final String MAP_LABEL_TABLE = "map_label_table";
+
+    //Temporary sqlite table names / column names to eventually be used in remote DB
+    public static final String RISK_ZONE_TABLE = "risk_zone_table";
+    public static final String USER_TABLE = "user_table";
+    public static final String USER_LOCATION_TABLE = "user_location_table";
+
+    public static final String RISK_ZONE_TABLE_COL_LATITUDE = "latitude";
+    public static final String RISK_ZONE_TABLE_COL_LONGITUDE = "longitude";
+    public static final String RISK_ZONE_TABLE_COL_RISK_LEVEL = "risk_level";
+    public static final String RISK_ZONE_TABLE_COL_RADIUS = "radius";
+
+    public static final String USER_TABLE_COL_ID = "user_id";
+    public static final String USER_TABLE_COL_COVID_STATUS = "covid_status";
+
+    public static final String USER_LOCATION_TABLE_COL_LATITUDE = "latitude";
+    public static final String USER_LOCATION_TABLE_COL_LONGITUDE = "longitude";
+    public static final String USER_LOCATION_TABLE_COL_DATE = "date";
+    public static final String USER_LOCATION_TABLE_COL_BUILDING_NAME = "building_name";
+    public static final String USER_LOCATION_TABLE_COL_ROOM_NAME = "room_name";
+    public static final String USER_LOCATION_TABLE_COL_COUNTY = "county";
+    public static final String USER_LOCATION_TABLE_COL_USER_ID = "user_id";
+
 
     /*
      * Data columns for the location features. The count begins at 0.
@@ -130,7 +153,41 @@ public class AppDatabase extends SQLiteOpenHelper {
                                                 +");";
 
 
-    //constant String for if matching label is not found when looking through device database:
+    //remote DB table creation statements
+    private final String createRiskZoneTable = "CREATE TABLE " + RISK_ZONE_TABLE + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + RISK_ZONE_TABLE_COL_LATITUDE + " DOUBLE, "
+            + RISK_ZONE_TABLE_COL_LONGITUDE + " DOUBLE, "
+            + RISK_ZONE_TABLE_COL_RISK_LEVEL + " TEXT, "
+            + RISK_ZONE_TABLE_COL_RADIUS + " DOUBLE, "
+            + "FOREIGN KEY(" + RISK_ZONE_TABLE_COL_LATITUDE + ") REFERENCES " + USER_LOCATION_TABLE + "(latitude), "
+            + "FOREIGN KEY(" + RISK_ZONE_TABLE_COL_LONGITUDE + ") REFERENCES " + USER_LOCATION_TABLE + "(longitude) "
+            +");";
+
+    private final String createUserTable = "CREATE TABLE " + USER_TABLE + "("
+            + USER_TABLE_COL_ID + " INTEGER, "
+            + USER_TABLE_COL_COVID_STATUS + " TEXT, "
+            + "PRIMARY KEY("
+            + USER_TABLE_COL_ID + ")"
+            +");";
+
+    private final String createUserLocationTable = "CREATE TABLE " + USER_LOCATION_TABLE + "("
+            + USER_LOCATION_TABLE_COL_LATITUDE + " DOUBLE, "
+            + USER_LOCATION_TABLE_COL_LONGITUDE + " DOUBLE, "
+            + USER_LOCATION_TABLE_COL_DATE + " DATE, "
+            + USER_LOCATION_TABLE_COL_BUILDING_NAME + " TEXT, "
+            + USER_LOCATION_TABLE_COL_ROOM_NAME + " TEXT, "
+            + USER_LOCATION_TABLE_COL_COUNTY + " TEXT, "
+            + USER_LOCATION_TABLE_COL_USER_ID + " INTEGER, "
+            + "PRIMARY KEY("
+            + USER_LOCATION_TABLE_COL_LATITUDE + ", "
+            + USER_LOCATION_TABLE_COL_LONGITUDE + ", "
+            + USER_LOCATION_TABLE_COL_DATE + "),"
+            + "FOREIGN KEY(" + USER_LOCATION_TABLE_COL_USER_ID + ") REFERENCES " + USER_TABLE + "(user_id) "
+            +");";
+
+
+
+     //constant String for if matching label is not found when looking through device database:
     private static final String LABEL_NOT_FOUND = "Label Not Found";
 
 
@@ -146,6 +203,10 @@ public class AppDatabase extends SQLiteOpenHelper {
         db.execSQL(createWiFIAPTable);
         db.execSQL(createAccelOffsetTable);
         db.execSQL(createMapLabelTable);
+
+        db.execSQL(createUserTable);
+        db.execSQL(createUserLocationTable);
+        db.execSQL(createRiskZoneTable);
     }
 
     @Override
@@ -160,8 +221,324 @@ public class AppDatabase extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + WAP_TABLE);
         db.execSQL("DROP TABLE IF EXISTS " + ACCEL_OFFSET_TABLE);
         db.execSQL("DROP TABLE IF EXISTS " + MAP_LABEL_TABLE);
+
+        db.execSQL("DROP TABLE IF EXISTS " + RISK_ZONE_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + USER_LOCATION_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + USER_TABLE);
         onCreate(db);
     }
+
+    /**
+     * Function to add a tuple to the User Table
+     * For now, primary key is an integer, so these must be unique
+     * @param userid
+     * @param covidstatus (ie, "positive" or "negative")
+     * @return int 0 for success, 1 for failure
+     */
+    public int addUserTuple(int userid, String covidstatus){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(USER_TABLE_COL_ID,userid);
+        contentValues.put(USER_TABLE_COL_COVID_STATUS,covidstatus);
+
+        long result = db.insert(USER_TABLE, null, contentValues);
+        if(result==-1){
+            Log.i("RiskTable","Info Not Added");
+            return 1;
+        }
+        else{
+            Log.i("RiskTable","Info Added");
+        }
+        return 0;
+    }
+
+    /**
+     * Function to add a tuple to the User Location Table
+     * Primary key is date, longitude and latitude so no duplicate tuples
+     * of identical values for these fields are allowed
+     * userID is a foreign key, so it must already have been added to User Table
+     * Date must be a String in the format: YYY-MM-DD
+     * @param latitude, longitude, date, buildingName, roomName, county, userID
+     * @return int 0 for success, 1 for failure
+     */
+    public int addUserLocationTuple(double latitude, double longitude, String date,
+    String buildingName, String roomName, String county, int userID){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(USER_LOCATION_TABLE_COL_LATITUDE,latitude);
+        contentValues.put(USER_LOCATION_TABLE_COL_LONGITUDE,longitude);
+        contentValues.put(USER_LOCATION_TABLE_COL_DATE,date);
+        contentValues.put(USER_LOCATION_TABLE_COL_BUILDING_NAME,buildingName);
+        contentValues.put(USER_LOCATION_TABLE_COL_ROOM_NAME,roomName);
+        contentValues.put(USER_LOCATION_TABLE_COL_COUNTY,county);
+        contentValues.put(USER_LOCATION_TABLE_COL_USER_ID,userID);
+
+        long result = db.insert(USER_LOCATION_TABLE, null, contentValues);
+        if(result==-1){
+            Log.i("RiskTable","User Location Info Not Added");
+            return 1;
+        }
+        else{
+            Log.i("RiskTable","User Location Info Added");
+        }
+        return 0;
+    }
+
+    /**
+     * Function to add a tuple to the Risk Zone Table
+     * latitude and longitudes are foreign keys, so it must already have been added to User Location Table
+     * risk level = "high", "medium" or "low"
+     * @param latitude, longitude, risklevel, radius
+     * @return int 0 for success, 1 for failure
+     */
+    public int addRiskZoneTuple(double latitude, double longitude, String riskLevel, double radius){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(RISK_ZONE_TABLE_COL_LATITUDE,latitude);
+        contentValues.put(RISK_ZONE_TABLE_COL_LONGITUDE,longitude);
+        contentValues.put(RISK_ZONE_TABLE_COL_RISK_LEVEL,riskLevel);
+        contentValues.put(RISK_ZONE_TABLE_COL_RADIUS,radius);
+
+        long result = db.insert(RISK_ZONE_TABLE, null, contentValues);
+        if(result==-1){
+            Log.i("RiskTable","Risk Zone Info Not Added");
+            return 1;
+        }
+        else{
+            Log.i("RiskTable","Risk Zone Info Added");
+        }
+        return 0;
+    }
+
+    /**Method joins User and User Location tables
+     * And returns any latitude, longitude tuples where the user is reported positive
+     * @return String formatted for demo
+     */
+    public String getJoinLocationAndUserTables(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String queryString = "SELECT "
+                + USER_LOCATION_TABLE_COL_LONGITUDE + ", "
+                + USER_LOCATION_TABLE_COL_LATITUDE + " FROM "
+                + USER_LOCATION_TABLE + " INNER JOIN " + USER_TABLE + " ON " +
+                USER_LOCATION_TABLE + "." + USER_LOCATION_TABLE_COL_USER_ID +
+                " = " + USER_TABLE + "." + USER_TABLE_COL_ID +
+                " WHERE " + USER_TABLE + "." + USER_TABLE_COL_COVID_STATUS +
+                " = 'positive'" +
+                ";";
+
+        Cursor cursorData = db.rawQuery(queryString, null);
+
+        cursorData.moveToFirst();
+        String outputString = "  Latitude                         Longitude                      \tRisk  Radius\n";
+
+        if(cursorData.moveToFirst()){
+            do{
+                double latitude = cursorData.getDouble(0);
+                double longitude = cursorData.getDouble(1);
+
+                outputString+=latitude + "  " + longitude + "  High " + " 5\n";
+
+            }while (cursorData.moveToNext());
+        }
+        cursorData.close();
+        Log.i("RiskTable","Joined Table:" + outputString);
+        return outputString;
+    }
+
+    /**Method queries User Location and User Tables
+     * Finds any latitude/longitudes associated with a COVID positive user
+     * @return a List of high risk coordinates
+     */
+    public List<LatLng> getHighRiskLocations(){
+
+        List<LatLng> coordinates = new ArrayList<>();
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        String queryString = "SELECT "
+                + USER_LOCATION_TABLE_COL_LONGITUDE + ", "
+                + USER_LOCATION_TABLE_COL_LATITUDE + " FROM "
+                + USER_LOCATION_TABLE + " INNER JOIN " + USER_TABLE + " ON " +
+                USER_LOCATION_TABLE + "." + USER_LOCATION_TABLE_COL_USER_ID +
+                " = " + USER_TABLE + "." + USER_TABLE_COL_ID +
+                " WHERE " + USER_TABLE + "." + USER_TABLE_COL_COVID_STATUS +
+                " = 'positive'" +
+                ";";
+
+        Cursor cursorData = db.rawQuery(queryString, null);
+
+        cursorData.moveToFirst();
+
+        if(cursorData.moveToFirst()){
+            do{
+                double longitude = cursorData.getDouble(0);
+                double latitude = cursorData.getDouble(1);
+                coordinates.add(new LatLng(latitude, longitude));
+            }while (cursorData.moveToNext());
+        }
+        cursorData.close();
+
+        return coordinates;
+    }
+
+    /**Queries User Location table
+     * and returns a list of all of the coordinates
+     * @return
+     */
+    public List<LatLng> getUserLocations(){
+
+        List<LatLng> coordinates = new ArrayList<>();
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        String queryString = "SELECT "
+                + USER_LOCATION_TABLE_COL_LONGITUDE + ", "
+                + USER_LOCATION_TABLE_COL_LATITUDE + " FROM "
+                + USER_LOCATION_TABLE + ";";
+
+        Cursor cursorData = db.rawQuery(queryString, null);
+
+        cursorData.moveToFirst();
+
+        if(cursorData.moveToFirst()){
+            do{
+                double longitude = cursorData.getDouble(0);
+                double latitude = cursorData.getDouble(1);
+                coordinates.add(new LatLng(latitude, longitude));
+            }while (cursorData.moveToNext());
+        }
+        cursorData.close();
+
+        return coordinates;
+    }
+
+
+    /**Updates an existing tuple in a user table
+     * used to update user to positive or negative status
+     * @param oldValue
+     * @param newValue
+     * @param userID
+     */
+    public void updateUserCovidRisk(String oldValue, String newValue, int userID){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String sql = "UPDATE "+USER_TABLE +" SET " + USER_TABLE_COL_COVID_STATUS + " = '"+newValue+"' WHERE " + USER_TABLE_COL_COVID_STATUS+ " = '" + oldValue + "'"
+                + " AND " + USER_TABLE_COL_ID + " = '" + userID + "'";
+        db.execSQL(sql);
+
+    }
+
+    /**Function to query User Table and return all contents
+     * Formatted as a String
+     * @return String
+     */
+    public String getUserTableContents(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String queryString = "SELECT * FROM " + USER_TABLE+ ";";
+        Cursor cursorData = db.rawQuery(queryString, null);
+        if(cursorData==null){
+            Log.i("RiskTable","No Info Retrieved");
+            return null;
+        }
+        //reset cursor at first tuple if it's somewhere else
+        cursorData.moveToFirst();
+        String outputString = "\n User ID\tCovid Status\n";
+
+        if(cursorData.moveToFirst()){
+            do{
+                int userID = cursorData.getInt(cursorData.getColumnIndex(USER_TABLE_COL_ID));
+                String covidStatus = cursorData.getString(cursorData.getColumnIndex(USER_TABLE_COL_COVID_STATUS));
+                outputString+=userID + "             " + covidStatus + "\n";
+
+            }while (cursorData.moveToNext());
+        }
+        cursorData.close();
+        Log.i("RiskTable","User Table:" + outputString);
+        return outputString;
+    }
+
+    /**Function to query User Location Table and return all contents
+     * Formatted as a String
+     * @return String
+     */
+    public String getUserLocationTableContents(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String queryString = "SELECT * FROM " + USER_LOCATION_TABLE+ ";";
+        Cursor cursorData = db.rawQuery(queryString, null);
+        if(cursorData==null){
+            Log.i("RiskTable","No Info Retrieved");
+            return null;
+        }
+
+        //reset cursor at first tuple if it's somewhere else
+        cursorData.moveToFirst();
+        String outputString = "\n  Latitude                         Longitude                      Date\tBuilding\tRoom\tCounty\t UserID\n";
+
+        if(cursorData.moveToFirst()){
+            do{
+                double latitude = cursorData.getDouble(cursorData.getColumnIndex(USER_LOCATION_TABLE_COL_LATITUDE));
+                double longitude = cursorData.getDouble(cursorData.getColumnIndex(USER_LOCATION_TABLE_COL_LONGITUDE));
+                String date = cursorData.getString(cursorData.getColumnIndex(USER_LOCATION_TABLE_COL_DATE));
+                String buildingName = cursorData.getString(cursorData.getColumnIndex(USER_LOCATION_TABLE_COL_BUILDING_NAME));
+                String roomName = cursorData.getString(cursorData.getColumnIndex(USER_LOCATION_TABLE_COL_ROOM_NAME));
+                String county = cursorData.getString(cursorData.getColumnIndex(USER_LOCATION_TABLE_COL_COUNTY));
+                int userID = cursorData.getInt(cursorData.getColumnIndex(USER_LOCATION_TABLE_COL_USER_ID));
+                outputString+= latitude +"\t "+ longitude +"\t"+ date +"\t"+ buildingName +"\t"+ roomName
+                        +"\t"+ county +"\t"+ userID + "\n";
+            }while (cursorData.moveToNext());
+        }
+        cursorData.close();
+        Log.i("RiskTable","User Location Table:" + outputString);
+        return outputString;
+    }
+
+    /**Function to query Risk Zone Table and return all contents
+     * Formatted as a String
+     * @return String
+     */
+    public String getRiskZoneTableContents(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String queryString = "SELECT * FROM " + RISK_ZONE_TABLE+ ";";
+        Cursor cursorData = db.rawQuery(queryString, null);
+        if(cursorData==null){
+            Log.i("RiskTable","Risk Zone Table: No Info Retrieved");
+            return null;
+        }
+
+        //reset cursor at first tuple if it's somewhere else
+        cursorData.moveToFirst();
+        String outputString = "\n Latitude                  Longitude                  Risk Level\tRadius\n";
+
+        if(cursorData.moveToFirst()){
+            do{
+                double latitude = cursorData.getDouble(cursorData.getColumnIndex(RISK_ZONE_TABLE_COL_LATITUDE));
+                double longitude = cursorData.getDouble(cursorData.getColumnIndex(RISK_ZONE_TABLE_COL_LONGITUDE));
+                String riskLevel = cursorData.getString(cursorData.getColumnIndex(RISK_ZONE_TABLE_COL_RISK_LEVEL));
+                double radius = cursorData.getDouble(cursorData.getColumnIndex(RISK_ZONE_TABLE_COL_RADIUS));
+                outputString+= latitude +" \t"+ longitude +"\t"+ riskLevel +"\t"+ radius + "\n";
+            }while (cursorData.moveToNext());
+        }
+        cursorData.close();
+        Log.i("RiskTable","Risk Zone Table:" + outputString);
+        return outputString;
+    }
+
+
+    public void AddRiskTuple(double latitude, double longitude, String risk, double radius){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(RISK_ZONE_TABLE_COL_LATITUDE,latitude);
+        contentValues.put(RISK_ZONE_TABLE_COL_LONGITUDE,longitude);
+        contentValues.put(RISK_ZONE_TABLE_COL_RISK_LEVEL,risk);
+        contentValues.put(RISK_ZONE_TABLE_COL_RADIUS,radius);
+
+        long result = db.insert(RISK_ZONE_TABLE, null, contentValues);
+        if(result==-1){
+            Log.i("RiskTable","Info Not Added");
+        }
+    }
+
 
 
     /**
