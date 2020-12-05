@@ -1,13 +1,19 @@
 package com.example.dp4coruna.mapmanagement;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import org.json.*;
 import androidx.fragment.app.FragmentActivity;
+
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -179,7 +185,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
 
-            mMap.addMarker(new MarkerOptions().position(latLng).infoWindowAnchor(25,25).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)).title(graph.members[x].name)).showInfoWindow();
+
+            if(graph.members[x].name.equals("XXIForever") || (graph.members[x].name.equals("Apple")) ) //High-risk nodes example
+            {
+                mMap.addMarker(new MarkerOptions().position(latLng).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)).title(graph.members[x].name).snippet(graph.members[x].name)).showInfoWindow();
+
+                showTextOnMarker(this,mMap,latLng,graph.members[x].name,150,12);
+                drawCircularZone(latLng,9);
+            }
+            else {
+                mMap.addMarker(new MarkerOptions().position(latLng).infoWindowAnchor(25, 25).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)).title(graph.members[x].name)).showInfoWindow();
+                showTextOnMarker(this,mMap,latLng,graph.members[x].name,150,12);
+            }
+
+
+
 
 
             Node node = new Node();
@@ -581,6 +601,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Toast.makeText(this, "COVID-19 Risk: " + polygon.getTag().toString(),
                 Toast.LENGTH_SHORT).show();
 
+    }
+
+    /*Adds text to a marker at a Latlng location
+
+     */
+    public Marker showTextOnMarker(final Context context, final GoogleMap map,
+                                   final LatLng location, final String text, final int padding,
+                                   final int fontSize) {
+        Marker marker = null;
+
+        if (context == null || map == null || location == null || text == null
+                || fontSize <= 0) {
+            return marker;
+        }
+
+        final TextView textView = new TextView(context);
+        textView.setText(text);
+        textView.setTextSize(fontSize);
+
+        final Paint paintText = textView.getPaint();
+
+        final Rect boundsText = new Rect();
+        paintText.getTextBounds(text, 0, textView.length(), boundsText);
+        paintText.setTextAlign(Paint.Align.CENTER);
+
+        final Bitmap.Config conf = Bitmap.Config.ARGB_8888;
+        final Bitmap bmpText = Bitmap.createBitmap(boundsText.width() + 2
+                * padding, boundsText.height() + 2 * padding, conf);
+
+        final Canvas canvasText = new Canvas(bmpText);
+        paintText.setColor(Color.BLACK);
+
+        canvasText.drawText(text, canvasText.getWidth() / 2,
+                canvasText.getHeight() - padding - boundsText.bottom, paintText);
+
+        final MarkerOptions markerOptions = new MarkerOptions()
+                .position(location)
+                .icon(BitmapDescriptorFactory.fromBitmap(bmpText))
+                .anchor(0.5f, 1);
+
+        marker = map.addMarker(markerOptions);
+
+        return marker;
     }
 
     @Override

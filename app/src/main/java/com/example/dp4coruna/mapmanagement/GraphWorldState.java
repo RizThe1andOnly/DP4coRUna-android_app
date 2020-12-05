@@ -68,6 +68,11 @@ public class GraphWorldState implements Comparable<GraphWorldState> {
 	}
 	public double h() {
 		// return Math.abs(gworld.gstate.row - row) + Math.abs(gworld.gstate.col - col);
+
+		if(nodename.equals("XXIForever") || (nodename.equals("Apple"))){
+			return this.hval+1000;
+
+		}
 		return hval;
 	}
 	public double f() {
