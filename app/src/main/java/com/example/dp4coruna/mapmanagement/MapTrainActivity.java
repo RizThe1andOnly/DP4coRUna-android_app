@@ -1,6 +1,9 @@
 package com.example.dp4coruna.mapmanagement;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.*;
 import android.util.Log;
@@ -10,27 +13,30 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.localLearning.location.LocationObject;
 import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
-import com.example.dp4coruna.localLearning.location.dataHolders.CosSimLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
 import com.example.dp4coruna.localLearning.location.learner.LocationGrabber;
 import com.example.dp4coruna.localLearning.location.learner.SensorReader;
+import com.example.dp4coruna.network.RelayServer;
+import com.example.dp4coruna.network.Transmitter;
 import com.example.dp4coruna.utilities.AddressDialog;
 import com.example.dp4coruna.utilities.DialogCallBack;
+import com.example.dp4coruna.utilities.JSONFunctions;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.*;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.security.PublicKey;
+import java.util.*;
 
 public class MapTrainActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleMap.OnPolylineClickListener, GoogleMap.OnPolygonClickListener,
@@ -43,6 +49,7 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
             * Class Constants
             * Class Variables
             * Lifecycle Methods
+            * Content Initiation Methods
             * GoogleMap SDK Methods
             * Internal Logic Functions
             * DialogCallBack Methods
@@ -52,16 +59,19 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
     // * Class constants:
     private final int SUBMIT_MAP_LABEL = 0;
     private final int SUBMIT_LOCATION_FEATURES = 1;
-
+    public static final String RECEIVE_MESSAGE_BROADCAST = "com.example.dp4coruna.MAP_TRAIN_RECEIVE"; // for connection with network;
+    private final int SECOND_CONSTANT = 1000; // = 1 second in milliseconds
 
     // * Class Variables
     private Context activityContext;
+    private Timer autoDetectTimer;
 
     private GoogleMap map;
     private boolean trainingMode = false;
+    private boolean autodetect = false;
 
     //      - Objects from view:
-    private TextView text_lat;
+    private TextView text_left;
     private TextView text_lng;
 
     //latitude and longitude of selected point (for training purposes)
@@ -71,6 +81,9 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
     // Handler for marker placement
     private Handler markerPlacement;
     private Looper  markerPlacement_Looper;
+
+    //handler for timer to view communication:
+    private Handler updateViewhandler;
 
     //map marker container:
     private Map<AreaLabel,Marker> markerContainer;
@@ -87,7 +100,7 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
         setContentView(R.layout.activity_map_train);
 
         //set the view elements
-        this.text_lat = findViewById(R.id.maptrain_lat);
+        this.text_left = findViewById(R.id.maptrain_textbox_left);
         this.text_lng = findViewById(R.id.maptrain_lng);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -95,9 +108,61 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
         mapFragment.getMapAsync(this);
 
         this.activityContext = getApplicationContext();
+        this.autoDetectTimer = new Timer("AutoDetectionThread");
+        this.updateViewhandler = new TimerToViewHandler(Looper.getMainLooper(),this.text_left);
 
         startMarkerProcedure();
+        setBroadCastReceiver();
     }
+
+
+    /*
+         Content Initiation Methods.
+
+         Responsible for setting up content. Will mostly likely be called by onCreate() or by a method
+         called by onCreate()
+     */
+
+
+    /*
+        Marker Methods
+        - Methods that deal with showing and holding map markers
+     */
+    private void startMarkerProcedure(){
+        setMarkerContainer();
+        startMarkerPlacementHanlder();
+    }
+
+    private void setMarkerContainer(){
+        (this.markerContainer) = new HashMap<>();
+    }
+
+    private void startMarkerPlacementHanlder(){
+        //setup the new handler
+        (this.markerPlacement) = new PlaceMarkerHandler(Looper.getMainLooper());
+        (this.markerPlacement).sendMessage((this.markerPlacement.obtainMessage()));
+    }
+
+
+    /**
+     * Setup broadcast receiver which will receive network transmitted data from
+     * RelayConnection class. The custom broadcast receiver for this class is defined
+     * somewhere below, look for MapTrainBroadCastReceiver.
+     *
+     * This method also starts the relay server, this is necessary to receive data
+     * from the network.
+     */
+    private void setBroadCastReceiver(){
+        MapTrainBroadCastReceiver mtbcr = new MapTrainBroadCastReceiver();
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
+        lbm.registerReceiver(mtbcr,new IntentFilter(MapTrainActivity.RECEIVE_MESSAGE_BROADCAST));
+
+        //this instruction sets up server to listen for data from the network
+        new Thread(new RelayServer(null,getApplicationContext())).start();
+        Toast.makeText(getApplicationContext(),"Setup Done",Toast.LENGTH_LONG).show();
+    }
+
+
 
     /*
         * Google Map SDK Methods
@@ -120,7 +185,7 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
         if(!this.trainingMode){
             String lat = ""+latLng.latitude;
             String longi = ""+latLng.longitude;
-            (this.text_lat).setText(lat);
+            (this.text_left).setText(lat);
             (this.text_lng).setText(longi);
             Log.i("Coordinates",lat+","+longi);
             return;
@@ -161,27 +226,6 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
             - Ground Overlay method
      */
 
-
-    /*
-        Marker Methods
-        - Methods that deal with showing and holding map markers
-     */
-
-    private void startMarkerProcedure(){
-        setMarkerContainer();
-        startMarkerPlacementHanlder();
-    }
-
-    private void setMarkerContainer(){
-        (this.markerContainer) = new HashMap<>();
-    }
-
-    private void startMarkerPlacementHanlder(){
-        //setup the new handler
-        (this.markerPlacement) = new PlaceMarkerHandler(Looper.getMainLooper());
-        (this.markerPlacement).sendMessage((this.markerPlacement.obtainMessage()));
-    }
-
     /*
         GOTO button functions
      */
@@ -220,23 +264,78 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
     /*
         Detect Button function
      */
-    public void detectLocation(View view){
+    public void detectLocationButton(View view){
+        //detectLocation();
+        if(!this.autodetect){
+            this.autodetect = true;
+            startAutoDetection();
+        }
+        else{
+            this.autodetect = false;
+            (this.autoDetectTimer).cancel();
+        }
+    }
+
+    public void detectLocation(){
         //if previous marker is green then re-set it to red:
         if((this.current_marker) != null){
             (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
         }
 
-        List<WiFiAccessPoint> start = SensorReader.scanWifiAccessPoints(getApplicationContext());
-        CosSimLabel csl = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
-        AreaLabel currentAreaLabel = csl.arealabel;
+        if(this.markerContainer.size() != 0){
 
-        (this.current_marker) = (this.markerContainer).get(currentAreaLabel);
+            List<WiFiAccessPoint> start = SensorReader.scanWifiAccessPoints(getApplicationContext());
+            AreaLabel currentAreaLabel = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
+
+
+            (this.current_marker) = (this.markerContainer).get(currentAreaLabel);
+            (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+
+            LatLng currentlatlng = new LatLng((this.current_marker).getPosition().latitude,(this.current_marker).getPosition().longitude);
+
+            map.moveCamera(CameraUpdateFactory.newLatLng(currentlatlng));
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentlatlng, 21.00f));
+        }
+        else{
+            initiateNetReq();
+        }
+    }
+
+    /**
+     * Method to detect user location based on response from network.
+     * If the current device does not have the location it will request from
+     * another device using the network.
+     */
+    public void detectLocationUsingNetwork(AreaLabel arealabel){
+
+        LatLng ll = new LatLng(arealabel.latitude,arealabel.longitude);
+        Marker netMarker = map.addMarker(new MarkerOptions()
+                .position(ll)
+                .title(arealabel.title));
+        netMarker.setTag(0);
+
+        (this.current_marker) = netMarker;
         (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
 
         LatLng currentlatlng = new LatLng((this.current_marker).getPosition().latitude,(this.current_marker).getPosition().longitude);
 
         map.moveCamera(CameraUpdateFactory.newLatLng(currentlatlng));
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentlatlng, 21.00f));
+    }
+
+    private void initiateNetReq(){
+        /*
+            The below condition should be for demo only. It checks if the device has no markers in
+            database and if that is the case then sends a network request. Normally this would be used
+            for specific locations and the device will have markers already in device.
+         */
+        //do network code here:
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                sendLocRequest();
+            }
+        },"NetworkReqThread").start();
     }
 
     /*
@@ -273,6 +372,7 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
                 markerContainer.put(current_al,temp);
             }
         }
+
     }
 
     /**
@@ -280,7 +380,7 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
      * Will get 10 samples per call.
      */
     private void sampleData(String building, String room){
-        TextView showCount = findViewById(R.id.maptrain_lat);
+        TextView showCount = findViewById(R.id.maptrain_textbox_left);
 
         Handler updateCountHandler = new UpdateCountHandler(Looper.getMainLooper(),showCount);
 
@@ -442,6 +542,119 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
             int count = msg.arg1;
             (this.tv).setText("\t\t"+count);
         }
+    }
+
+    private class TimerToViewHandler extends Handler{
+        private TextView txtview;
+
+        public TimerToViewHandler(Looper looper,TextView txtView){
+            super(looper);
+            this.txtview = txtView;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            int counter = msg.arg1;
+            (this.txtview).setText(""+counter);
+
+            if(counter == 0){
+                detectLocation();
+            }
+        }
+    }
+
+
+    /*
+        ------------------------------------------Network Code--------------------------------
+     */
+
+    /**
+     *  Sends the request for markers over the network.
+     *  Currently uses hardcoded ip address, will need to fix this later.
+     */
+    private void sendLocRequest(){
+        String[] ips = {
+                "192.168.1.159",
+                "192.168.1.199",
+                "192.168.1.164"
+        };
+
+        List<String> deviceAddresses = new ArrayList<>();
+        String deviceAddress;
+
+        deviceAddresses.addAll(Arrays.asList(ips));
+        deviceAddress = ips[2];
+
+        List<PublicKey> rsaEncryptKeys = new ArrayList<PublicKey>();
+        LocationObject lobNet = new LocationObject(getApplicationContext());
+        lobNet.updateLocationData();
+
+        new Thread(new Transmitter(deviceAddresses, deviceAddress,rsaEncryptKeys, lobNet,"hello","transmitter")).start();
+    }
+
+
+    private class MapTrainBroadCastReceiver extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            try {
+                String receivedAreaLabel = (JSONFunctions.receivedToJSON(intent.getStringExtra("outgoingMessage"))).getString("msg");
+                Log.i("ALJsonString",receivedAreaLabel);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            AreaLabel receivedMarkerData = extractAreaLabel(intent);
+            Toast.makeText(getApplicationContext(),receivedMarkerData.toString(),Toast.LENGTH_LONG).show();
+            detectLocationUsingNetwork(receivedMarkerData);
+        }
+    }
+
+    /**
+     * Obtains the area label object from the message received from device in network.
+     * @param intent
+     * @return
+     */
+    private AreaLabel extractAreaLabel(Intent intent){
+        String receivedMessage = intent.getStringExtra("outgoingMessage");
+        JSONObject msgJson = JSONFunctions.receivedToJSON(receivedMessage);
+
+        //get the area label:
+        String areaLabelString = "";
+        try {
+            areaLabelString = msgJson.getString("msg");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        Log.i("ALJsonString",areaLabelString);
+        return AreaLabel.fromJson(areaLabelString);
+    }
+
+
+    /*
+        Counter for auto location detection:
+     */
+
+    private int counter = 10;
+
+    private void startAutoDetection(){
+        autoDetectTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                counter--;
+
+                Message msg = updateViewhandler.obtainMessage();
+                msg.arg1 = counter;
+                updateViewhandler.sendMessage(msg);
+
+                if(counter == 0){
+                    counter = 10;
+                }
+            }
+        },0,SECOND_CONSTANT);
     }
 }
 

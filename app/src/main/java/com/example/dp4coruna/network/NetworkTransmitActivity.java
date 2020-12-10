@@ -38,14 +38,14 @@ public class NetworkTransmitActivity extends AppCompatActivity {
     private String deviceAddress;
 
     /*
-        s7
+        s7e
         j
-        s9
+        s6
      */
     private String[] ips = {
       "192.168.1.159",
       "192.168.1.199",
-      "192.168.1.156"
+      "192.168.1.164"
     };
 
 
@@ -121,7 +121,7 @@ public class NetworkTransmitActivity extends AppCompatActivity {
             //deviceAddress = argsFromMain.getString("transmitterAddress");
 
             deviceAddresses.addAll(Arrays.asList(ips));
-            deviceAddress = ips[0];
+            deviceAddress = ips[2];
 
             //List<String> b64PublicKeys = argsFromMain.getStringArrayList("rsaEncryptKeys");
             rsaEncryptKeys = new ArrayList<PublicKey>();
@@ -143,7 +143,7 @@ public class NetworkTransmitActivity extends AppCompatActivity {
             //possible fix for too many threads: give below thread a name and check for that name before spawning new
             //thread
 
-            new Thread(new Transmitter(deviceAddresses, deviceAddress, rsaEncryptKeys, networkLocObj)).start();
+            new Thread(new Transmitter(deviceAddresses, deviceAddress, deviceAddresses.get(0),rsaEncryptKeys, networkLocObj,"hello","none")).start();
         }
 
     }

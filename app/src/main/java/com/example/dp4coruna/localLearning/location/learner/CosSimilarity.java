@@ -70,6 +70,7 @@ public class CosSimilarity {
 
         AppDatabase ad = new AppDatabase(this.context);
         List<String> roomLabels = ad.getAllLocationLabels();
+
         List<List<WiFiAccessPoint>> wapLists = ad.getWifiAPListByLocation();
 
         List<Double> vals = cosSimValues_forEachLocation(start,wapLists);
@@ -83,9 +84,10 @@ public class CosSimilarity {
         return toBeReturned;
     }
 
-    public CosSimLabel checkCosSin_vs_allLocations_v2(List<WiFiAccessPoint> start){
+    public AreaLabel checkCosSin_vs_allLocations_v2(List<WiFiAccessPoint> start){
         AppDatabase ad = new AppDatabase(this.context);
-        List<AreaLabel> als = ad.getAllAreaLabels();
+        List<AreaLabel> als = ad.getFullAreaLabels();
+        List<AreaLabel> allAls = ad.getAllAreaLabels();
         List<List<WiFiAccessPoint>> wapLists = ad.getWifiAPListByLocation();
 
         List<Double> vals = cosSimValues_forEachLocation(start,wapLists);
@@ -93,10 +95,16 @@ public class CosSimilarity {
         //prep output
         List<CosSimLabel> labeledOutputVals = new ArrayList<>();
         for(int i=0;i< vals.size();i++){
-            labeledOutputVals.add(new CosSimLabel(als.get(i),vals.get(i)));
+            labeledOutputVals.add(new CosSimLabel(allAls.get(i),vals.get(i)));
         }
 
-        return Collections.max(labeledOutputVals);
+        CosSimLabel maxLabel =  Collections.max(labeledOutputVals);
+        AreaLabel toBeReturned = null;
+        for(int i=0;i<als.size();i++){
+            if(als.get(i).equals(maxLabel.arealabel)) toBeReturned = als.get(i);
+        }
+
+        return toBeReturned;
     }
 
     /**

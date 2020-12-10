@@ -1,7 +1,6 @@
 package com.example.dp4coruna.mapmanagement;
 
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Handler;
@@ -11,7 +10,6 @@ import android.widget.*;
 import androidx.fragment.app.DialogFragment;
 import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
-import com.example.dp4coruna.localLearning.location.dataHolders.CosSimLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
 import com.example.dp4coruna.localLearning.location.learner.LocationGrabber;
@@ -33,12 +31,10 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.localLearning.location.LocationObject;
-import com.example.dp4coruna.reportPositiveTestActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
@@ -47,13 +43,11 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
-import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.PolyUtil;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleMap.OnPolylineClickListener, GoogleMap.OnPolygonClickListener,
@@ -981,7 +975,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * Will get 10 samples per call.
      */
     private void sampleData(String building, String room){
-        TextView showCount = findViewById(R.id.maptrain_lat);
+        TextView showCount = findViewById(R.id.maptrain_textbox_left);
 
         Handler updateCountHandler = new UpdateCountHandler(Looper.getMainLooper(),showCount);
 
@@ -1062,8 +1056,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         List<WiFiAccessPoint> start = SensorReader.scanWifiAccessPoints(getApplicationContext());
-        CosSimLabel csl = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
-        AreaLabel currentAreaLabel = csl.arealabel;
+        AreaLabel currentAreaLabel = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
+
 
         (this.current_marker) = (this.markerContainer).get(currentAreaLabel);
         (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));

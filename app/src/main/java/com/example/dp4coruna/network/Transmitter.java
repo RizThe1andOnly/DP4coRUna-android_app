@@ -41,23 +41,42 @@ public class Transmitter implements Runnable {
     private List<String> deviceAddresses;
     private List<PublicKey> rsaEncryptKeys;
     private String transmitterAddress;
+    private String receiverAddress;
     private AtomicBoolean isDestroyed;
     private LocationObject locObj;
+    private String messageToBeSent;
+    private Object payload;
+    private String relativePost;
 
-    public Transmitter(List<String> dvas, String dva, List<PublicKey> rsaEKs, LocationObject locationObject) {
+    public Transmitter(List<String> dvas, String dva, List<PublicKey> rsaEKs, Object payload,String messageToBeSent, String relativePost) {
         this.deviceAddresses = dvas;
         this.transmitterAddress = dva;
         this.rsaEncryptKeys = rsaEKs;
         this.isDestroyed = new AtomicBoolean(false);
-        this.locObj = locationObject;
+        this.locObj = (LocationObject) payload;
+        //this.payload = payload;
+        this.receiverAddress = transmitterAddress;
+        this.messageToBeSent = messageToBeSent;
+        this.relativePost = relativePost;
+    }
+
+    public Transmitter(List<String> dvas, String dva, String receiverAddress,List<PublicKey> rsaEKs, Object payload, String messageToBeSent, String relativePost){
+        this.deviceAddresses = dvas;
+        this.transmitterAddress = dva;
+        this.rsaEncryptKeys = rsaEKs;
+        this.isDestroyed = new AtomicBoolean(false);
+        this.locObj = (LocationObject) payload;
+        this.receiverAddress = receiverAddress;
+        this.messageToBeSent = messageToBeSent;
+        this.relativePost = relativePost;
     }
 
     @Override
     public void run() {
         Log.i("FromTransmitter","Got to begining of run");
         // Get the string to be sent to the receiver device.
-        //String locationMessage = locObj.convertLocationToJSON();
-        String locationMessage = "hello from transmitter";
+        String location = locObj.convertLocationToJSON();
+        String locationMessage = messageToBeSent;
         // Encrypt with 2 layers (as per Onion Routing protocol).
         List<String> path = new ArrayList<String>();
         List<PublicKey> pathPublicKeys = new ArrayList<PublicKey>();
@@ -78,7 +97,7 @@ public class Transmitter implements Runnable {
                 // Then, remove the last element in the path. That will be the first relay and is unnecessary for encryption.
                 // Add a "0" at the start of the path. Now, each element in the path list represents the NEXT element in the path, which
                 // is how we need it for encrypting.
-                firstRelay = path.remove(path.size() - 1);
+                firstRelay = getFirstRelay(path);
                 path.add(0, "0");
             }
 
@@ -86,7 +105,7 @@ public class Transmitter implements Runnable {
 
         // This method will encrypt the message with as many layers as specified in the path, using the corresponding keys, and will encode
         // the final result in base64.
-        String encryptedMessage = transmitterEncrypt(path.size(), locationMessage, path, pathPublicKeys);
+        String encryptedMessage = transmitterEncrypt(path.size(),location, locationMessage, path, pathPublicKeys,transmitterAddress);
         try {
             // Open a socket with the relayer device and send the encrypted message.
             Socket relaySocket = null;
@@ -103,6 +122,7 @@ public class Transmitter implements Runnable {
             DataInputStream readBuffer = new DataInputStream(relaySocket.getInputStream());
             DataOutputStream writeBuffer = new DataOutputStream(relaySocket.getOutputStream());
             // Send the message and wait for response.
+            Log.i("TestUnEncrypt",encryptedMessage);
             writeBuffer.writeUTF(encryptedMessage);
             Log.i("FromTransmitterWait","Waiting For Response"); //(!!!)
             String received = readBuffer.readUTF();
@@ -120,6 +140,16 @@ public class Transmitter implements Runnable {
             ioe.printStackTrace();
         }
 
+    }
+
+    private String getFirstRelay(List<String> path){
+        for (int i=0;i<path.size();i++){
+            String elem = path.get(i);
+            if(!elem.equals(receiverAddress)){
+                return path.remove(i);
+            }
+        }
+        return "";
     }
 
     public void destroy() {
@@ -142,10 +172,10 @@ public class Transmitter implements Runnable {
 
     }
 
-    public String transmitterEncrypt(int numDevices, String msg, List<String> ipList, List<PublicKey> publicKeys) {
+    public String transmitterEncrypt(int numDevices, String lob,String msg, List<String> ipList, List<PublicKey> publicKeys, String src) {
         for (int i = 0; i < numDevices; i++) {
-            String aes_key = randomizeKey();
-            String message = AES.encrypt(msg, aes_key); //msg will only be the location data on the first iteration
+            //String aes_key = randomizeKey();
+            //String message = AES.encrypt(msg, aes_key); //msg will only be the location data on the first iteration
 
             //String ip = RSA.encrypt(ipList.get(i), publicKeys.get(i));
             //String key = RSA.encrypt(aes_key, publicKeys.get(i));
@@ -153,11 +183,14 @@ public class Transmitter implements Runnable {
             JSONObject msgJSON = new JSONObject();
             try {
                 //msgJSON.put("msg", message);
+                msgJSON.put("loc",lob);
                 msgJSON.put("msg",msg);
                 //msgJSON.put("key", key);
                 msgJSON.put("key","");
                 //msgJSON.put("ip", ip);
                 msgJSON.put("ip",ipList.get(i));
+                msgJSON.put("src",src);
+                msgJSON.put("relativePost",relativePost);
             } catch(JSONException je) {
                 Log.d("Transmitter", "JSONException thrown when creating encrypted JSON.");
                 je.printStackTrace();
@@ -170,7 +203,7 @@ public class Transmitter implements Runnable {
 
         //encode when done encrypting
         byte[] msgByte = msg.getBytes();
-        msg = Base64.encodeToString(msgByte, Base64.DEFAULT);
+        //msg = Base64.encodeToString(msgByte, Base64.DEFAULT);
 
         return msg;
     }

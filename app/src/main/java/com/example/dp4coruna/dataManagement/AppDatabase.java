@@ -709,6 +709,24 @@ public class AppDatabase extends SQLiteOpenHelper {
         return true;
     }
 
+    public List<AreaLabel> getFullAreaLabels(){
+        Cursor markers = queryMapMarkers();
+        List<AreaLabel> toBeReturned = new ArrayList<>();
+        while(markers.moveToNext()){
+            String current_building = markers.getString(0);
+            String current_room = markers.getString(1);
+            double current_latitude = markers.getDouble(2);
+            double current_longitude = markers.getDouble(3);
+
+            String marker_title = current_building + " " + current_room;
+            AreaLabel current_al = new AreaLabel(markers.getString(0),markers.getString(1),current_latitude,current_longitude);
+
+            toBeReturned.add(current_al);
+        }
+
+        return toBeReturned;
+    }
+
     public Cursor queryMapMarkers(){
         SQLiteDatabase db = this.getReadableDatabase();
         String queryString = "SELECT "

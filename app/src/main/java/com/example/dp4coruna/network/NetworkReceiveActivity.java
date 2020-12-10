@@ -4,19 +4,32 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.dp4coruna.R;
+import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.localLearning.SubmitLocationLabel;
 import com.example.dp4coruna.localLearning.location.LocationObject;
+import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
+import com.example.dp4coruna.localLearning.location.dataHolders.CosSimLabel;
+import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
 import com.example.dp4coruna.ml.MLModel;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 public class NetworkReceiveActivity extends AppCompatActivity {
@@ -37,7 +50,24 @@ public class NetworkReceiveActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             Bundle broadcastBundle = msg.getData();
             String receivedLocation = broadcastBundle.getString("decryptedMessage");
-            receivedLocationView.setText(receivedLocation);
+
+            //get location object from the bundle of data
+            String jsonString = broadcastBundle.getString("outgoingMessage");
+            JSONObject jo = receivedToJSON(jsonString);
+            LocationObject lob;
+            try {
+                lob = LocationObject.getLocationFromJSON(jo.getString("loc"));
+            } catch (JSONException e) {
+                lob = null;
+                e.printStackTrace();
+            }
+
+            AreaLabel csl = (new CosSimilarity(getApplicationContext())).checkCosSin_vs_allLocations_v2(lob.getWifiAccessPointList());
+
+            receivedLocationView.setText(csl.toString());
+            String messageToBeSent = csl.convertToJson();
+            Log.i("ALJsonString",messageToBeSent);
+            sendReply(broadcastBundle.getString("src"),messageToBeSent);
         }
 
     }
@@ -52,10 +82,20 @@ public class NetworkReceiveActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(RECEIVE_MESSAGE_BROADCAST)) {
+
+                //get the data from the network transmitted data:
+                String jsonString = intent.getStringExtra("outgoingMessage");
+                String decryptedMessage = intent.getStringExtra("decryptedMessage");
+                String src = intent.getStringExtra("src");
+
+                //put data in a bundle to send to handler
+                Bundle b = new Bundle();
+                b.putString("outgoingMessage",jsonString);
+                b.putString("decryptedMessage",decryptedMessage);
+                b.putString("src",src);
+
                 Message msg = uiHandler.obtainMessage();
-                Bundle broadcastBundle = new Bundle();
-                broadcastBundle.putString("decryptedMessage", intent.getStringExtra("decryptedMessage"));
-                msg.setData(broadcastBundle);
+                msg.setData(b);
                 uiHandler.sendMessage(msg);
             }
         }
@@ -118,5 +158,63 @@ public class NetworkReceiveActivity extends AppCompatActivity {
         outputText.append(strng);
     }
 
+
+    private void sendReply(String src,String messageOverNetwork){
+        String[] ips = {
+                "192.168.1.159",
+                "192.168.1.199",
+                "192.168.1.164"
+        };
+
+        List<String> deviceAddresses = new ArrayList<>();
+        String deviceAddress;
+
+        deviceAddresses.addAll(Arrays.asList(ips));
+        deviceAddress = ips[0];
+
+        List<PublicKey> rsaEncryptKeys = new ArrayList<PublicKey>();
+        LocationObject networkLocObj = new LocationObject(getApplicationContext());
+
+        new Thread(new Transmitter(deviceAddresses, deviceAddress, src,rsaEncryptKeys, networkLocObj,messageOverNetwork,"receiver")).start();
+    }
+
+
+    public static JSONObject receivedToJSON(String receivedData){
+        byte[] dataBytes = receivedData.getBytes();
+        //String decodedData = new String(Base64.decode(dataBytes, Base64.DEFAULT));
+        String decodedData = receivedData;
+        JSONObject dataToJSON = new JSONObject();
+        try {
+            Log.i("TestUnEncrypt",decodedData);
+            dataToJSON = new JSONObject(decodedData);
+        } catch(JSONException je){
+            Log.d("Receive", "JSONException thrown when decoding encrypted JSON.");
+            je.printStackTrace();
+        }
+        return dataToJSON;
+    }
+
+    /**
+     * Gets a list of area labels to get full details of
+     * @return
+     */
+    private List<AreaLabel> getAreaList(){
+        Context activityContext = getApplicationContext();
+        Cursor markers = (new AppDatabase(activityContext)).queryMapMarkers();
+        List<AreaLabel> alList = new ArrayList<>();
+
+        while(markers.moveToNext()){
+            String current_building = markers.getString(0);
+            String current_room = markers.getString(1);
+            double current_latitude = markers.getDouble(2);
+            double current_longitude = markers.getDouble(3);
+
+            String marker_title = current_building + " " + current_room;
+            AreaLabel current_al = new AreaLabel(markers.getString(0),markers.getString(1),current_latitude,current_longitude);
+            alList.add(current_al);
+        }
+
+        return alList;
+    }
 
 }

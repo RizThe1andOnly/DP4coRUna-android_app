@@ -24,7 +24,7 @@
             <TextView
                     android:text="TextView"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:id="@+id/maptrain_lat" android:layout_weight="1"/>
+                    android:layout_height="wrap_content" android:id="@+id/maptrain_textbox_left" android:layout_weight="1"/>
             <TextView
                     android:text="TextView"
                     android:layout_width="wrap_content"
@@ -52,7 +52,7 @@
                     android:text="@string/detect"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" android:id="@+id/maptrain_button3" android:layout_weight="1"
-                    android:onClick="detectLocation"/>
+                    android:onClick="detectLocationButton"/>
             <Button
                     android:text="@string/sampleButton"
                     android:layout_width="wrap_content"

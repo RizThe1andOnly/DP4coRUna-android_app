@@ -131,8 +131,8 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
         //dataView.append(WiFiAccessPoint.getListStringRepresent(start));
         //dataView.append(new CosSimilarity(getApplicationContext()).checkCosSim_vs_allLocations(start));
 
-        CosSimLabel csl = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
-        dataView.append(csl.arealabel.building + "\t" +csl.arealabel.area + "\t" + csl.cosSimVal);
+        //CosSimLabel csl = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
+        //dataView.append(csl.arealabel.building + "\t" +csl.arealabel.area + "\t" + csl.cosSimVal);
     }
 
     private void trainMLModel(){

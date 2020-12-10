@@ -8,6 +8,7 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.example.dp4coruna.mapmanagement.MapTrainActivity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -45,14 +46,25 @@ public class RelayConnection implements Runnable {
             // Now, use the RSA private key to decrypt the key/ip fields, and that to decrypt the msg field.
             //JSONObject decryptedJSON = decrypt(receivedJSON, myPrivateKey);
             JSONObject decryptedJSON = receivedJSON;
-            String decryptedMessage = decryptedJSON.getString("msg");
+            String decryptedMessage = decryptedJSON.getString("msg") + decryptedJSON.getString("src");
             String nextIP = decryptedJSON.getString("ip");
+            String relativePost = decryptedJSON.getString("relativePost");
 
             if (nextIP.equals("0")) {
                 // We're the recipient.
+                Log.i("TestUnEncrypt_receive",decryptedJSON.getString("relativePost"));
                 Intent recipientIntent = new Intent(NetworkReceiveActivity.RECEIVE_MESSAGE_BROADCAST);
+                Intent recipientIntent_2 = new Intent(MapTrainActivity.RECEIVE_MESSAGE_BROADCAST);
                 recipientIntent.putExtra("decryptedMessage", decryptedMessage);
-                LocalBroadcastManager.getInstance(context).sendBroadcast(recipientIntent);
+                recipientIntent.putExtra("src",decryptedJSON.getString("src"));
+                recipientIntent.putExtra("outgoingMessage",receivedMessage);
+                recipientIntent_2.putExtra("outgoingMessage",receivedMessage);
+                if(relativePost.equals("receiver")){
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(recipientIntent_2);
+                }
+                else{
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(recipientIntent);
+                }
                 // Send "Received" back through the network. (If this were confidential, would encrypt).
                 receiverWriteBuffer.writeUTF("Received");
 
@@ -108,6 +120,7 @@ public class RelayConnection implements Runnable {
         String decodedData = receivedData;
         JSONObject dataToJSON = new JSONObject();
         try {
+            Log.i("TestUnEncrypt",decodedData);
             dataToJSON = new JSONObject(decodedData);
         } catch(JSONException je){
             Log.d("RelayConnection", "JSONException thrown when decoding encrypted JSON.");

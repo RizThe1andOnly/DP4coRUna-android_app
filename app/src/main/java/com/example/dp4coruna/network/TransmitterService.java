@@ -75,7 +75,7 @@ public class TransmitterService extends Service {
         // ---------- network. For now, I just spawn the Transmitter thread here directly to send one instance of data over. ------------
         LocationObject locationObject = new LocationObject(this);
         locationObject.updateLocationData();
-        transmitterRunnable = new Transmitter(deviceAddresses, transmitterAddress, rsaEncryptKeys, locationObject);
+        transmitterRunnable = new Transmitter(deviceAddresses, transmitterAddress, rsaEncryptKeys, locationObject,"hello","none");
         transmitterThread = new Thread(transmitterRunnable);
         transmitterThread.start();
         // Finally, start the RelayService.
