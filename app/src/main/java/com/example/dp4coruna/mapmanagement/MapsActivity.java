@@ -8,7 +8,10 @@ import android.os.Looper;
 import android.os.Message;
 import android.widget.*;
 import androidx.fragment.app.DialogFragment;
+
+import com.example.dp4coruna.TempResultsActivity;
 import com.example.dp4coruna.dataManagement.AppDatabase;
+import com.example.dp4coruna.dataManagement.databaseDemoActivity;
 import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
@@ -66,6 +69,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Holds coordinates of walkways/hallways
     //Dummy Data
+    public static ArrayList<Circle> dangerSpots = new ArrayList<>();
+
     ArrayList<Marker> walkwaypoints = new ArrayList<Marker>();
 
     String destinationStreetAddress;
@@ -86,7 +91,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private Spinner optionSpinner;
     private String[] optionNames = {
-            "Save Points",
             "Display Routes",
             "Show Risk Zones",
             "GPS",
@@ -95,7 +99,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             "Sample",
             "UnlockMap",
             "LockMap",
-            "GetRoute"
+            "GetRoute",
+            "Add DB Dummy Data",
+            "Show User Locations",
+            "Show DB Contents",
+            "Report Positive Test: User 1",
+            "Report Positive Test: User 2"
     };
     private String optionToRun;
     // * Class constants:
@@ -155,7 +164,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void runEvent(View view){
         /*
             Current available options:
-                    "Save Points",
                     "Display Routes",
                     "Show Risk Zones",
                     "GPS",
@@ -165,7 +173,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
          */
 
         switch ((this.optionToRun)){
-            case "Save Point" : savePointsClicked(view); break;
             case "Display Routes" : showAllRoutes(view); break;
             case "Show Risk Zones" : showRiskZones(view); break;
             case "GPS" : moveToCurrent_train(view); break;
@@ -175,10 +182,142 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             case "UnlockMap" : this.lockmap = false; break;
             case "LockMap" : this.lockmap = true; break;
             case "GetRoute" : getDirections(); break;
+            case "Add DB Dummy Data" : addDBDummyData(); break;
+            case "Show DB Contents" : showDBContents(view); break;
+            case "Show User Locations" : showUserLocations(); break;
+            case "Report Positive Test: User 1" : demoUser1(); break;
+            case "Report Positive Test: User 2" : demoUser2(); break;
             default: Toast.makeText(getApplicationContext(),"No Function for " + (this.optionToRun),Toast.LENGTH_LONG).show();break;
         }
     }
 
+    /**For Demo:
+     * Shows the database with some dummy data
+     * Click "Add Dummy Data" first or tables will be empty
+     * @param view
+     */
+    public void showDBContents(View view){
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent(this, databaseDemoActivity.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    /**For Demo:
+     * Places markers on the locations of users
+     * found in database query
+     */
+    public void showUserLocations(){
+        AppDatabase ad = new AppDatabase(getApplicationContext());
+        List<LatLng> coords = ad.getUserLocations();
+
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(40.54733449622285, -74.33499678969381), 17.10f));
+
+        for(int i=0; i<coords.size(); i++){
+            mMap.addMarker(new MarkerOptions().position(coords.get(i)));
+        }
+        Log.i("RiskTable", Integer.toString(coords.size()));
+    }
+
+
+    /**For Demo:
+     * Changes value in DB for User #1 from "positive" to "negative"
+     * Change is reflected in "Show DB Contents"
+     * Marks these locations on map with danger circles
+     */
+    public void demoUser1(){
+        //clear map
+        mMap.clear();
+        dangerSpots.forEach((n) -> n.remove());
+
+        //update user 1 in database to "positive"
+        AppDatabase ad = new AppDatabase(getApplicationContext());
+        ad.updateUserCovidRisk("negative", "positive", 1);
+
+        //query DB for all positive locations
+        List<LatLng> coords = ad.getHighRiskLocations();
+
+        //Mark up map with danger circles
+        for(int i=0; i<coords.size(); i++){
+            CircleOptions circleOptions = new CircleOptions();
+            circleOptions.center(coords.get(i));
+            circleOptions.radius(5);
+            circleOptions.strokeWidth(1);
+            circleOptions.strokeColor(0x46FF0000);
+            circleOptions.fillColor(0x46FF0000);
+            circleOptions.clickable(true);
+            Circle circle = mMap.addCircle(circleOptions);
+            circle.setTag("User 1");
+            dangerSpots.add(circle);
+        }
+
+    }
+
+    /**For Demo:
+     * Changes value in DB for User #2 from "positive" to "negative"
+     * Change is reflected in "Show DB Contents"
+     * Marks these locations on map with danger circles
+     */
+    public void demoUser2(){
+        mMap.clear();
+        dangerSpots.forEach((n) -> n.remove());
+
+        AppDatabase ad = new AppDatabase(getApplicationContext());
+        ad.updateUserCovidRisk("negative", "positive", 2);
+        List<LatLng> coords = ad.getHighRiskLocations();
+
+        for(int i=0; i<coords.size(); i++){
+            CircleOptions circleOptions = new CircleOptions();
+            circleOptions.center(coords.get(i));
+            circleOptions.radius(5);
+            circleOptions.strokeWidth(1);
+            circleOptions.strokeColor(0x46FF0000);
+            circleOptions.fillColor(0x46FF0000);
+            circleOptions.clickable(true);
+            Circle circle = mMap.addCircle(circleOptions);
+            circle.setTag("User 2");
+            dangerSpots.add(circle);
+        }
+    }
+
+
+    /**Adds some dummy data to all three tables in DB for demo
+     * By default, dummy users are set to be "negative" for covid
+     */
+    public void addDBDummyData(){
+        dangerSpots.forEach((n) -> n.remove());
+
+        AppDatabase ad = new AppDatabase(getApplicationContext());
+        ad.addUserTuple(0, "negative");
+        ad.addUserTuple(1, "negative");
+        ad.addUserTuple(2, "negative");
+        ad.getUserTableContents();
+
+        ad.addUserLocationTuple(40.549556289512, -74.33660745620728, "2020-12-03", "Menlo Mall", null, null, 0);
+        ad.addUserLocationTuple(40.54930049652604, -74.33626614511014, "2020-12-03", "Menlo Mall", null, null, 0);
+        ad.addUserLocationTuple(40.548868169933755, -74.33561973273753, "2020-12-03", "Menlo Mall", null, null, 0);
+        ad.addUserLocationTuple(40.548923452865196, -74.33546785265207, "2020-12-03", "Menlo Mall", null, null, 0);
+
+        ad.addUserLocationTuple(40.54629122135982, -74.33646831661463, "2020-12-02", "Menlo Mall", null, null, 1);
+        ad.addUserLocationTuple(40.54657248680576, -74.33590304106474, "2020-12-02", "Menlo Mall", null, null, 1);
+        ad.addUserLocationTuple(40.546928398000375, -74.3357602134347, "2020-12-02", "Menlo Mall", null, null, 1);
+        ad.addUserLocationTuple(40.54745117894556, -74.33596305549143, "2020-12-02", "Menlo Mall", null, null, 1);
+        ad.addUserLocationTuple(40.547480222211746, -74.33626983314751, "2020-12-02", "Menlo Mall", null, null, 1);
+
+        ad.addUserLocationTuple(40.54733449622285, -74.33499678969381, "2020-11-30", "Menlo Mall", null, null, 2);
+        ad.addUserLocationTuple(40.54772759899485, -74.3354085087776, "2020-11-30", "Menlo Mall", null, null, 2);
+        ad.addUserLocationTuple(40.54827100946152, -74.335333977717163, "2020-11-30", "Menlo Mall", null, null, 2);
+        ad.addUserLocationTuple(40.54889619354526, -74.33552015572786, "2020-11-30", "Menlo Mall", null, null, 2);
+
+        ad.getUserLocationTableContents();
+        ad.getUserTableContents();
+        ad.getJoinLocationAndUserTables();
+
+        //updates demo users to negative if info already added to DB
+        ad.updateUserCovidRisk("positive", "negative", 0);
+        ad.updateUserCovidRisk("positive", "negative", 1);
+        ad.updateUserCovidRisk("positive", "negative", 2);
+    }
 
     /**
      * Get directions using the current user location as the start and a selected
@@ -221,6 +360,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         lo.setupLocation();
         List<Address> addresses = lo.getListOfAddresses();
 
+        lo.updateLocationData();
         double latitude = lo.getLatitude();
         double longitude = lo.getLongitude();
 
@@ -774,7 +914,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                //add circle to arraylist, so we can remove from map later
                covidClusterCircles.add(circle);
-
                hashmap.put(circle, COVIDcluster);
 
            }
