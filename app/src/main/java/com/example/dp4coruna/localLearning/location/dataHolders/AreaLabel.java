@@ -13,6 +13,7 @@ public class AreaLabel {
     public double latitude;
     public double longitude;
     public String title;
+    public int riskLevel;
 
     public AreaLabel(String building, String area){
         this.building = building;
@@ -27,6 +28,28 @@ public class AreaLabel {
         this.longitude = longitude;
         this.title = building + " " + area;
     }
+
+    public AreaLabel(String building, String area, double latitude, double longitude,int riskLevel){
+        this.building = building;
+        this.area = area;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.title = building + " " + area;
+        this.riskLevel = riskLevel;
+    }
+
+    /*
+                                    --------------------Getters and Setters--------------------
+     */
+
+    public void setRiskLevel(int riskLevel) {
+        this.riskLevel = riskLevel;
+    }
+
+
+    /*
+                                    -------------------Object Utility Functions--------------------
+     */
 
     /**
      * Enables search in a hash table/ map based on area labels for an object.
@@ -61,6 +84,11 @@ public class AreaLabel {
                 '}';
     }
 
+
+
+    /*
+                                    ---------------------JSON/GSON Functions----------------------
+     */
 
     /**
      * Converts the calling object to its JSON representation and returns the

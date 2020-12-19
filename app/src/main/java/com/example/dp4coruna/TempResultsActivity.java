@@ -1,41 +1,39 @@
 package com.example.dp4coruna;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.*;
 import android.view.View;
 import android.widget.*;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import com.android.volley.*;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.dataManagement.remoteDatabase.DbConnection;
 import com.example.dp4coruna.localLearning.SubmitLocationLabel;
-import com.example.dp4coruna.localLearning.learningService.LocalLearningService;
-import com.example.dp4coruna.localLearning.learningService.movementTracker.Acceleration.AccelerationSensor;
-import com.example.dp4coruna.localLearning.learningService.movementTracker.Acceleration.CalibrationTask;
-import com.example.dp4coruna.localLearning.learningService.movementTracker.MovementSensor;
-import com.example.dp4coruna.localLearning.learningService.movementTracker.TrackMovement;
 import com.example.dp4coruna.localLearning.location.LocationObject;
-import com.example.dp4coruna.localLearning.location.dataHolders.CosSimLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
 import com.example.dp4coruna.localLearning.location.learner.SensorReader;
 import com.example.dp4coruna.ml.MLModel;
-import android.database.Cursor;
-import org.bytedeco.opencv.presets.opencv_core;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.cpu.nativecpu.NDArray;
+import com.example.dp4coruna.phpServer.ServerConnection;
 
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
 
 
 public class TempResultsActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
+    public static final String BROADCAST_RECEIVE_ACTION = "com.example.dp4coruna.TEMP_RESULTS_ACTIVITY";
+
     private TextView dataView;
     private Spinner options;
     private String[] optionNames= {
+            "NetworkTest",
             "GetLocation",
             "ShowDatabase",
             "MLTrain",
@@ -56,6 +54,9 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
     private CountDownTimer demoCDT;
 
 
+    //network test vars:
+    private Handler outputHandler;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +66,8 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
         timerView =  findViewById(R.id.TempResultsTextView_Timer);
         timerView.setText(MAX_TIMER_VAL);
         this.demoHt = new HandlerThread("DemoThread");
+
+        outputHandler = new PrintOutputHandler(Looper.getMainLooper(),dataView);
     }
 
     @Override
@@ -105,10 +108,18 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
             case "MLTrain" : trainMLModel(); break;
             case "MLOutput" : MLModelOutput(); break;
             case "Demo" : demoFunc(); break;
+            case "NetworkTest" : testAWSConnection_v3(); break;
             default: dataView.append("Method For this Instruction Not Yet Implemented.\n"); break;
         }
     }
 
+    /*
+        Network Testing code:
+     */
+    private void testAWSConnection_v3(){
+        ServerConnection sc = new ServerConnection(getApplicationContext(),this.outputHandler);
+        sc.queryDatabase("SELECT * FROM userLocation");
+    }
 
     /*
         Testing functions that will be triggered upon button press and corresponding selection in the dropdown menu
@@ -223,6 +234,33 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
                 }
             };
             printHandler.sendMessage(printHandler.obtainMessage());
+        }
+    }
+
+    private class PrintOutputHandler extends Handler{
+
+        private TextView outputView;
+
+        public PrintOutputHandler(Looper mainLooper, TextView outputView){
+            super(mainLooper);
+            this.outputView = outputView;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+
+            if(msg.obj instanceof String){
+                String message = (String) msg.obj;
+                (this.outputView).setText(message);
+            }
+
+            if(msg.obj instanceof List){
+                List<String> output = (List<String>) msg.obj;
+                for(String s : output){
+                    (this.outputView).append(s);
+                }
+            }
         }
     }
 

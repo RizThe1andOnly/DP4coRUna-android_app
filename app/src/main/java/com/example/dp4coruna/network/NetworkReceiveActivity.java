@@ -38,6 +38,9 @@ public class NetworkReceiveActivity extends AppCompatActivity {
 
     private TextView outputText;
 
+    //random risk factor:
+    int riskFactor = 0;
+
     private class ReceiverHandler extends Handler {
         private TextView receivedLocationView;
 
@@ -63,6 +66,8 @@ public class NetworkReceiveActivity extends AppCompatActivity {
             }
 
             AreaLabel csl = (new CosSimilarity(getApplicationContext())).checkCosSin_vs_allLocations_v2(lob.getWifiAccessPointList());
+            csl.setRiskLevel(riskFactor);
+            riskFactor++;
 
             receivedLocationView.setText(csl.toString());
             String messageToBeSent = csl.convertToJson();

@@ -5,11 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.*;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.ColorInt;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
@@ -89,6 +91,8 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
     private Map<AreaLabel,Marker> markerContainer;
 
     private Marker current_marker = null;
+
+
 
     /*
         * Lifecycle Method(s)
@@ -266,14 +270,16 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
      */
     public void detectLocationButton(View view){
         //detectLocation();
-        if(!this.autodetect){
-            this.autodetect = true;
-            startAutoDetection();
-        }
-        else{
-            this.autodetect = false;
-            (this.autoDetectTimer).cancel();
-        }
+//        if(!this.autodetect){
+//            this.autodetect = true;
+//            startAutoDetection();
+//        }
+//        else{
+//            this.autodetect = false;
+//            (this.autoDetectTimer).cancel();
+//        }
+
+        detectLocation();
     }
 
     public void detectLocation(){
@@ -319,8 +325,42 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
 
         LatLng currentlatlng = new LatLng((this.current_marker).getPosition().latitude,(this.current_marker).getPosition().longitude);
 
+        //add risk zone:
+        drawRiskArea(arealabel);
+
         map.moveCamera(CameraUpdateFactory.newLatLng(currentlatlng));
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentlatlng, 21.00f));
+    }
+
+
+    /**
+     * Uses obtained area labels to draw risk zones.
+     *
+     * Currently uses only lat/lng with a dummy radius to draw a risk area.
+     * The risk will be determined by the AreaLabel's associated num of cases or some other pre-determined
+     * value.
+     *
+     * @param arealabel
+     */
+    private void drawRiskArea(AreaLabel arealabel){
+        LatLng coord = new LatLng(arealabel.latitude,arealabel.longitude);
+
+        @ColorInt int low = Color.argb(50,255, 25, 25);
+        @ColorInt int high = Color.argb(100,255, 25, 25);
+
+        int risk = arealabel.riskLevel;
+        int riskColor = risk == 0 ? low:high;
+
+        CircleOptions circleOptions = new CircleOptions();
+        circleOptions.center(coord);
+        circleOptions.radius(5);
+        circleOptions.strokeWidth(1);
+        circleOptions.strokeColor(riskColor);
+        circleOptions.fillColor(riskColor);
+        circleOptions.clickable(true);
+        Circle circle = map.addCircle(circleOptions);
+        circle.setTag("User 1");
+
     }
 
     private void initiateNetReq(){

@@ -1,6 +1,7 @@
 package com.example.dp4coruna.mapmanagement;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Handler;
