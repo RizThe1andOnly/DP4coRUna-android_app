@@ -195,9 +195,7 @@ public class ServerConnection {
         StringRequest sr = new StringRequest(Request.Method.POST,fullUrl,response->{
                 /*
                     This lambda function is triggered when the server returns a page.
-
                     response is a String value.
-
                     response will be processed by processHtmlForData() to get only the data.
                  */
             result = processHtmlForData(response,requestType);
@@ -266,11 +264,12 @@ public class ServerConnection {
      * Will send broadcast with results if there is a destination to send to, i.e. this.broadcastDestination is not null.
      */
     private void outputResults(int requestType){
-
+        Log.i("AreaLabelFeat", "in output results");
         //Comment out the line below if you want to test out the code
-        if(requestType == UPDATE_REQUEST) return;
+       // if(requestType == UPDATE_REQUEST) return;
 
         if(this.externalHandler != null){
+            Log.i("AreaLabelFeat", "in external handler");
             Message msg = (this.externalHandler).obtainMessage();
             msg.obj = this.result;
             (this.externalHandler).sendMessage(msg);
@@ -283,4 +282,11 @@ public class ServerConnection {
             LocalBroadcastManager.getInstance(this.context).sendBroadcast(outputResultIntent);
         }
     }
+
+    public List<String> getResults(){
+        return this.result;
+    }
+
+
+
 }
