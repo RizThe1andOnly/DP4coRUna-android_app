@@ -111,7 +111,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             "Show User Locations",
             "Show DB Contents",
             "Report Positive Test: User 1",
-            "Report Positive Test: User 2"
+            "Report Positive Test: User 2",
+            "Create Area Labels",
+            "Print Area Labels"
     };
     private String optionToRun;
     // * Class constants:
@@ -204,10 +206,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             case "Report Positive Test: User 2" : demoUser2(); break;
             case "Display Indoor Routes" : indoorRouting();break;
             case "Set Indoor Points" : enableIndoorRoutingProcedures = true;break;
+            case "Create Area Labels" : createAreaLabels(this); break;
+            case "Print Area Labels" : printAreaLabels(); break;
             default: Toast.makeText(getApplicationContext(),"No Function for " + (this.optionToRun),Toast.LENGTH_LONG).show();break;
         }
     }
 
+
+    /**Method to demo:
+     * querying the MySQL database,
+     * parsing the returned strings and using them to
+     * create a List of AreaLabel objects with the appropriate fields
+     * @param context
+     */
+    public void createAreaLabels(Context context){
+       AreaLabel.getQueryResults(context, "SELECT * FROM userLocation");
+    }
+
+
+    /**Method to demo the Area Label Objects set from createAreaLabel
+     * This just runs through the list and prints the fields in the Log
+     */
+    public void printAreaLabels(){
+    Log.d("AreaLabelFeat", "in printAreaLabels");
+
+        List<AreaLabel> arealabellist = new ArrayList<>();
+        arealabellist =  AreaLabel.getAreaLabels();
+
+        for(AreaLabel a : arealabellist) {
+            Log.i("AreaLabelFeat", Double.toString(a.latitude) + " " + Double.toString(a.longitude) + " "
+            + a.date + " " + a.building + " " + a.room+ " " + a.county + " " + a.numCovidCases + "\n");
+        }
+    }
 
     /**For Demo:
      * Shows the database with some dummy data
