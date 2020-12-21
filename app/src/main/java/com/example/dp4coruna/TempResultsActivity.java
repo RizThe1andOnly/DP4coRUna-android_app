@@ -14,6 +14,7 @@ import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.dataManagement.remoteDatabase.DbConnection;
 import com.example.dp4coruna.localLearning.SubmitLocationLabel;
 import com.example.dp4coruna.localLearning.location.LocationObject;
+import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
 import com.example.dp4coruna.localLearning.location.learner.SensorReader;
@@ -107,7 +108,8 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
             case "CosSim" : cosineSimilarityTest(); break;
             case "MLTrain" : trainMLModel(); break;
             case "MLOutput" : MLModelOutput(); break;
-            case "Demo" : demoFunc(); break;
+            //case "Demo" : demoFunc(); break;
+            case "Demo" : testIndoorFileCreationString();break;
             case "NetworkTest" : testAWSConnection_v3(); break;
             default: dataView.append("Method For this Instruction Not Yet Implemented.\n"); break;
         }
@@ -119,6 +121,31 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
     private void testAWSConnection_v3(){
         ServerConnection sc = new ServerConnection(getApplicationContext(),this.outputHandler);
         sc.queryDatabase("SELECT * FROM userLocation");
+    }
+
+    /*
+        Test indoor file string creation
+     */
+    private void testIndoorFileCreationString(){
+        AreaLabel a1 = new AreaLabel("A","1",10.0,10.0);
+        AreaLabel a2 = new AreaLabel("A","2",10.0,11.0);
+        AreaLabel a3 = new AreaLabel("B","1",11.0,10.0);
+        AreaLabel a4 = new AreaLabel("B","2",10.0,12.0);
+        AreaLabel a5 = new AreaLabel("B","3",12.0,11.0);
+        AreaLabel a6 = new AreaLabel("C","1",10.0,13.0);
+        AreaLabel a7 = new AreaLabel("D","1",13.0,10.0);
+
+        List<AreaLabel> listAl = new ArrayList<>();
+        listAl.add(a1);
+        listAl.add(a2);
+        listAl.add(a3);
+        listAl.add(a4);
+        listAl.add(a5);
+        listAl.add(a6);
+        listAl.add(a7);
+
+        AreaLabel.writeAreasToFile(listAl);
+
     }
 
     /*

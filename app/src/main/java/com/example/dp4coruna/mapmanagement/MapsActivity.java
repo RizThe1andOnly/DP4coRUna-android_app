@@ -3,7 +3,7 @@ package com.example.dp4coruna.mapmanagement;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Color;
+import android.graphics.*;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -51,6 +51,7 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.PolyUtil;
 
+import java.io.*;
 import java.util.*;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
@@ -83,6 +84,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     int numClicks;
 
+    private List<AreaLabel> currentBuildingAreas;
+    private AppDatabase classAd;
+
     /*
         From Riz:
         Variables for certain location detection functionalities and view objects
@@ -92,10 +96,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private Spinner optionSpinner;
     private String[] optionNames = {
+            "Detect",
+            "Display Indoor Routes",
+            "Set Indoor Points",
             "Display Routes",
             "Show Risk Zones",
             "GPS",
-            "Detect",
             "Train",
             "Sample",
             "UnlockMap",
@@ -124,6 +130,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Map<AreaLabel,Marker> markerContainer;
     private Marker current_marker = null;
 
+    //indoor routing variables: (set src and destination)
+    private String indoorRouting_srcnode = null;
+    private String indoorRouting_destnode = null;
+    private int indoorRouting_setState = 0;
+    private boolean enableIndoorRoutingProcedures = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,6 +158,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         this.activityContext = getApplicationContext();
         setSpinnerView();
+
+        this.classAd = new AppDatabase(getApplicationContext());
 
         numClicks=0;
     }
@@ -188,9 +202,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             case "Show User Locations" : showUserLocations(); break;
             case "Report Positive Test: User 1" : demoUser1(); break;
             case "Report Positive Test: User 2" : demoUser2(); break;
+            case "Display Indoor Routes" : indoorRouting();break;
+            case "Set Indoor Points" : enableIndoorRoutingProcedures = true;break;
             default: Toast.makeText(getApplicationContext(),"No Function for " + (this.optionToRun),Toast.LENGTH_LONG).show();break;
         }
     }
+
 
     /**For Demo:
      * Shows the database with some dummy data
@@ -698,16 +715,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public boolean onMarkerClick(Marker marker) {
-    if(marker==null){
-        return false;
-    }
-    if(marker.getTag()==null){
-        return false;
-    }
+        if(marker==null){
+            return false;
+        }
+        if(marker.getTag()==null){
+            return false;
+        }
         Toast.makeText(this, marker.getTag().toString(),
                 Toast.LENGTH_SHORT).show();
-    return true;
+
+
+        if((this.enableIndoorRoutingProcedures)) setIndoorRoutingPoints(marker);
+
+        return true;
     }
+
+    private void setIndoorRoutingPoints(Marker marker){
+        switch ((this.indoorRouting_setState)){
+            case 0:
+                (this.indoorRouting_srcnode) = (String) marker.getTag();
+                (this.indoorRouting_setState)++;
+                break;
+            case 1:
+                (this.indoorRouting_destnode) = (String) marker.getTag();
+                (this.indoorRouting_setState) = 0;
+                (this.enableIndoorRoutingProcedures) = false;
+                break;
+        }
+    }
+
     /*
     /**
      * Called when the user clicks a marker
@@ -720,18 +756,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     /*
     @Override
     public boolean onMarkerClick(Marker marker) {
-
         if (marker != null) {
             //remove coordinates from arraylist
             walkwaypoints.remove(marker);
-
             //clears the marker the user clicked
             marker.remove();
-
             return true;
         }
-
-
         // Return false to indicate that we have not consumed the event and that we wish
         // for the default behavior to occur (which is for the camera to move such that the
         // marker is centered and for the marker's info window to open, if it has one).
@@ -774,9 +805,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onResponse(String response) {
                         Log.d("JSON", response.substring(0, 10000));
                         jsonCOVIDData = response;
-                       if (response==null){
-                           return;
-                       }
+                        if (response==null){
+                            return;
+                        }
 
                         try {
                             ArrayList<COVIDCluster> covidClusters = new ArrayList<COVIDCluster>();
@@ -819,7 +850,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return null;
         }
 
-       ArrayList<COVIDCluster> covidClusters = new ArrayList<COVIDCluster>();
+        ArrayList<COVIDCluster> covidClusters = new ArrayList<COVIDCluster>();
         JSONObject jsonData = new JSONObject(response);
         JSONArray jsonFeatures = jsonData.getJSONArray("features");
 
@@ -842,7 +873,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             String longitude = jsonAttribute.getString("Long_");
             if(latitude!="null" && longitude!="null") {
                 LatLng coordinates = (new LatLng(jsonAttribute.getDouble("Lat"), jsonAttribute.getDouble("Long_")));
-                    covidCluster.setCoordinates(coordinates);
+                covidCluster.setCoordinates(coordinates);
             }
             covidCluster.setConfirmed(jsonAttribute.getInt("Confirmed"));
             covidCluster.setRecovered(jsonAttribute.getInt("Recovered"));
@@ -876,48 +907,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             COVIDCluster COVIDcluster = COVIDClusters.get(i);
 
-           if(COVIDcluster.getCoordinates()!=null) {
+            if(COVIDcluster.getCoordinates()!=null) {
 
 
-               CircleOptions circleOptions = new CircleOptions();
-               circleOptions.center(COVIDcluster.getCoordinates());
-               circleOptions.radius(10000);
+                CircleOptions circleOptions = new CircleOptions();
+                circleOptions.center(COVIDcluster.getCoordinates());
+                circleOptions.radius(10000);
 
-               //hish risk, red
-               if(COVIDcluster.getRisklevel()=="High") {
-                   circleOptions.strokeWidth(1);
-                   circleOptions.strokeColor(0x46FF0000);
-                   circleOptions.fillColor(0x46FF0000);
-               }
-               //medium risk, yellow
-               else if(COVIDcluster.getRisklevel()=="Medium") {
-                   circleOptions.strokeWidth(1);
-                   circleOptions.strokeColor(0x467F8000);
-                   circleOptions.fillColor(0x467F8000);
-               }
-               else{ //low risk, blue
-                   circleOptions.strokeWidth(1);
-                   circleOptions.strokeColor(0x460000FF);
-                   circleOptions.fillColor(0x460000FF);
-               }
+                //hish risk, red
+                if(COVIDcluster.getRisklevel()=="High") {
+                    circleOptions.strokeWidth(1);
+                    circleOptions.strokeColor(0x46FF0000);
+                    circleOptions.fillColor(0x46FF0000);
+                }
+                //medium risk, yellow
+                else if(COVIDcluster.getRisklevel()=="Medium") {
+                    circleOptions.strokeWidth(1);
+                    circleOptions.strokeColor(0x467F8000);
+                    circleOptions.fillColor(0x467F8000);
+                }
+                else{ //low risk, blue
+                    circleOptions.strokeWidth(1);
+                    circleOptions.strokeColor(0x460000FF);
+                    circleOptions.fillColor(0x460000FF);
+                }
 
 
 
-               circleOptions.clickable(true);
+                circleOptions.clickable(true);
 
-               //Add circle to the map, with tag
-               Circle circle = mMap.addCircle(circleOptions);
-               circle.setTag((COVIDcluster.getLocation() +
-                       "\n\nCOVID-19:" +
-                       "\nActive Cases: " + COVIDcluster.getActive() +
-                       "\nDeaths: " + COVIDcluster.getDeaths() +
-                       "\nTotal Cases: " + COVIDcluster.getConfirmed()));
+                //Add circle to the map, with tag
+                Circle circle = mMap.addCircle(circleOptions);
+                circle.setTag((COVIDcluster.getLocation() +
+                        "\n\nCOVID-19:" +
+                        "\nActive Cases: " + COVIDcluster.getActive() +
+                        "\nDeaths: " + COVIDcluster.getDeaths() +
+                        "\nTotal Cases: " + COVIDcluster.getConfirmed()));
 
-               //add circle to arraylist, so we can remove from map later
-               covidClusterCircles.add(circle);
-               hashmap.put(circle, COVIDcluster);
+                //add circle to arraylist, so we can remove from map later
+                covidClusterCircles.add(circle);
+                hashmap.put(circle, COVIDcluster);
 
-           }
+            }
         }
     }
 
@@ -1015,7 +1046,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Riz's Section
         This section has to do with locating where the user is.
             Keywords: GPS,Detect,Train,Sample
-
         This section also sets up the dropdown(up) menu that holds all of the
         options.
             Keywords: spinner,options,dropdown
@@ -1027,8 +1057,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         optionStringList.addAll(Arrays.asList(this.optionNames));
 
         ArrayAdapter<String> aradptr = new ArrayAdapter<>(this,
-                                                            android.R.layout.simple_spinner_item,
-                                                            optionStringList);
+                android.R.layout.simple_spinner_item,
+                optionStringList);
         aradptr.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         (this.optionSpinner).setAdapter(aradptr);
         (this.optionSpinner).setOnItemSelectedListener(this);
@@ -1079,7 +1109,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             double current_latitude = markers.getDouble(2);
             double current_longitude = markers.getDouble(3);
 
-            String marker_title = current_building + " " + current_room;
+            String marker_title = current_building + "-" + current_room;
             AreaLabel current_al = new AreaLabel(markers.getString(0),markers.getString(1),current_latitude,current_longitude);
 
             if(!markerContainer.containsKey(current_al)){
@@ -1087,7 +1117,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Marker temp = mMap.addMarker(new MarkerOptions()
                         .position(marker_post)
                         .title(marker_title));
-                temp.setTag(0);
+                temp.setTag(marker_title);
                 markerContainer.put(current_al,temp);
             }
         }
@@ -1198,6 +1228,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         List<WiFiAccessPoint> start = SensorReader.scanWifiAccessPoints(getApplicationContext());
         AreaLabel currentAreaLabel = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
 
+        // get all the area labels associated with the current building:
+        this.currentBuildingAreas = (this.classAd).getFullAreaLabels(currentAreaLabel);
 
         (this.current_marker) = (this.markerContainer).get(currentAreaLabel);
         (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
@@ -1281,5 +1313,255 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    /*
+                ---------------------------------Akshay Integration Code--------------------------------
+     */
+
+    private GraphWorld graph;
+    private boolean enteredInputs = true;
+    ArrayList<Polyline> lines=new ArrayList<>();
+
+    private void indoorRouting(){
+        Button button = (Button)findViewById(R.id.DisplayRoutesButton);
+        Polyline polyline=null;
+        ArrayList<Double> distanceList = new ArrayList<Double>();
+        ArrayList<Node> nodesList = new ArrayList<>();
+        ArrayList<String> resultList = new ArrayList<>();
+
+        //MALL EXAMPLE
+        //Fair Oaks Mall Coordinates
+
+        int checkFirstNode=0;
+
+        //Adds text to each of the nodes
+
+        LocationGrabber lg = new LocationGrabber(getApplicationContext());
+        lg.setupLocation();
+        LatLng currentlatlng = new LatLng(lg.getLatitude(),lg.getLongitude());
+
+        //need destination from somewhere here
+        sendDirectionsRequest(currentlatlng, null);
+
+
+        Scanner scanner = null;
+        String testFilePath = AreaLabel.FILEPATH;
+        AreaLabel.writeAreasToFile((this.currentBuildingAreas));
+        try {
+            //DataInputStream textFileStream = new DataInputStream(getAssets().open(String.format()));
+            DataInputStream textFileStream = new DataInputStream(new FileInputStream(new File(testFilePath)));
+            scanner = new Scanner(textFileStream);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        graph = new GraphWorld(scanner,this.indoorRouting_srcnode,this.indoorRouting_destnode);
+
+
+
+        for (int x = 0; x < graph.members.length; x++) {
+
+            System.out.println("Member is " + graph.members[x].name);
+
+
+
+            LatLng latLng = new LatLng(graph.members[x].lat,graph.members[x].lon);
+
+            if(checkFirstNode==0){  //Only update the position of the map to first store from textfile
+
+                //Moves to that user's current location
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+
+                //Zoom in on the user's current location
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(graph.members[x].lat,graph.members[x].lon),  18.5f));
+
+                checkFirstNode=1;
+
+            }
+
+
+            if(graph.members[x].name.equals("XXIForever") || (graph.members[x].name.equals("Apple")) ) //High-risk nodes example
+            {
+                mMap.addMarker(new MarkerOptions().position(latLng).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)).title(graph.members[x].name).snippet(graph.members[x].name)).showInfoWindow();
+
+                showTextOnMarker(this,mMap,latLng,graph.members[x].name,150,12);
+                drawCircularZone(latLng,9);
+            }
+            else {
+                mMap.addMarker(new MarkerOptions().position(latLng).infoWindowAnchor(25, 25).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)).title(graph.members[x].name)).showInfoWindow();
+                showTextOnMarker(this,mMap,latLng,graph.members[x].name,150,12);
+            }
+
+
+
+
+
+            Node node = new Node();
+            node.name = graph.members[x].name;
+
+            node.latLng = latLng;
+
+            nodesList.add(node);
+
+            for (Neighbor ptr = graph.members[x].first; ptr != null; ptr = ptr.next) {
+
+
+                System.out.println("Neighbor of member " + graph.members[x].name + " is " + graph.members[ptr.fnum].name);
+
+            }
+        }
+
+        if(enteredInputs) {
+
+
+
+            ComputeRoute route = new ComputeRoute(graph);
+            LinkedList<GraphWorldState> full_path = new LinkedList<GraphWorldState>();
+            LinkedList<GraphWorldState> path = route.compute_path();
+
+            if (path == null) {
+                System.out.println("No path");
+                return;
+            }
+            System.out.println("RETURN FROM COMPUTE PATH = " + path);
+            full_path.addAll(path);
+            full_path.removeLast();
+
+            GraphWorldState last_state = path.peekLast();
+            if (!last_state.equals(route.world.gstate)) {
+                System.out.println("Something is not right");
+                // route.world.update_start(last_state);
+            } else {
+                System.out.println("Completed successfully");
+            }
+
+
+            for (int x = 0; x < nodesList.size(); x++) {
+
+                System.out.println("Name " + nodesList.get(x).name + " Lat Long " + nodesList.get(x).latLng);
+            }
+
+            ListIterator<GraphWorldState> iter = full_path.listIterator(0);
+            while (iter.hasNext()) {
+                GraphWorldState next_state = iter.next();
+                System.out.println(next_state);
+
+                resultList.add(next_state.nodename);
+
+                Log.d("PRINTING SHORTEST ROUTE", next_state.nodename + "");
+
+
+            }
+
+            //   System.out.println(route.world.gstate.);
+            Log.d("DESTINATION", graph.destnode);
+            resultList.add(graph.destnode);
+
+            System.out.println("START END STATES "+graph.sstate+" "+graph.gstate);
+
+            System.out.println("resultList " + resultList);
+
+
+            LatLng l1 = null;
+            LatLng l2 = null;
+
+
+            for(Polyline line:lines){
+
+
+                line.remove();
+            }
+
+            lines.clear();
+
+
+
+            for (int x = 0; x < resultList.size() - 1; x++) {
+
+
+                for (int y = 0; y < nodesList.size(); y++) {
+
+
+                    if (nodesList.get(y).name.equals(resultList.get(x)))  //if the shortest path node is equal to the nodeList nodes name then add polylines for that nodes latlng objects
+                    {
+                        l1 = nodesList.get(y).latLng;
+
+                    }
+
+
+                }
+
+                for (int y = 0; y < nodesList.size(); y++) {
+
+
+                    if (nodesList.get(y).name.equals(resultList.get(x + 1)))  //if the shortest path node is equal to the nodeList nodes name then add polylines for that nodes latlng objects
+                    {
+                        l2 = nodesList.get(y).latLng;
+
+                    }
+                }
+
+
+                polyline = mMap.addPolyline(new PolylineOptions().clickable(true).add(
+                        l1, l2
+
+                ));
+
+                lines.add(polyline);
+
+                System.out.println("Added LINES"+lines.get(x)) ;
+
+                polyline.setColor(Color.RED);
+
+
+            } //resultList end
+
+            enteredInputs=false;
+
+        }
+    }
+
+    /*Adds text to a marker at a Latlng location
+     */
+    public Marker showTextOnMarker(final Context context, final GoogleMap map,
+                                   final LatLng location, final String text, final int padding,
+                                   final int fontSize) {
+        Marker marker = null;
+
+        if (context == null || map == null || location == null || text == null
+                || fontSize <= 0) {
+            return marker;
+        }
+
+        final TextView textView = new TextView(context);
+        textView.setText(text);
+        textView.setTextSize(fontSize);
+
+        final Paint paintText = textView.getPaint();
+
+        final Rect boundsText = new Rect();
+        paintText.getTextBounds(text, 0, textView.length(), boundsText);
+        paintText.setTextAlign(Paint.Align.CENTER);
+
+        final Bitmap.Config conf = Bitmap.Config.ARGB_8888;
+        final Bitmap bmpText = Bitmap.createBitmap(boundsText.width() + 2
+                * padding, boundsText.height() + 2 * padding, conf);
+
+        final Canvas canvasText = new Canvas(bmpText);
+        paintText.setColor(Color.BLACK);
+
+        canvasText.drawText(text, canvasText.getWidth() / 2,
+                canvasText.getHeight() - padding - boundsText.bottom, paintText);
+
+        final MarkerOptions markerOptions = new MarkerOptions()
+                .position(location)
+                .icon(BitmapDescriptorFactory.fromBitmap(bmpText))
+                .anchor(0.5f, 1);
+
+        marker = map.addMarker(markerOptions);
+
+        return marker;
+    }
 
 }

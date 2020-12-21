@@ -1116,6 +1116,44 @@ public class AppDatabase extends SQLiteOpenHelper {
     }
 
 
+    /*
+        Get specific building area labels:
+     */
+    public List<AreaLabel> getFullAreaLabels(AreaLabel al){
+
+        String buildingName = al.building;
+
+        Cursor markers = queryMapMarkers(buildingName);
+        List<AreaLabel> toBeReturned = new ArrayList<>();
+        while(markers.moveToNext()){
+            String current_building = markers.getString(0);
+            String current_room = markers.getString(1);
+            double current_latitude = markers.getDouble(2);
+            double current_longitude = markers.getDouble(3);
+
+            String marker_title = current_building + " " + current_room;
+            AreaLabel current_al = new AreaLabel(markers.getString(0),markers.getString(1),current_latitude,current_longitude);
+
+            toBeReturned.add(current_al);
+        }
+
+        return toBeReturned;
+    }
+
+    public Cursor queryMapMarkers(String buildingName){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String queryString = "SELECT "
+                + MAP_LABEL_TABLE_COL_BUILDING + ", "
+                + MAP_LABEL_TABLE_COL_ROOM + ", "
+                + MAP_LABEL_TABLE_COL_LATITUDE + ", "
+                + MAP_LABEL_TABLE_COL_LONGITUDE +" "
+                + "FROM " + MAP_LABEL_TABLE + " "
+                + "WHERE " + MAP_LABEL_TABLE_COL_BUILDING + " = ?" + ";";
+
+        return db.rawQuery(queryString,new String[]{buildingName});
+    }
+
+
     /* ----------------------------------------
             Section for adding and retrieving accelerometer data from the database. Used with CalibrationTask to
             save Accelerometer offset to device database. This offset will be retrieved to be used with accelerometer

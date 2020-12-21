@@ -1,7 +1,12 @@
 package com.example.dp4coruna.localLearning.location.dataHolders;
 
+import android.os.Environment;
+import android.util.Log;
 import com.google.gson.Gson;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -14,6 +19,10 @@ public class AreaLabel {
     public double longitude;
     public String title;
     public int riskLevel;
+
+    //filepath to save the route info for indoor routing:
+    public static final String FILEPATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/indoorGraph.txt";
+    //public static final String FILEPATH = "/assets/dynamicList.txt";
 
     public AreaLabel(String building, String area){
         this.building = building;
@@ -103,5 +112,60 @@ public class AreaLabel {
 
     public static AreaLabel fromJson(String areaLabelJson){
          return (new Gson().fromJson(areaLabelJson,AreaLabel.class));
+    }
+
+
+
+    /*
+                            ------------------------Indoor Routing Functionalities---------------------
+
+           Currently static method to create text file for indoor routing:
+     */
+
+    public static void writeAreasToFile(List<AreaLabel> inputs){
+        String fileContents = "";
+        String numLines = String.valueOf(inputs.size());
+
+        //put number of lines in the file:
+        fileContents += numLines + "\n";
+
+        //put each location label and their lat/lng in the file:
+        for(AreaLabel al : inputs){
+
+            String name = generateIndoorRoutingName(al);
+            String lat = String.valueOf(al.latitude);
+            String lng = String.valueOf(al.longitude);
+
+            fileContents += name + "|" + lat + "|" + lng + "\n";
+        }
+
+        //put edges in fileContents:
+        for(int i=0;i<inputs.size();i++){
+            AreaLabel alStart = inputs.get(i);
+            String startNodeName = generateIndoorRoutingName(alStart);
+            for(int j=(i+1);j< inputs.size();j++){
+                AreaLabel alEnd = inputs.get(j);
+                String endNodeName = generateIndoorRoutingName(alEnd);
+
+                fileContents += startNodeName + "|" + endNodeName + "\n";
+            }
+        }
+
+        //get rid of final \n:
+        fileContents = fileContents.substring(0,fileContents.length()-1);
+
+        //write to file
+        //Log.i("FromAreaLabel",fileContents);
+        try {
+            FileWriter fw = new FileWriter(FILEPATH);
+            fw.write(fileContents);
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String generateIndoorRoutingName(AreaLabel al){
+        return al.building + "-" + al.area;
     }
 }
