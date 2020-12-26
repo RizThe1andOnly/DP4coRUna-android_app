@@ -1,4 +1,4 @@
-package com.example.dp4coruna.localLearning.location.dataHolders;
+package com.example.dp4coruna.mapmanagement.MapDataStructures;
 
 import android.os.Environment;
 import android.util.Log;
@@ -7,16 +7,11 @@ import com.google.gson.Gson;
 import java.io.FileWriter;
 import java.io.IOException;
 import android.content.Context;
-import android.hardware.Camera;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
-import android.widget.TextView;
 
-import com.example.dp4coruna.TempResultsActivity;
 import com.example.dp4coruna.phpServer.ServerConnection;
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +37,9 @@ public class AreaLabel {
     public String title;
     public int riskLevel;
 
+    public String lat_string;
+    public String lng_string;
+
 
     //filepath to save the route info for indoor routing:
     public static final String FILEPATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/indoorGraph.txt";
@@ -50,6 +48,8 @@ public class AreaLabel {
     public Handler dbQueryHandler;
     public static List<String> queryResults;
     public static Handler DBQueryHandler;
+
+    public static String ALL_LOCATION_QUERY = "SELECT * FROM userLocation";
 
     public AreaLabel(String building, String area){
         this.building = building;
@@ -63,6 +63,8 @@ public class AreaLabel {
         this.latitude = latitude;
         this.longitude = longitude;
         this.title = building + " " + area;
+
+        setLatLngStrings();
     }
 
     public AreaLabel(String building, String area, double latitude, double longitude,int riskLevel){
@@ -72,20 +74,32 @@ public class AreaLabel {
         this.longitude = longitude;
         this.title = building + " " + area;
         this.riskLevel = riskLevel;
+
+        setLatLngStrings();
     }
 
     /**
      *Constructor for creating AreaLabel objects from database
      */
     public AreaLabel(double latitude, double longitude, String date, String building,
-                     String room, String county, int numCovidCases){
+                     String area, String county, int numCovidCases){
         this.latitude=latitude;
         this.longitude=longitude;
         this.date=date;
         this.building=building;
-        this.room=room;
+        this.area=area;
         this.county=county;
         this.numCovidCases=numCovidCases;
+
+        setLatLngStrings();
+    }
+
+    /**
+     * For database update purposes
+     */
+    private void setLatLngStrings(){
+        this.lat_string = String.valueOf(this.latitude);
+        this.lng_string = String.valueOf(this.longitude);
     }
 
 
@@ -105,6 +119,22 @@ public class AreaLabel {
      */
 
     /**
+     * This method checks to see if two area markers are in the same building. This is done
+     * through the building attribute of an AreaLabel object and the in turn the building
+     * attribute within the sqlite database. So the building attribute of the two object being
+     * compared has to match in order for this method to return true.
+     *
+     * @param o
+     * @return Boolean
+     */
+    public boolean sameBuilding(Object o){
+        if(this == o) return true;
+        if(o==null || getClass() != o.getClass()) return false;
+        AreaLabel areaLabel = (AreaLabel) o;
+        return (this.building).equals(areaLabel.building);
+    }
+
+    /**
      * Enables search in a hash table/ map based on area labels for an object.
      * @param o
      * @return
@@ -114,7 +144,18 @@ public class AreaLabel {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AreaLabel areaLabel = (AreaLabel) o;
-        return (building.equals(areaLabel.building) && area.equals(areaLabel.area));
+
+        boolean toBeReturned = false;
+
+        if(this.area == null || areaLabel.area == null ) {
+            toBeReturned = (this.building.equals(areaLabel.building) && this.room.equals(areaLabel.room));
+        }
+
+        if(this.room == null || areaLabel.room == null){
+            toBeReturned = (this.building.equals(areaLabel.building) && this.area.equals(areaLabel.area));
+        }
+
+        return toBeReturned;
     }
 
     /**
@@ -199,7 +240,7 @@ public class AreaLabel {
         fileContents = fileContents.substring(0,fileContents.length()-1);
 
         //write to file
-        //Log.i("FromAreaLabel",fileContents);
+        Log.i("FromAreaLabel",fileContents);
         try {
             FileWriter fw = new FileWriter(FILEPATH);
             fw.write(fileContents);
@@ -225,6 +266,21 @@ public class AreaLabel {
     public static void getQueryResults(Context context, String sqlStatement){
         queryResults = new ArrayList<>();
         DBQueryHandler = new DBQueryHandler(Looper.getMainLooper());
+        ServerConnection sc3 = new ServerConnection(context, DBQueryHandler);
+        sc3.queryDatabase(sqlStatement);
+    }
+
+    /**
+     * Method queries the database with the given sql statement, except now a handler is passed in as
+     * an argument. This is based on the getQueryResult() defined above.
+     *
+     * @param context
+     * @param sqlStatement
+     * @param markerPlacerHandler
+     */
+    public static void getQueryResults(Context context, String sqlStatement, Handler markerPlacerHandler){
+        queryResults = new ArrayList<>();
+        DBQueryHandler = markerPlacerHandler;
         ServerConnection sc3 = new ServerConnection(context, DBQueryHandler);
         sc3.queryDatabase(sqlStatement);
     }

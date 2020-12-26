@@ -1,6 +1,6 @@
 package com.example.dp4coruna.localLearning.location.dataHolders;
 
-import java.security.InvalidParameterException;
+import com.example.dp4coruna.mapmanagement.MapDataStructures.AreaLabel;
 
 public class CosSimLabel implements Comparable {
 

@@ -1,23 +1,28 @@
 package com.example.dp4coruna.mapmanagement;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.*;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.widget.*;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
-import com.example.dp4coruna.TempResultsActivity;
 import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.dataManagement.databaseDemoActivity;
-import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
-import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
-import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
+import com.example.dp4coruna.mapmanagement.MapDataStructures.AreaLabel;
 import com.example.dp4coruna.localLearning.location.learner.LocationGrabber;
-import com.example.dp4coruna.localLearning.location.learner.SensorReader;
+import com.example.dp4coruna.mapmanagement.MapDataStructures.Route;
+import com.example.dp4coruna.mapmanagement.indoorRouting.*;
+import com.example.dp4coruna.mapmanagement.indoorRouting.DataStructures.Neighbor;
+import com.example.dp4coruna.mapmanagement.MapModel.COVIDCluster;
+import com.example.dp4coruna.mapmanagement.MapModel.MapActivityModel;
 import com.example.dp4coruna.utilities.AddressDialog;
 import com.example.dp4coruna.utilities.DialogCallBack;
 import org.json.*;
@@ -73,6 +78,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //Dummy Data
     public static ArrayList<Circle> dangerSpots = new ArrayList<>();
 
+    public static final int ROUTE_SRC_DEST_RESULTS = 0;
+    private boolean fromCurrentLocation = true;
+
     ArrayList<Marker> walkwaypoints = new ArrayList<Marker>();
 
     String destinationStreetAddress;
@@ -87,33 +95,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private List<AreaLabel> currentBuildingAreas;
     private AppDatabase classAd;
 
+    private MapActivityModel mm;
+
     /*
         From Riz:
         Variables for certain location detection functionalities and view objects
      */
 
-    private boolean lockmap = true;
 
+    private boolean lockmap = true;
     private Spinner optionSpinner;
+
+    /*  DROP DOWN OPTIONS
+       Options For the spinner. These have code associated with them but won't be shown for demo purposes.
+       When necessary copy the below into optionNames.
+
+           "Detect",
+           "Show Risk Zones",
+           "GPS",
+           "Train",
+           "Sample",
+           "UnlockMap",
+           "LockMap",
+           "GetRoute",
+           "Add DB Dummy Data",
+           "Show User Locations",
+           "Show DB Contents",
+           "Report Positive Test: User 1",
+           "Report Positive Test: User 2",
+           "Create Area Labels",
+           "Print Area Labels"
+    */
     private String[] optionNames = {
             "Detect",
-            "Display Indoor Routes",
+            "Zoom To Current",
+            "Update Map",
+            "Zoom To Mall",
             "Set Indoor Points",
-            "Display Routes",
-            "Show Risk Zones",
-            "GPS",
-            "Train",
-            "Sample",
-            "UnlockMap",
-            "LockMap",
-            "GetRoute",
-            "Add DB Dummy Data",
-            "Show User Locations",
-            "Show DB Contents",
-            "Report Positive Test: User 1",
-            "Report Positive Test: User 2",
-            "Create Area Labels",
-            "Print Area Labels"
+            "Display Indoor Routes",
+            "Display Routes(Random)",
+            "GetRoute(Trained)",
+            "Show Risk Zones"
     };
     private String optionToRun;
     // * Class constants:
@@ -137,6 +159,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String indoorRouting_destnode = null;
     private int indoorRouting_setState = 0;
     private boolean enableIndoorRoutingProcedures = false;
+    private AreaLabel indoorStartingAL;
 
 
     @Override
@@ -179,18 +202,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * @param view
      */
     public void runEvent(View view){
-        /*
-            Current available options:
-                    "Display Routes",
-                    "Show Risk Zones",
-                    "GPS",
-                    "Detect",
-                    "Train",
-                    "Sample"
-         */
-
         switch ((this.optionToRun)){
-            case "Display Routes" : showAllRoutes(view); break;
+            case "Display Routes(Random)" : showAllRoutes(view); break;
             case "Show Risk Zones" : showRiskZones(view); break;
             case "GPS" : moveToCurrent_train(view); break;
             case "Detect" : detectLocation(view); break;
@@ -198,7 +211,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             case "Sample" : sampleButtonEvent(view); break;
             case "UnlockMap" : this.lockmap = false; break;
             case "LockMap" : this.lockmap = true; break;
-            case "GetRoute" : getDirections(); break;
+            case "GetRoute(Trained)" : getDirections(); break;
             case "Add DB Dummy Data" : addDBDummyData(); break;
             case "Show DB Contents" : showDBContents(view); break;
             case "Show User Locations" : showUserLocations(); break;
@@ -208,10 +221,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             case "Set Indoor Points" : enableIndoorRoutingProcedures = true;break;
             case "Create Area Labels" : createAreaLabels(this); break;
             case "Print Area Labels" : printAreaLabels(); break;
+            case "Zoom To Mall" : zoomToMall();break;
+            case "Update Map" : updateMap();break;
+            case "Zoom To Current" : zoomToCurrentGPSLocation();break;
             default: Toast.makeText(getApplicationContext(),"No Function for " + (this.optionToRun),Toast.LENGTH_LONG).show();break;
         }
     }
 
+    /**
+     * Zooms in to the gps generated coordinates. This is to make things a bit easier to mark locations.
+     */
+    private void zoomToCurrentGPSLocation(){
+        LocationGrabber lg = new LocationGrabber(getApplicationContext());
+        lg.setupLocation();
+        LatLng currentloc = new LatLng(lg.getLatitude(),lg.getLongitude());
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentloc, 18.10f));
+    }
+
+
+    /**
+     *  Updates the map with new server data. This is to account for changes in server by other users.
+     */
+    private void updateMap(){
+        (this.mm).updateMap();
+    }
+
+
+    /**
+     * Zoom to the mall datapoints
+     */
+    private void zoomToMall(){
+        this.mm.zoomToMall();
+    }
 
     /**Method to demo:
      * querying the MySQL database,
@@ -235,7 +276,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         for(AreaLabel a : arealabellist) {
             Log.i("AreaLabelFeat", Double.toString(a.latitude) + " " + Double.toString(a.longitude) + " "
-            + a.date + " " + a.building + " " + a.room+ " " + a.county + " " + a.numCovidCases + "\n");
+            + a.date + " " + a.building + " " + a.area+ " " + a.county + " " + a.numCovidCases + "\n");
         }
     }
 
@@ -372,7 +413,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * location from the list of marked locations as destination.
      */
     public void getDirections(){
-        LatLng startpoint = (this.current_marker).getPosition();
+        LatLng startpoint = (this.mm.current_marker).getPosition();
 
         //get destination from user entry:
         DialogFragment df = new AddressDialog(SUBMIT_DESTINATION);
@@ -381,12 +422,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void getDirection_postSubmission(String building, String room){
         AreaLabel al = new AreaLabel(building,room);
-        Marker destinationMarker = (this.markerContainer).get(al);
+        Marker destinationMarker = (this.mm.markerContainer).get(al);
+
+        if(destinationMarker == null){
+            Toast.makeText(getApplicationContext(),"This Destination Does NOT Exist In Trained Data!",Toast.LENGTH_LONG).show();
+        }
 
         destinationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationMarker.getPosition(), 10.10f));
 
-        sendDirectionsRequest((this.current_marker).getPosition(),destinationMarker.getPosition());
+        sendDirectionsRequest((this.mm.current_marker).getPosition(),destinationMarker.getPosition());
     }
 
 
@@ -402,22 +447,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        this.mm = new MapActivityModel(this.activityContext,this.mMap);
 
         //gets user's current location
         lo = new LocationObject(this, this);
-        lo.setupLocation();
+        //lo.setupLocation();           //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   changes
         List<Address> addresses = lo.getListOfAddresses();
 
-        lo.updateLocationData();
+        //lo.updateLocationData();      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   changes
         double latitude = lo.getLatitude();
         double longitude = lo.getLongitude();
 
         LatLng currentlocation = new LatLng(latitude, longitude);
 
-        mMap.addMarker(new MarkerOptions().position(currentlocation).title("Current Location"));
+        //mMap.addMarker(new MarkerOptions().position(currentlocation).title("Current Location")); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   changes
         mMap.moveCamera(CameraUpdateFactory.newLatLng(currentlocation));
         //Zoom in on the user's current location
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15.10f));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 2.10f));
 
         //Set up listeners once map is ready
         mMap.setOnPolylineClickListener(this);
@@ -430,7 +476,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //sendCOVIDDataRequest();
 
         //Riz section:
-        startMarkerProcedure();
+        //startMarkerProcedure();
+        (this.mm).updateMap();
     }
 
 
@@ -1111,47 +1158,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    /*
-        Marker Methods
-        - Methods that deal with showing and holding map markers
-     */
-
-    private void startMarkerProcedure(){
-        setMarkerContainer();
-        startMarkerPlacementHanlder();
-    }
-
-    private void setMarkerContainer(){
-        (this.markerContainer) = new HashMap<>();
-    }
-
-    private void startMarkerPlacementHanlder(){
-        //setup the new handler
-        (this.markerPlacement) = new PlaceMarkerHandler(Looper.getMainLooper());
-        (this.markerPlacement).sendMessage((this.markerPlacement.obtainMessage()));
-    }
-
-    public void putMarkersOnMap(){
-        Cursor markers = (new AppDatabase(activityContext)).queryMapMarkers();
-        while(markers.moveToNext()){
-            String current_building = markers.getString(0);
-            String current_room = markers.getString(1);
-            double current_latitude = markers.getDouble(2);
-            double current_longitude = markers.getDouble(3);
-
-            String marker_title = current_building + "-" + current_room;
-            AreaLabel current_al = new AreaLabel(markers.getString(0),markers.getString(1),current_latitude,current_longitude);
-
-            if(!markerContainer.containsKey(current_al)){
-                LatLng marker_post = new LatLng(markers.getDouble(2),markers.getDouble(3));
-                Marker temp = mMap.addMarker(new MarkerOptions()
-                        .position(marker_post)
-                        .title(marker_title));
-                temp.setTag(marker_title);
-                markerContainer.put(current_al,temp);
-            }
-        }
-    }
 
     /**
      * Puts new map label into the database. This data will later be used with obtained data and
@@ -1250,24 +1256,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * @param view
      */
     public void detectLocation(View view){
-        //if previous marker is green then re-set it to red:
-        if((this.current_marker) != null){
-            (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-        }
-
-        List<WiFiAccessPoint> start = SensorReader.scanWifiAccessPoints(getApplicationContext());
-        AreaLabel currentAreaLabel = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
-
-        // get all the area labels associated with the current building:
-        this.currentBuildingAreas = (this.classAd).getFullAreaLabels(currentAreaLabel);
-
-        (this.current_marker) = (this.markerContainer).get(currentAreaLabel);
-        (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-
-        LatLng currentlatlng = new LatLng((this.current_marker).getPosition().latitude,(this.current_marker).getPosition().longitude);
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentlatlng));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentlatlng, 21.00f));
+        this.mm.detectCurrentLocation();
     }
 
     /*
@@ -1300,27 +1289,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    /*
-        * Handler Classes
-            - Handlers that are used for various tasks.
-                - Task 1: Place markers on the map
-                - Task 2: light up marker the user is in
-     */
-
-    private class PlaceMarkerHandler extends Handler {
-
-        public PlaceMarkerHandler(Looper looperToBeUsed){
-            super(looperToBeUsed);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-
-            putMarkersOnMap();
-        }
-
-    }
 
     /**
      * Handler that will receive count from a different thread and update the
@@ -1351,6 +1319,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean enteredInputs = true;
     ArrayList<Polyline> lines=new ArrayList<>();
 
+    private List<AreaLabel> getAreaLabels_forIndoorRouting(){
+        Set<AreaLabel> alList = (this.mm.markerContainer).keySet();
+        List<AreaLabel> toBeReturned = new ArrayList<>();
+        for(AreaLabel current_al : alList){
+            toBeReturned.add(current_al);
+        }
+        return toBeReturned;
+    }
+
     private void indoorRouting(){
         Button button = (Button)findViewById(R.id.DisplayRoutesButton);
         Polyline polyline=null;
@@ -1370,11 +1347,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng currentlatlng = new LatLng(lg.getLatitude(),lg.getLongitude());
 
         //need destination from somewhere here
-        sendDirectionsRequest(currentlatlng, null);
+        //sendDirectionsRequest(currentlatlng, null);
 
 
         Scanner scanner = null;
         String testFilePath = AreaLabel.FILEPATH;
+        this.currentBuildingAreas = getAreaLabels_forIndoorRouting();
         AreaLabel.writeAreasToFile((this.currentBuildingAreas));
         try {
             //DataInputStream textFileStream = new DataInputStream(getAssets().open(String.format()));
@@ -1386,6 +1364,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             e.printStackTrace();
         }
 
+        Log.i("ReportSelections",this.indoorRouting_srcnode + "->" + this.indoorRouting_destnode);
         graph = new GraphWorld(scanner,this.indoorRouting_srcnode,this.indoorRouting_destnode);
 
 
@@ -1401,10 +1380,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if(checkFirstNode==0){  //Only update the position of the map to first store from textfile
 
                 //Moves to that user's current location
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                //mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
 
                 //Zoom in on the user's current location
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(graph.members[x].lat,graph.members[x].lon),  18.5f));
+                //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(graph.members[x].lat,graph.members[x].lon),  18.5f));
 
                 checkFirstNode=1;
 

@@ -26,6 +26,8 @@ public class enterDestinationActivity extends AppCompatActivity {
 
     LocationObjectData lod;
 
+    private Intent intent;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_enter_destination);
@@ -67,7 +69,7 @@ public class enterDestinationActivity extends AppCompatActivity {
         String destinationZipcode = destzipcode.getText().toString();
 
         Bundle bundle = new Bundle();
-        Intent intent = new Intent(this, MapsActivity.class);
+        intent = new Intent(this, MapsActivity.class);
         intent.putExtras(bundle);
         intent.putExtra("originStreetAddress", originStreetAddress);
         intent.putExtra("originCity", originCity);
@@ -78,7 +80,7 @@ public class enterDestinationActivity extends AppCompatActivity {
         intent.putExtra("destinationState", destinationState);
         intent.putExtra("destinationZipcode", destinationZipcode);
 
-        startActivity(intent);
+        //setResult(RESULT_OK,intent);
     }
 
 }

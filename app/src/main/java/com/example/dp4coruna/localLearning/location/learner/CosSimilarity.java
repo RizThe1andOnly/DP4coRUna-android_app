@@ -2,7 +2,7 @@ package com.example.dp4coruna.localLearning.location.learner;
 
 import android.content.Context;
 import com.example.dp4coruna.dataManagement.AppDatabase;
-import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
+import com.example.dp4coruna.mapmanagement.MapDataStructures.AreaLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.CosSimLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 

@@ -9,8 +9,7 @@ import android.graphics.Color;
 import android.os.*;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 import androidx.annotation.ColorInt;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
@@ -19,13 +18,15 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.example.dp4coruna.R;
 import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.localLearning.location.LocationObject;
-import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
+import com.example.dp4coruna.mapmanagement.MapDataStructures.AreaLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
 import com.example.dp4coruna.localLearning.location.learner.LocationGrabber;
 import com.example.dp4coruna.localLearning.location.learner.SensorReader;
+import com.example.dp4coruna.mapmanagement.MapModel.MapTrainActivityModel;
 import com.example.dp4coruna.network.RelayServer;
 import com.example.dp4coruna.network.Transmitter;
+import com.example.dp4coruna.phpServer.ServerConnection;
 import com.example.dp4coruna.utilities.AddressDialog;
 import com.example.dp4coruna.utilities.DialogCallBack;
 import com.example.dp4coruna.utilities.JSONFunctions;
@@ -53,7 +54,7 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
             * Lifecycle Methods
             * Content Initiation Methods
             * GoogleMap SDK Methods
-            * Internal Logic Functions
+            * Internal Logic Functions; Button action methods
             * DialogCallBack Methods
             * GoogleMap SDK Methods (that are unused)
      */
@@ -71,6 +72,20 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
     private GoogleMap map;
     private boolean trainingMode = false;
     private boolean autodetect = false;
+
+    private MapTrainActivityModel mm;
+
+    //  - Spinner Variables: spinner for selecting methods to run:
+    //      - Spinner:
+    private Spinner optionSpinner;
+    //      - Spinner items
+    private String[] options = {
+            "Detect",
+            "Train",
+            "Sample",
+            "Detect With Network"
+    };
+    private String optionSelected;
 
     //      - Objects from view:
     private TextView text_left;
@@ -93,6 +108,13 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
     private Marker current_marker = null;
 
 
+    // hard-coded ip addresses:  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IP ADDRESSES HERE
+    private String[] hardcoded_ips = { // please put in addresses of devices based on the label next to them
+            "192.168.1.159", // transmitter device
+            "192.168.1.199", // relay device
+            "192.168.1.164" // receiver device
+    };
+
 
     /*
         * Lifecycle Method(s)
@@ -113,10 +135,9 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
 
         this.activityContext = getApplicationContext();
         this.autoDetectTimer = new Timer("AutoDetectionThread");
-        this.updateViewhandler = new TimerToViewHandler(Looper.getMainLooper(),this.text_left);
 
-        startMarkerProcedure();
         setBroadCastReceiver();
+        setUpSpinner();
     }
 
 
@@ -127,25 +148,36 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
          called by onCreate()
      */
 
+    //set up drop down menu for lists:
+    private void setUpSpinner(){
 
-    /*
-        Marker Methods
-        - Methods that deal with showing and holding map markers
-     */
-    private void startMarkerProcedure(){
-        setMarkerContainer();
-        startMarkerPlacementHanlder();
+        (this.optionSpinner) = findViewById(R.id.maptrainactivity_spinner);
+
+        List<String> optionNames = new ArrayList<>();
+        optionNames = Arrays.asList(this.options);
+
+        ArrayAdapter<String> optionNamesArrayAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                optionNames
+        );
+        optionNamesArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        (this.optionSpinner).setAdapter(optionNamesArrayAdapter);
+        (this.optionSpinner).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int index, long l) {
+                optionSelected = (String) adapterView.getItemAtPosition(index);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                optionSelected = (String) adapterView.getItemAtPosition(0);
+            }
+        });
     }
 
-    private void setMarkerContainer(){
-        (this.markerContainer) = new HashMap<>();
-    }
 
-    private void startMarkerPlacementHanlder(){
-        //setup the new handler
-        (this.markerPlacement) = new PlaceMarkerHandler(Looper.getMainLooper());
-        (this.markerPlacement).sendMessage((this.markerPlacement.obtainMessage()));
-    }
 
 
     /**
@@ -175,6 +207,7 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
     @Override
     public void onMapReady(GoogleMap googleMap) {
         this.map = googleMap;
+        this.mm = new MapTrainActivityModel(getApplicationContext(),googleMap,this.text_left);
 
         map.setOnPolylineClickListener(this);
         map.setOnPolygonClickListener(this);
@@ -182,6 +215,8 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
         map.setOnCircleClickListener(this);
         map.setOnMarkerClickListener(this);
         map.setOnMarkerDragListener(this);
+
+        (this.mm).updateMap();
     }
 
     @Override
@@ -198,8 +233,8 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
         //if currently in training mode:
 
         //first set the lat/lng class vars to the point selected
-        this.classVar_latitude = latLng.latitude;
-        this.classVar_longitude = latLng.longitude;
+        (this.mm).classVar_latitude = latLng.latitude;
+        (this.mm).classVar_longitude = latLng.longitude;
 
         //call dialogbox for building name and room name:
         DialogFragment df = new AddressDialog(SUBMIT_MAP_LABEL);
@@ -230,26 +265,17 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
             - Ground Overlay method
      */
 
+
     /*
-        GOTO button functions
+        Run button:
      */
-    /**
-     * Used with Button:GOTO
-     *
-     * Moves the camera to user current location in term of latitude and longitude obtained from google.
-     * @param view
-     */
-    public void moveToCurrent_train(View view){
-
-        //get usable latitude and longitude values to move camera initially
-        LocationGrabber lg = new LocationGrabber(getApplicationContext());
-        lg.setupLocation();
-        LatLng currentlatlng = new LatLng(lg.getLatitude(),lg.getLongitude());
-
-        map.moveCamera(CameraUpdateFactory.newLatLng(currentlatlng));
-        //Zoom in on the user's current location
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentlatlng, 21.00f));
-
+    public void runOption(View view){
+        switch ((this.optionSelected)){
+            case "Train"  : setTrainingMode(view); break;
+            case "Sample" : sampleButtonEvent(view);break;
+            case "Detect" : (this.mm).detectCurrentLocation();break;
+            case "Detect With Network" : initiateNetReq(); break;
+        }
     }
 
     /*
@@ -265,47 +291,6 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
         Toast.makeText(getApplicationContext(),"Train Set To: " + this.trainingMode,Toast.LENGTH_LONG).show();
     }
 
-    /*
-        Detect Button function
-     */
-    public void detectLocationButton(View view){
-        //detectLocation();
-//        if(!this.autodetect){
-//            this.autodetect = true;
-//            startAutoDetection();
-//        }
-//        else{
-//            this.autodetect = false;
-//            (this.autoDetectTimer).cancel();
-//        }
-
-        detectLocation();
-    }
-
-    public void detectLocation(){
-        //if previous marker is green then re-set it to red:
-        if((this.current_marker) != null){
-            (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-        }
-
-        if(this.markerContainer.size() != 0){
-
-            List<WiFiAccessPoint> start = SensorReader.scanWifiAccessPoints(getApplicationContext());
-            AreaLabel currentAreaLabel = (new CosSimilarity(getApplicationContext()).checkCosSin_vs_allLocations_v2(start));
-
-
-            (this.current_marker) = (this.markerContainer).get(currentAreaLabel);
-            (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-
-            LatLng currentlatlng = new LatLng((this.current_marker).getPosition().latitude,(this.current_marker).getPosition().longitude);
-
-            map.moveCamera(CameraUpdateFactory.newLatLng(currentlatlng));
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentlatlng, 21.00f));
-        }
-        else{
-            initiateNetReq();
-        }
-    }
 
     /**
      * Method to detect user location based on response from network.
@@ -315,10 +300,11 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
     public void detectLocationUsingNetwork(AreaLabel arealabel){
 
         LatLng ll = new LatLng(arealabel.latitude,arealabel.longitude);
+        String areaLabelTag = arealabel.building + "-" + arealabel.area;
         Marker netMarker = map.addMarker(new MarkerOptions()
                 .position(ll)
                 .title(arealabel.title));
-        netMarker.setTag(0);
+        netMarker.setTag(areaLabelTag);
 
         (this.current_marker) = netMarker;
         (this.current_marker).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
@@ -326,42 +312,14 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
         LatLng currentlatlng = new LatLng((this.current_marker).getPosition().latitude,(this.current_marker).getPosition().longitude);
 
         //add risk zone:
-        drawRiskArea(arealabel);
+        //drawRiskArea(arealabel);
 
         map.moveCamera(CameraUpdateFactory.newLatLng(currentlatlng));
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentlatlng, 21.00f));
     }
 
 
-    /**
-     * Uses obtained area labels to draw risk zones.
-     *
-     * Currently uses only lat/lng with a dummy radius to draw a risk area.
-     * The risk will be determined by the AreaLabel's associated num of cases or some other pre-determined
-     * value.
-     *
-     * @param arealabel
-     */
-    private void drawRiskArea(AreaLabel arealabel){
-        LatLng coord = new LatLng(arealabel.latitude,arealabel.longitude);
 
-        @ColorInt int low = Color.argb(50,255, 25, 25);
-        @ColorInt int high = Color.argb(100,255, 25, 25);
-
-        int risk = arealabel.riskLevel;
-        int riskColor = risk == 0 ? low:high;
-
-        CircleOptions circleOptions = new CircleOptions();
-        circleOptions.center(coord);
-        circleOptions.radius(5);
-        circleOptions.strokeWidth(1);
-        circleOptions.strokeColor(riskColor);
-        circleOptions.fillColor(riskColor);
-        circleOptions.clickable(true);
-        Circle circle = map.addCircle(circleOptions);
-        circle.setTag("User 1");
-
-    }
 
     private void initiateNetReq(){
         /*
@@ -392,80 +350,44 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
             - Functions that will be called by the handler to change certain view props
      */
 
-    public void putMarkersOnMap(){
-        Cursor markers = (new AppDatabase(activityContext)).queryMapMarkers();
-        while(markers.moveToNext()){
-            String current_building = markers.getString(0);
-            String current_room = markers.getString(1);
-            double current_latitude = markers.getDouble(2);
-            double current_longitude = markers.getDouble(3);
-
-            String marker_title = current_building + " " + current_room;
-            AreaLabel current_al = new AreaLabel(markers.getString(0),markers.getString(1),current_latitude,current_longitude);
-
-            if(!markerContainer.containsKey(current_al)){
-                LatLng marker_post = new LatLng(markers.getDouble(2),markers.getDouble(3));
-                Marker temp = map.addMarker(new MarkerOptions()
-                        .position(marker_post)
-                        .title(marker_title));
-                temp.setTag(0);
-                markerContainer.put(current_al,temp);
-            }
-        }
-
-    }
 
     /**
      * Get multiple samples of location features for a particular label (building,room).
      * Will get 10 samples per call.
      */
     private void sampleData(String building, String room){
-        TextView showCount = findViewById(R.id.maptrain_textbox_left);
-
-        Handler updateCountHandler = new UpdateCountHandler(Looper.getMainLooper(),showCount);
-
-        Thread sampleLocData = new Thread(new Runnable() {
+        Handler updateCountHandler = new Handler(Looper.getMainLooper()){
             @Override
-            public void run() {
-                LocationObject lo = new LocationObject(getApplicationContext());
-                AppDatabase ad = new AppDatabase(getApplicationContext());
-
-                for(int i=0;i<10;i++){
-                    lo.updateLocationData();
-                    lo.setBuildingName(building);
-                    lo.setRoomName(room);
-                    ad.addData(lo);
-
-                    int displayCount = i + 1;
-                    Message msg = updateCountHandler.obtainMessage();
-                    msg.arg1 = displayCount;
-                    //updateCountHandler.sendMessage(msg);
-                }
-
-                Thread.currentThread().interrupt();
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                text_left.setText(msg.arg1);
             }
+        };
+
+        Thread sampleLocData = new Thread(()->{
+            // lambda runnable class
+
+            LocationObject lo = new LocationObject(getApplicationContext());
+            AppDatabase ad = new AppDatabase(getApplicationContext());
+
+            for(int i=0;i<10;i++){
+                lo.updateLocationData();
+                lo.setBuildingName(building);
+                lo.setRoomName(room);
+                ad.addData(lo);
+
+                int displayCount = i + 1;
+                Message msg = updateCountHandler.obtainMessage();
+                msg.arg1 = displayCount;
+                updateCountHandler.sendMessage(msg);
+            }
+
+            Thread.currentThread().interrupt();
         },"SampleLocDataThread");
 
         sampleLocData.start();
     }
 
-
-    public void groundOverlayEvent(View view){
-        LatLng coreloc = new LatLng(40.52155103834118,-74.46171607822181);
-        map.moveCamera(CameraUpdateFactory.newLatLng(coreloc));
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(coreloc, 18.00f));
-        groundOverlay();
-    }
-
-    private void groundOverlay(){
-        LatLng coreloc = new LatLng(40.52160736327198,-74.46183912456036);
-        GroundOverlayOptions goo = new GroundOverlayOptions()
-                .image(BitmapDescriptorFactory.fromResource(R.drawable.core_1st_floor_small_realigned_2))
-                .anchor(0,0)
-                .position(coreloc,75f);
-
-        map.addGroundOverlay(goo);
-    }
 
 
     /*
@@ -487,11 +409,12 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
 
 
         if(submit_type == SUBMIT_MAP_LABEL){
-            mapLabelSubmission(building,room);
+            //mapLabelSubmission_toPhpServer(building,room);
+            (this.mm).mapLabelSubmission(building,room);
         }
 
         if(submit_type == SUBMIT_LOCATION_FEATURES){
-            sampleData(building,room);
+            (this.mm).sampleData(building,room);
         }
     }
 
@@ -504,6 +427,30 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
             Toast.makeText(getApplicationContext(),"Submit Fail",Toast.LENGTH_LONG).show();
         }
         (this.markerPlacement).sendMessage((this.markerPlacement.obtainMessage()));
+    }
+
+
+    /**
+     * Add the new map label to the aws serve we have using the ServerConnection class.
+     * @param building
+     * @param room
+     */
+    private void mapLabelSubmission_toPhpServer(String building, String room){
+        String date = "\"2020-12-21\"";
+        String lat = String.valueOf((this.classVar_latitude));
+        String lng = String.valueOf((this.classVar_longitude));
+        String county = "\"Passaic\"";
+        building = "\"" + building + "\"";
+        room = "\"" + room + "\"";
+        String numCases = "0";
+
+        String columnsString = "latitude,longitude,date_added,building_name,room_name,county,numCases";
+        String valuesString = lat + "," + lng + "," + date + "," + building + "," + room + "," + county + "," + numCases;
+        List<String> args = new ArrayList<>();
+        args.add(columnsString);
+        args.add(valuesString);
+
+        (new ServerConnection(getApplicationContext())).queryDatabaseUnprepared(ServerConnection.ADD_NEW_MAP_LABEL,args);
     }
 
 
@@ -541,69 +488,6 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
 
 
 
-    /*
-        * Handler Classes
-            - Handlers that are used for various tasks.
-                - Task 1: Place markers on the map
-                - Task 2: light up marker the user is in
-     */
-
-    private class PlaceMarkerHandler extends Handler {
-
-        public PlaceMarkerHandler(Looper looperToBeUsed){
-            super(looperToBeUsed);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-
-
-            putMarkersOnMap();
-        }
-
-    }
-
-    /**
-     * Handler that will receive count from a different thread and update the
-     * appropriate textview accordingly.
-     */
-    private class UpdateCountHandler extends Handler {
-        private TextView tv;
-
-        public UpdateCountHandler(Looper looperToBeUsed, TextView tv){
-            super(looperToBeUsed);
-            this.tv = tv;
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            int count = msg.arg1;
-            (this.tv).setText("\t\t"+count);
-        }
-    }
-
-    private class TimerToViewHandler extends Handler{
-        private TextView txtview;
-
-        public TimerToViewHandler(Looper looper,TextView txtView){
-            super(looper);
-            this.txtview = txtView;
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            int counter = msg.arg1;
-            (this.txtview).setText(""+counter);
-
-            if(counter == 0){
-                detectLocation();
-            }
-        }
-    }
-
 
     /*
         ------------------------------------------Network Code--------------------------------
@@ -614,11 +498,7 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
      *  Currently uses hardcoded ip address, will need to fix this later.
      */
     private void sendLocRequest(){
-        String[] ips = {
-                "192.168.1.159",
-                "192.168.1.199",
-                "192.168.1.164"
-        };
+        String[] ips = hardcoded_ips;
 
         List<String> deviceAddresses = new ArrayList<>();
         String deviceAddress;
@@ -673,28 +553,5 @@ public class MapTrainActivity extends FragmentActivity implements OnMapReadyCall
         return AreaLabel.fromJson(areaLabelString);
     }
 
-
-    /*
-        Counter for auto location detection:
-     */
-
-    private int counter = 10;
-
-    private void startAutoDetection(){
-        autoDetectTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                counter--;
-
-                Message msg = updateViewhandler.obtainMessage();
-                msg.arg1 = counter;
-                updateViewhandler.sendMessage(msg);
-
-                if(counter == 0){
-                    counter = 10;
-                }
-            }
-        },0,SECOND_CONSTANT);
-    }
 }
 

@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.os.*;
-import com.example.dp4coruna.TempResultsActivity;
+import com.example.dp4coruna.mapmanagement.MapModel.MapActivityModel;
 
 /**
  * Connects to the AWS PHP Server.
@@ -66,6 +66,9 @@ public class ServerConnection {
     private final int QUERY_REQUEST = 0;
     private final int UPDATE_REQUEST = 1;
 
+    //query templates:
+    public static final String ADD_NEW_MAP_LABEL = "INSERT INTO userLocation(?) VALUES(?)";
+
     //this will be updated everytime there is a network request
     private List<String> result;
 
@@ -77,6 +80,8 @@ public class ServerConnection {
 
     //declaration of broadcast destination:
     private String broadcastDestination;
+
+    private RequestQueue batchRq = null;
 
 
     /**
@@ -154,6 +159,31 @@ public class ServerConnection {
 
 
     /**
+     * Send Several Requests at once to the server. (In testing!)
+     * @param sqlString
+     * @param argList
+     */
+    public void sendBatchReq(List<String> sqlString,List<List<String>> argList){
+        if(argList.isEmpty() || argList == null){
+            for(String req : sqlString){
+                sendBatchRequests(req,QUERY_REQUEST);
+            }
+        }
+
+        List<String> preparedSqlStrings = new ArrayList<>();
+        int argIndex = 0;
+        for(String req : sqlString){
+            preparedSqlStrings.add(setUpRequest(req, argList.get(argIndex)));
+            argIndex++;
+        }
+
+        for(String ps : preparedSqlStrings){
+            sendBatchRequests(ps,QUERY_REQUEST);
+        }
+    }
+
+
+    /**
      * Queries the AWS database and returns the result.
      *
      * The result is returned as a list of string with each column separated by a whitespace (" ").
@@ -165,6 +195,16 @@ public class ServerConnection {
      */
     public void queryDatabase(String sqlStatement){
         sendRequest(sqlStatement,this.QUERY_REQUEST);
+    }
+
+
+    /**
+     * Query database using an unprepared sql statement
+     * @param unprepSql sql with ? for sub positions
+     * @param args what to replace ? with; a list of strings
+     */
+    public void queryDatabaseUnprepared(String unprepSql, List<String> args){
+        sendRequest(setUpRequest(unprepSql, args),this.QUERY_REQUEST);
     }
 
     /**
@@ -198,6 +238,45 @@ public class ServerConnection {
                     response is a String value.
                     response will be processed by processHtmlForData() to get only the data.
                  */
+            Log.i("ServerResponse",response);
+            result = processHtmlForData(response,requestType);
+            outputResults(requestType);
+        },error ->{
+            Log.i("FromServerConnection",error.toString());
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map paramMap = new HashMap<String,String>();
+                paramMap.put("sqlQuery",sqlStatement);
+                Log.i("FromReport",sqlStatement);
+                return paramMap;
+            }
+        };
+
+        rq.add(sr);
+    }
+
+
+    private void sendBatchRequests(String sqlStatement, int requestType){
+        Context localContext = this.context;
+        String url = localContext.getString(R.string.dp4_server_url);
+
+        //set type of request:
+        switch (requestType){
+            case UPDATE_REQUEST: url += UPDATE_REQUEST_STRING; break;
+            case QUERY_REQUEST: url += QUERY_REQUEST_STRING; break;
+        }
+
+        String fullUrl = url;
+
+        if(batchRq == null) batchRq = Volley.newRequestQueue(context);
+        StringRequest sr = new StringRequest(Request.Method.POST,fullUrl,response->{
+                /*
+                    This lambda function is triggered when the server returns a page.
+                    response is a String value.
+                    response will be processed by processHtmlForData() to get only the data.
+                 */
+            Log.i("ServerResponse",response);
             result = processHtmlForData(response,requestType);
             outputResults(requestType);
         },error ->{
@@ -211,10 +290,40 @@ public class ServerConnection {
             }
         };
 
-        rq.add(sr);
+        batchRq.add(sr);
     }
 
+    /**
+     * Used to prepare sql statements where we have to substitute in values. For example: sql statements
+     * with the phrase "where = ?".
+     *
+     * This is a simplified setup where the unprepared sql statement should have a question mark wherever a sub is
+     * required. Then the substitute values should be passed in as a list of strings in order that they would appear
+     * in the sql statement.
+     *
+     *
+     * @param unPreparedSqlStatement sql statement with question marks where substitutes should go
+     * @param arguments List of Strings; convert non strings to strings and put them in list
+     *
+     * @return Updated String; question marks are replaced with provided values
+     */
+    public String setUpRequest(String unPreparedSqlStatement,List<String> arguments){
+        String regexPattern = "\\?";
+        Pattern p = Pattern.compile(regexPattern);
+        Matcher m = p.matcher(unPreparedSqlStatement);
 
+        int subIndex = 0;
+        String updatedString = "";
+        while(m.find()){
+            updatedString = m.replaceFirst(arguments.get(subIndex));
+            m = p.matcher(updatedString);
+            subIndex++;
+        }
+
+       return updatedString;
+    }
+
+    
     /**
      * Since the response from our server is an html page it needs to be processed.
      * This method will extract only the data and return it as a list of strings.
@@ -272,6 +381,7 @@ public class ServerConnection {
             Log.i("AreaLabelFeat", "in external handler");
             Message msg = (this.externalHandler).obtainMessage();
             msg.obj = this.result;
+            msg.arg1 = MapActivityModel.MARKER_FROM_PHP_SERVER;
             (this.externalHandler).sendMessage(msg);
         }
 

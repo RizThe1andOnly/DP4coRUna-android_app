@@ -7,23 +7,16 @@ import android.view.View;
 import android.widget.*;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import com.android.volley.*;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.example.dp4coruna.dataManagement.AppDatabase;
 import com.example.dp4coruna.dataManagement.remoteDatabase.DbConnection;
 import com.example.dp4coruna.localLearning.SubmitLocationLabel;
 import com.example.dp4coruna.localLearning.location.LocationObject;
-import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.localLearning.location.learner.CosSimilarity;
 import com.example.dp4coruna.localLearning.location.learner.SensorReader;
 import com.example.dp4coruna.ml.MLModel;
 import com.example.dp4coruna.phpServer.ServerConnection;
 
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.*;
 
 
@@ -109,7 +102,7 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
             case "MLTrain" : trainMLModel(); break;
             case "MLOutput" : MLModelOutput(); break;
             //case "Demo" : demoFunc(); break;
-            case "Demo" : testIndoorFileCreationString();break;
+            case "Demo" : updateDbFromApp();break;
             case "NetworkTest" : testAWSConnection_v3(); break;
             default: dataView.append("Method For this Instruction Not Yet Implemented.\n"); break;
         }
@@ -127,25 +120,10 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
         Test indoor file string creation
      */
     private void testIndoorFileCreationString(){
-        AreaLabel a1 = new AreaLabel("A","1",10.0,10.0);
-        AreaLabel a2 = new AreaLabel("A","2",10.0,11.0);
-        AreaLabel a3 = new AreaLabel("B","1",11.0,10.0);
-        AreaLabel a4 = new AreaLabel("B","2",10.0,12.0);
-        AreaLabel a5 = new AreaLabel("B","3",12.0,11.0);
-        AreaLabel a6 = new AreaLabel("C","1",10.0,13.0);
-        AreaLabel a7 = new AreaLabel("D","1",13.0,10.0);
-
-        List<AreaLabel> listAl = new ArrayList<>();
-        listAl.add(a1);
-        listAl.add(a2);
-        listAl.add(a3);
-        listAl.add(a4);
-        listAl.add(a5);
-        listAl.add(a6);
-        listAl.add(a7);
-
-        AreaLabel.writeAreasToFile(listAl);
-
+        List<String> res = (new AppDatabase(getApplicationContext())).getDistinctLabels();
+        for(String locLabel : res){
+            dataView.append(locLabel);
+        }
     }
 
     /*
@@ -264,6 +242,10 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
         }
     }
 
+
+    /*
+            --------------------------------SErver functionalities----------------------------
+     */
     private class PrintOutputHandler extends Handler{
 
         private TextView outputView;
@@ -286,9 +268,18 @@ public class TempResultsActivity extends AppCompatActivity implements AdapterVie
                 List<String> output = (List<String>) msg.obj;
                 for(String s : output){
                     (this.outputView).append(s);
+                    break;
                 }
             }
         }
+    }
+
+
+    /**
+     *
+     */
+    private void updateDbFromApp(){
+
     }
 
 

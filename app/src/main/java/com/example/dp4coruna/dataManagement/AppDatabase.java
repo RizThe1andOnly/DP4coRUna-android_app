@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.example.dp4coruna.localLearning.location.LocationObject;
-import com.example.dp4coruna.localLearning.location.dataHolders.AreaLabel;
+import com.example.dp4coruna.mapmanagement.MapDataStructures.AreaLabel;
 import com.example.dp4coruna.localLearning.location.dataHolders.LocationObjectData;
 import com.example.dp4coruna.localLearning.location.dataHolders.WiFiAccessPoint;
 import com.example.dp4coruna.ml.MLData;
@@ -736,6 +736,8 @@ public class AppDatabase extends SQLiteOpenHelper {
     }
 
 
+
+
     /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      * Below is the section for obtaining data for the machine learning section. The below methods will gather all
      * necessary data and compile them into a MLData object.
@@ -865,6 +867,8 @@ public class AppDatabase extends SQLiteOpenHelper {
          */
         SQLiteDatabase db = this.getWritableDatabase();
 
+        String queryCols = LOCATION_TABLE_COL_BUILDING_NAME + "," + LOCATION_TABLE_COL_ROOM_NAME;
+
         String labelQueryString = "SELECT DISTINCT "+  LOCATION_TABLE_COL_LABEL + " FROM " + LOCATION_TABLE + ";";
         Cursor labelCursor = db.rawQuery(labelQueryString,null);
 
@@ -875,6 +879,34 @@ public class AppDatabase extends SQLiteOpenHelper {
 
         return toBeReturned;
     }
+
+    /**
+     * Returns a list of strings that are the building names and room names of all distinct locations stored in
+     * device.
+     * @return
+     */
+    public ArrayList<String> getDistinctLabels(){
+        /*
+            Obtain all of the labels in the database location table
+             1- query the database for all location labels
+             2- populate list by iterating through the cursor returned by the query
+             3- return list
+         */
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String queryCols = LOCATION_TABLE_COL_BUILDING_NAME + "," + LOCATION_TABLE_COL_ROOM_NAME;
+
+        String labelQueryString = "SELECT DISTINCT "+  queryCols + " FROM " + LOCATION_TABLE + ";";
+        Cursor labelCursor = db.rawQuery(labelQueryString,null);
+
+        ArrayList<String> toBeReturned = new ArrayList<>();
+        while(labelCursor.moveToNext()){
+            toBeReturned.add(labelCursor.getString(0) + "-" + labelCursor.getString(1));
+        }
+
+        return toBeReturned;
+    }
+
 
     public List<AreaLabel> getAllAreaLabels(){
         SQLiteDatabase db = this.getWritableDatabase();
