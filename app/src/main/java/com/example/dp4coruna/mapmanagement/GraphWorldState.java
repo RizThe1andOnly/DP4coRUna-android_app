@@ -1,5 +1,7 @@
 package com.example.dp4coruna.mapmanagement;
 
+import com.google.android.gms.maps.MapsInitializer;
+
 import java.util.Vector;
 
 
@@ -20,7 +22,9 @@ public class GraphWorldState implements Comparable<GraphWorldState> {
 		this.gworld=gw;
 		this.nodename=name;
 		this.gval=g;
-		
+
+		//System.out.println("CHRISTMAS TREE"+GraphWorld.destnode);
+
 		int i = gw.map.get(GraphWorld.destnode);
 		int j = gw.map.get(name);
 		Double lat2=gw.members[i].lat;
@@ -69,11 +73,63 @@ public class GraphWorldState implements Comparable<GraphWorldState> {
 	public double h() {
 		// return Math.abs(gworld.gstate.row - row) + Math.abs(gworld.gstate.col - col);
 
-		if(nodename.equals("XXIForever") || (nodename.equals("Apple"))){
-			return this.hval+1000;
+		int risklevel=0;
+		boolean addedValue=false;
+
+		if(MapsActivity.riskPath==0) {
+
+
+				for(int x=0;x<MapsActivity.listOfZones.size();x++){
+
+					if(nodename.equals(MapsActivity.listOfZones.get(x).name) && (MapsActivity.listOfZones.get(x).numCOVIDPoints>=3)){ //high-risk zone
+
+						hval+=1000;
+
+					}
+
+					if(nodename.equals(MapsActivity.listOfZones.get(x).name) && (MapsActivity.listOfZones.get(x).numCOVIDPoints==1)){  //medium-risk zone
+
+						hval+=250;
+					}
+
+
+				}
+
+
+
+
+			}
+
+
+		else if (MapsActivity.riskPath==1){
+
+
+
+			if(MapsActivity.riskCount!=0){
+
+
+				for(int x=0;x<MapsActivity.listOfZones.size();x++){
+
+					if(nodename.equals(MapsActivity.listOfZones.get(x).name)){
+
+						hval+=12;
+						addedValue=true;
+					}
+
+
+				}
+
+				if(addedValue==false){
+
+					hval+=1500;
+				}
+
+			}
 
 		}
+
 		return hval;
+
 	}
 	public double f() {
 		return g() + h();
@@ -93,7 +149,13 @@ public class GraphWorldState implements Comparable<GraphWorldState> {
 			
 		
 		}
-		return (int) f_diff;
+
+		if(f_diff<0)
+			return (int)-1;
+		else
+			return (int) 1;
+
+		//return (int) f_diff;
 	}
 	
 	public boolean equals(GraphWorldState other) {
